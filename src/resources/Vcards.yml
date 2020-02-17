@@ -1,0 +1,48 @@
+Image:
+  extends: inside
+  height: :scale
+
+Nom:
+  extends: inside
+  x: += 10
+  y: += 10
+  width: 550
+  font: ChunkFive Roman,Sans 12
+  color: '#232F23'
+  valign: top
+  align: left
+
+Image:
+  extends: inside
+  x: += 100
+  y: += 100
+  width: 450
+  height: 450
+
+Fonction:
+  extends: Nom
+  y: += 50
+  width: 300
+  font: ChunkFive Roman,Sans 10
+  align: left
+
+Position:
+  extends: Nom
+  x: += 500
+  width: 150
+  font: ChunkFive Roman,Sans 10
+  align: right
+  
+
+Pouvoir:
+  extends: inside
+  x: += 50
+  y: += 550
+  width: 600
+  font: ChunkFive Roman,Sans 10
+
+
+Description:
+  extends: Pouvoir
+  y: += 150
+  font: ChunkFive Roman,Sans 8
