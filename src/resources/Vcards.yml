@@ -34,15 +34,20 @@ Position:
   align: right
   
 
-Pouvoir:
+Pouvoir_Actif:
   extends: inside
   x: += 50
   y: += 550
   width: 600
   font: ChunkFive Roman,Sans 10
 
+Pouvoir_Passif:
+  extends: Pouvoir_Actif
+  y: += 150
+  width: 600
+  font: ChunkFive Roman,Sans 10
 
 Description:
-  extends: Pouvoir
-  y: += 150
-  font: ChunkFive Roman,Sans 8
+  extends: Pouvoir_Actif
+  y: += 250
+  font: ChunkFive Roman,Sans 7

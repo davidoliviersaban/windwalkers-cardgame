@@ -7,9 +7,8 @@ Ni le jeu et son titre / ni les images et pdf ne sont de moi. Je ne fourni que l
 
 ---
 # Windwalkers - La Horde du Contrevent
-À l’origine fut la vitesse, le pur mouvement furtif, le « vent-foudre ». Puis le cosmos décéléra, prit consistance et forme, jusqu’aux lenteurs habitables, jusqu’au vivant, jusqu’à vous. Bienvenue à toi, lent homme lié, poussif tresseur des vitesses. 
-
-Damasio, Alain. La Horde du Contrevent (Sc. Fiction) (French Edition) (Kindle Locations 84-86). La Volte. Kindle Edition. 
+>À l’origine fut la vitesse, le pur mouvement furtif, le « vent-foudre ». Puis le cosmos décéléra, prit consistance et forme, jusqu’aux lenteurs habitables, jusqu’au vivant, jusqu’à vous. Bienvenue à toi, lent homme lié, poussif tresseur des vitesses. 
+*Damasio, Alain. La Horde du Contrevent (Sc. Fiction) (French Edition) (Kindle Locations 84-86). La Volte. Kindle Edition.*
 
 
 # Introduction
@@ -36,7 +35,6 @@ Une Horde est composee par:
 Alain Damasio invente tout un vocabulaire pour decrire le vent et une terminologie pour contrer ce vent. Il decrit egalement comment les scribes notent le vent:
 
 >Fondamentalement, le vent c’est : 1, une vitesse ; 2, un coefficient de variation – accélération ou décélération ; et 3, une variable de fluctuation, ou turbulence. La notation peut aussi comporter des indications de matière, vent chargé, grain ou pluie, de forme pour les tourbillons ou les contrevagues, et enfin d’effet – par exemple l’effet Lascini qu’on note avec des tirets. Il existe en tout vingt et un signes de ponctuation, tous empruntés à l’écriture courante et qui suffisent à décrire exhaustivement le vent.
-
 *Damasio, Alain. La Horde du Contrevent (Sc. Fiction) (French Edition) (Kindle Locations 938-942). La Volte. Kindle Edition.*
 
 Les vents que vous rencontrerez sont les suivants, tries par ordre de difficulté :
@@ -47,7 +45,7 @@ Les vents que vous rencontrerez sont les suivants, tries par ordre de difficulte
 1. le crivetz (aussi appelé stikine ou blizzard, ä) ;
 1. le furvent (å).
 
-Il y a plusieurs valeurs de force de vent:
+Il y a plusieurs valeurs de fluctuation/turbulence de vent:
 * Turbule
 * Salve
 * Rafale
@@ -55,10 +53,11 @@ Il y a plusieurs valeurs de force de vent:
 * Blaast
 * Vortex
 
-Dans le jeu, les 6 formes de vent sont representees par un d6 qui definira les exigences du vent (sa difficulte). Le vent aura aussi une couleur qui represente les fluctuations du vent et qui apparaissent dans le jeu comme un d6 colore.
+Dans le jeu, les 6 formes de vent sont representees par un d6 qui definira les exigences du vent - sa difficulte. Les fluctuations du vent sont inscrites dans les valeurs que le vent peut prendre. Les vents sont generalement composes de 6 d6. La valeur que prend chacun de ces d6 est une fluctuation du vent.
+Le vent aura aussi une couleur qui reflete la nature du vent, ils sont representes dans le jeu comme des d6 colore.
+Un vent est donc une composition de d6 colores et de d6 incolores.
 
 Lors de la progression de votre Horde sur le terrain, il vous sera possible de connaitre a l'avance la couleur du vent mais pas sa difficulte.
-
 
 ## Contrer le vent
 Pour effectuer sa Trace, la Horde doit contrer le vent. Contrer est l'action d'avancer a contre vent pour rejoindre les villes intermediaires et enfin rejoindre Camp Boban.
@@ -68,10 +67,10 @@ Un vent est compose de 6 d6.
 
 La force du vent impose a la Horde le nombre de d6 qui doivent etre identiques au vent. Les couleurs doivent etre egalees avant les d6 incolores du vent.
 
-Le joueur lance alors les d6 de sa Horde et resoud les actions comme suit:
+Le joueur lance alors les d6 de sa Horde et du vent simultanement et resoud les actions comme suit:
 * Apairez les d6 identiques aux d6 du vent en commencant par les d6 colores.
-* Si les conditions sont respectees, il reste alors a faire au moins autant que le vent, c'est a dire que la somme des d6 de la Horde doit etre superieure ou egale a la somme des d6 du vent.
-* Si les conditions ne sont pas respectees, il faudra user et combiner les capacites des Hordiers afin de passer cette epreuve ou reculer.
+* Si les conditions de contre sont respectees, il reste alors a faire au moins autant que le vent, c'est a dire que la somme des d6 de la Horde doit etre superieure ou egale a la somme des d6 du vent.
+* Si les conditions de contre ne sont pas respectees, il faudra user et combiner les capacites des personnages afin de passer cette epreuve ou reculer.
 
 
 ### Exemple de reussite
@@ -105,6 +104,7 @@ Exemples d'effets:
 Le terrain est compose de tuiles hexagonales. Il existe 2 types de tuiles: 
 * les Villes et Villages abrites
 * le Paysage
+* les couleurs de vent et la force du vent.
 
 Les **Villes** sont les points de depart et d'arrivee de la Horde entre chacun des 4 chapitres que nous allons vous proposer. Le but de chaque chapitre est donc de progresser d'une ville, par exemple Aberlaas en Extreme-Aval du vent vers Port-Choon pour le premier chapitre. Dans ces villes, vous pourrez reposer votre Horde et la recomposer. Pour ce faire, une phase de recrutement est possible. [Voir section recrutement](). 
 La Horde peut egalement monter un camp pour se reposer. Ainsi, chaque personnage recupere son pouvoire et regagne un point de moral.
@@ -153,7 +153,7 @@ Le joueur decide alors de deplacer sa Horde sur l'une des tuiles adjacentes (sur
 
 Il n'y a de vent que sur les tuiles possedant des chiffres 1 a 6. Il n'y a donc pas de vent sur les villages abrites, les villes ou certains lieux speciaux.
 
-Le terrain possede 1-3 des colores/incolores qui sont ajoutes au d6 du vent.
+Le terrain possede 1 a 3 des colores et/ou incolores qui sont ajoutes aux d6 du vent.
 
 Les persos
 

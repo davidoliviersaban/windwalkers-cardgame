@@ -17,6 +17,7 @@ Squib::Deck.new(cards: deck["Nom"].size,#cards: deck["Name"].size, # cards: 1,#
   fillcolor["Traine"] = "#AAFFAA"
   fillcolor["Fer"] = "#FFAAAA"
   fillcolor["Traceur"] = "#FFFFAA"
+  fillcolor[""] = "#FFFFFF"
 
   %w(Position).each do |key|
     rect layout: :inside, fill_color:  deck[key].map{|c| fillcolor[c]}
@@ -26,7 +27,7 @@ Squib::Deck.new(cards: deck["Nom"].size,#cards: deck["Name"].size, # cards: 1,#
 
   png file: deck["Image"].map{ |img| "src/resources/images/"+img}, layout: "Image"
 
-  %w(Nom Fonction Description Pouvoir Position).each do |key|
+  %w(Nom Fonction Description Pouvoir_Actif Position).each do |key|
     text str: deck[key], layout: key
   end
 
