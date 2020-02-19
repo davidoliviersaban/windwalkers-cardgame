@@ -70,7 +70,7 @@ La force du vent impose a la Horde le nombre de d6 qui doivent etre identiques a
 Le joueur lance alors les d6 de sa Horde et du vent simultanement et resoud les actions comme suit:
 * Apairez les d6 identiques aux d6 du vent en commencant par les d6 colores.
 * Si les conditions de contre sont respectees, il reste alors a faire au moins autant que le vent, c'est a dire que la somme des d6 de la Horde doit etre superieure ou egale a la somme des d6 du vent.
-* Si les conditions de contre ne sont pas respectees, il faudra user et combiner les capacites des personnages afin de passer cette epreuve ou reculer.
+* Si les conditions de contre ne sont pas respectees, il faudra user et combiner les capacites des personnages afin de passer cette epreuve ou reculer ou user des capacites du moral.
 
 
 ### Exemple de reussite
@@ -90,7 +90,13 @@ Le vent etant de force 2, il exige que 2 d6 soient identiques a son jet. Nous av
 - [] @TODO: Un vent peut avoir une variation de +/- 1 c'est le nombre de des en + ou en - qui doivent etre lances pour le vent.
 - [] @TODO: Pour battre un vent, le joueur lance autant de d6 qu'il a de hordiers.
 
-## Regle speciale Furevent (vent de force 6)
+### Ce qui fait baisser le moral
+* Relancer tous les d6 de la Horde
+* Se faire pousser par le vent
+* Changer la valeur +/-1 sur 1 d6 de la Horde
+* Monter un camp (sous Zefirine (force 1) ??)
+
+## Regle additionnelle pour le Furevent (vent de force 6)
 Les 6 sur les furevent font apparaitre des chrones qui ont des effets aleatoires. Ces effets peuvent aussi bien etre positifs que negatifs.
 Exemples d'effets:
 1. Regagner un point de moral
@@ -100,27 +106,32 @@ Exemples d'effets:
 1. Perdez un point de moral
 1. Retrouvez un hordier perdu
 
+Un seul effet par furevent. (@TODO: retravailler cette partie)
+
 ## Le terrain
-Le terrain est compose de tuiles hexagonales. Il existe 2 types de tuiles: 
+Le terrain est compose de tuiles hexagonales. Il existe 3 types de tuiles: 
 * les Villes et Villages abrites
-* le Paysage
-* les couleurs de vent et la force du vent.
+* les Terrain
+* les difficultes de vent
 
 Les **Villes** sont les points de depart et d'arrivee de la Horde entre chacun des 4 chapitres que nous allons vous proposer. Le but de chaque chapitre est donc de progresser d'une ville, par exemple Aberlaas en Extreme-Aval du vent vers Port-Choon pour le premier chapitre. Dans ces villes, vous pourrez reposer votre Horde et la recomposer. Pour ce faire, une phase de recrutement est possible. [Voir section recrutement](). 
 La Horde peut egalement monter un camp pour se reposer. Ainsi, chaque personnage recupere son pouvoire et regagne un point de moral.
 
 Il est egalement possible de recruter dans les *villages abrites* avec moins de choix et de reposer son equipe. La Horde ne regagne pas de moral dans les *villages abrites*.
 
+Les villes sont considerees comme n'etant pas de la couleur du vent (@TODO clarifier cette partie)
 
 Le vent s'ecoule toujours dans le meme sens sur le plateau: d'Ouest en Est.
 
-Le **Paysage** represente le sol et indique dans quel sens coule le vent. Il est compose de prairies, deserts, montagnes, steppes et lacs. Parfois, quelques forets et bosquets.
+Le **Terrain** represente le sol et indique dans quel sens coule le vent. Il est compose de prairies, deserts, montagnes, steppes et lacs. Parfois, quelques forets et bosquets.
 Sur ce plateau, on viendra d'abord poser la couleur du vent puis sa force.
 
 Les chiffres indiques sur chaque tuile montrent dans quel sens le vent pousse la Horde. 
 Dans l'exemple ci-dessous, ma Horde arrive sur la tuile A. Le Vent soufle d'Ouest en Est, il remonte donc. Si ma Horde echoue a progresser, les vents de force 1 et 4 la feront reculer en F, les vents de force 2 et 5 vers E et les vents de force 3 et 6 en G.
 Si ma horde reussi a passer le vent, elle pourra progresser ou elle le souhaite.
 Toujours dans l'exemple ci dessous, si ma Horde arrive sur la tuile C, elle reculera vers A pour les vents de forece 3 et 6, vers B pour les vents de force 5 et 2 et vers la tuile D pour les vents de force 1 et 4.
+
+On nomme tuile adjacentes les tuiles qui entourent une autre tuile. Ici, les tuiles B,C,D,E,F et G sont adjacentes a la tuile A. La plupart du temps, nous nous interesserons aux tuiles adjacentes, dans le sens du contre, c'est a dire les tuiles B, C et D. On les nommera **tuiles de contre**.
 ```  
 sens du vent: de bas en haut
   E
@@ -128,11 +139,11 @@ N ^ S
   O
                      _____
         \\    F    //  5  \
-         \\       //4     6\
-     G    \\_____//    E     \
+        5\\5     3//4     6\
+     G    \\__4__//    E     \
           //  1  \\         /
-         //6     2\\3     1/
-   _____//    A    \\__2__/
+        6//6     2\\3     1/
+   __1__//    A    \\__2__/
   /  4  \\         //  2  \
  /3     5\\5     3//1     3\
 /    B    \\__4__//    D    \
@@ -145,24 +156,41 @@ N ^ S
 
 ```
 
+Les **Difficulte de Vent** sont egalement des tuiles que l'on place sur le plateau de jeu, sur les tuiles terrain. Elle ne sont retournees que lorsqu'on deplace sa Horde dessus. Elles ont des valeurs comprises entre 1 et 6.
+En debut de parties, les difficultes seront plutot faibles et plus vous progresserez dans les chapitres, plus ces valeurs seront elevees.
+
 ## L'Exploration
 En debut de chapitre, on dispose les tuiles comme indique par le scenario. Les tuiles indiquent le sens des vent ainsi que la topologie du terrain.
-Ensuite, lorsque l'on pose la horde sur la ville du depart, la couleur des vents des tuiles adjacentes sont decouvertes. Dans l'exemple ci dessus, les tuiles adjacentes a la tuile A sont les tuiles B, C, D, E, F et G. Pour decouvrir cette couleur du vent, on retourne une tuile vent que l'on place sur la tuile terrain.
+Ensuite, lorsque l'on pose la horde sur la ville du depart. Dans l'exemple ci dessus, les tuiles adjacentes a la tuile A sont les tuiles B, C, D, E, F et G. Pour decouvrir cette couleur du vent, on retourne une tuile vent que l'on place sur la tuile *terrain*.
 
 Le joueur decide alors de deplacer sa Horde sur l'une des tuiles adjacentes (sur la tuile C par exemple) et il decouvre alors la force du vent. Pour ce faire (@TODO encore une tuile? un lance de d6?)
 
 Il n'y a de vent que sur les tuiles possedant des chiffres 1 a 6. Il n'y a donc pas de vent sur les villages abrites, les villes ou certains lieux speciaux.
 
-Le terrain possede 1 a 3 des colores et/ou incolores qui sont ajoutes aux d6 du vent.
+Le *terrain* possede 3 des colores et/ou incolores qui sont ajoutes aux d6 du vent. Le vent rajoute 3 d6 incolores aux d6 du terrain.
+Dans l'exemple ci-dessus, si la tuile A a 2 d6 rouge et 1 d6 incolore ; la Horde devra contrer 2 d6 rouges et 4 d6 incolores. On retourne la tuile vent sur la case A. C'est un vent de force 3, le vent a donc 3 d6 d'exigeance. On doit donc resoudre les 2d6 du terrain en premier (il faut tenir compte des couleurs en premier) puis n'importe lequel des d6 incolores du vent.
+On se retrouve dans le meme cas de vent de force 3 avec 2 couleurs.
 
-Les persos
+### Exemple de reussite
+Vous rencontrez un vent de force 3 avec 2 couleurs. 
+* Le vent fait le jet suivant pour ses des colores: 1 et 5, et pour ses des incolores: 3, 3, 4, 6.
+* La Horde fait le jet suivant avec ses des (tous incolores @TODO pour l'instant): 1, 2, 3, 5, 6, 6.
+* En appairant les d6 du joueur avec ceux du vent, on voit que les 2 couleurs sont respectees car la Horde a obtenu un 5 et un 1. La Horde a egalement obtenu un 3 et un 6 qui correspondent au d6 incolores du vent.
+Le vent etant de force 3, il exige que 3 d6 soient identiques a son jet. Nous avons respecte cette contrainte car 4 de nos d6 sont identiques. Le vent ayant 2 couleurs, nous devons d'abord reussir a remplir cette contrainte ce qui est fait avec le 5 et le 1. Finalement, les valeurs restantes sont 3 et 4 pour le vent et 3 et 6 pour la Horde. La somme des d6 du vent fait 3+4=7 ; la somme des d6 restant de la Horde est de 3+6=9. Le resultat de la Horde est >= au resultat du vent. Nous pouvons donc progresser.
 
 ## Regle additionnelle de deplacement
-Afin d'augmenter l'impacte du vent sur le deplacement, chaque chiffre possede une couleur: les 1 et 4 sont jaunes, les 2 et 5 sont verts et les 6 et 3 sont bleus. Lors de votre progression, lancez un d6 de chaque couleur presente sur votre tuile paysage a contre vent. Dans l'exemple ci-dessus, vous lancerez 3 d6; le jaune representera le 4, le vert representera le 5 et le bleu la valeur 3. Ils indiquent les vents locaux en bord de tuile. Vous lancerez aussi 3d6 supplementaires pour votre Horde, un par couleur, pour contrer ces vents locaux.
-Pour vous rendre de la tuile A vers la tuile C, il faudra que votre d6 jaune fasse au moins autant que le d6 jaune indiquant la direction 4 de votre tuile.
+Afin d'augmenter l'impacte du vent sur le deplacement, chaque chiffre de la tuile terrain possede une couleur ; ils indiquent les vents locaux en bord de tuile. Les 1 et 4 sont jaunes, les 2 et 5 sont verts et les 6 et 3 sont bleus. Lors de votre progression, et pour chacune des 3 tuiles adjacentes dans le sens de progression; si la couleur presente sur le bord votre tuile actuelle correspond a la couleur du bord de la tuile adjacente, le vent aura un d6 colore de la couleur du bord; le cas contraire, le vent a 1 d6 incolore.
+Dans le pire des cas, le vent aura donc 3 d6 colores en plus, un de chaque couleur.
 
-Si le chiffre de votre tuile coincide avec la couleur du prochain vent. Vous devrez egaler la valeur du d6 jaune, vert ou bleu.
-Toujours sur l'exemple precedent, si votre Horde en A veut se rendre sur la tuile D et que la tuile D possede un vent a 3 couleurs, votre d6 bleu devra etre egal au d6 bleu du vent.
+Dans l'exemple ci-dessus, la tuile A n'a qu'une seule couleur commune avec ses *tuiles de contre* (tuiles B, C, et D): la valeur 5 qui joint A et B. Une Horde sur la tuile A qui souhaite avancer fera donc face a un vent avec 2 d6 incolores et 1 d6 colore.
+
+## Le Recrutement (@TODO a retravailler)
+Les grandes villes proposent un grand nombre de personnages qui peuvent etre recruter.
+Les villages abrites quant a eux, n'ont qu'un choix restreint de personnages.
+Pour chaque village abrite, definissez une couleur et proposez 3 cartes personnage pour chacun d'eux.
+Pour chaque ville, proposez 3 cartes personnages de chaque couleur.
+
+Le joueur peut recruter dans sa horde autant de personnage qu'il le souhaite tant qu'il respecte les conditions de son plateau Horde. Le joueur peut egalement decider de se separer de certains de ses Hordiers au benefices d'autres plus adequates pour la mission suivante.
 
 # Idees
 ## Jeu a plusieurs
@@ -184,8 +212,11 @@ Toujours sur l'exemple precedent, si votre Horde en A veut se rendre sur la tuil
     * Les Freoles peuvent fournir de la main d'oeuvre ou des "infrastructures"/"equipements" a la horde pour l'aider a progresser
   * Obliques
     * Peuple independant qui vit de rapine et du vent.
+    * Ils peuvent attaquer n'importe quel autre peuple.
+    * Ils auront une carte objectif qui varie en fonction de la partie.
   * Poursuiveurs
     * Ils veulent faire echouer la Horde, ils sont leur antagoniste
+    * Leur but est de rejoindre la Horde. Les cartes avec les Poursuiveurs devront donc etre bien plus grandes ou il faudra accoler plusieurs chapitres.
   * Les autochrones
     * Elements perturbateurs qui apportent de l'aleatoire dans la partie, ils n'ont pas de logique identifiee par les peuples.
     * La plupart des evenements qu'ils engendrent sont puissantes
@@ -241,12 +272,6 @@ Les pouvoirs passifs sont generalement moins puissants et surtout permanents. Il
 * Le type de terrain
 * Des suites de terrain, vent
 * Une configuration speciale de terrains adjacents
-
-# Ce qui fait baisser le moral
-* Relancer tous les d6
-* Se faire pousser par le vent/reculer
-* +/-1 sur 1d6
-* monter un camp sous Zefirine
 
 
 # Bonus: 
