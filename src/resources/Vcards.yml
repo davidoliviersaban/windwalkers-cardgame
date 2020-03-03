@@ -22,22 +22,21 @@ Image:
 Fonction:
   extends: Nom
   y: += 50
-  width: 300
-  font: ChunkFive Roman,Sans 10
+  width: 500
+  font: ChunkFive Roman,Italic 8
   align: left
 
 Position:
   extends: Nom
   x: += 500
   width: 150
-  font: ChunkFive Roman,Sans 10
+  font: ChunkFive Roman,Bold 10
   align: right
   
-
 Pouvoir_Actif:
   extends: inside
   x: += 50
-  y: += 550
+  y: += 560
   width: 600
   font: ChunkFive Roman,Sans 10
 
@@ -49,5 +48,5 @@ Pouvoir_Passif:
 
 Description:
   extends: Pouvoir_Actif
-  y: += 250
+  y: += 230
   font: ChunkFive Roman,Sans 7

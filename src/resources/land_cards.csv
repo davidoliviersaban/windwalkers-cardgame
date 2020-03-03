@@ -1,0 +1,35 @@
+Chapitre,Type,Red,Green,Incolor,Trick,Description,Image,
+chapitre,village,,,,,Village vert,Village Abrite1.png,
+chapitre,village,,,,,Village bleu,Village Abrite2.png,
+chapitre,village,,,,,Village rouge,Village 3.png,
+chapitre,depart,,,,,Aberlaas      (Extreme-Amont),Ville PortChoon.png,
+chapitre,arrivee,,,,,Port-Choon,Ville PortChoon2.png
+chapitre,village,,,,1,Tour Fontaine,Village Tour Fontaine.png
+chapitre,arrivee,,,,,Chawondasee,Ville Chawondasee.png
+chapitre,arrivee,,,,,Alticcio,Ville Alticcio2.png
+chapitre,terrain,0,0,0,6,Porte d'Hurle,Terrain Porte d'Hurle2.png
+chapitre,arrivee,,,,,Camp Boban,Ville Camp Boban.png
+chapitre 1,terrain,3,0,0,,,Terrain Steppe5.png,
+chapitre 1,terrain,2,1,0,,,Terrain Steppe5.png,
+chapitre 1,terrain,2,0,1,,,Terrain Steppe5.png,
+chapitre 1,terrain,1,2,0,,,Terrain Steppe5.png,
+chapitre 1,terrain,1,1,1,,,Terrain Steppe5.png,
+chapitre 1,terrain,1,0,2,,,Terrain Steppe5.png,
+chapitre 1,terrain,0,3,0,,,Terrain Steppe5.png,
+chapitre 1,terrain,0,2,1,,,Terrain Steppe5.png,
+chapitre 1,terrain,0,1,2,,,Terrain Steppe5.png,
+chapitre 1,terrain,0,0,3,,,Terrain Steppe5.png,
+chapitre 2,terrain,0,0,3,1,-1 moral,Terrain Eau1.png
+chapitre 2,terrain,0,0,3,1,-1 moral,Terrain Eau2.png
+chapitre 2,terrain,0,0,3,2,-1 moral,Terrain Eau3.png
+chapitre 2,terrain,0,0,3,2,-1 moral,Terrain Eau4.png
+chapitre 2,terrain,0,0,3,3,-1 moral,Terrain Eau5.png
+chapitre 3,terrain,0,0,3,,-1 moral      Abandon -2 moral,Terrain Desert1.png
+chapitre 3,terrain,1,0,2,,-2 moral      Abandon -1 moral,Terrain Desert2.png
+chapitre 3,terrain,0,0,3,,-3 moral      Abandon -1 moral,Terrain Desert3.png
+chapitre 3,terrain,0,0,3,,-1 moral      Abandon -1 moral,Terrain Desert4.png
+chapitre 3,terrain,1,0,2,,-1 moral      Abandon -1 moral,Terrain Desert5.png
+chapitre 4,terrain,0,1,2,1,-1 moral      Abandon -1 moral,Terrain Tourbe1.png
+chapitre 4,terrain,1,0,2,1,-1 moral      Abandon -1 moral,Terrain Tourbe7.png
+chapitre 4,terrain,0,0,3,1,-1 moral      Abandon -1 moral,Terrain Tourbe3.png
+chapitre 4,terrain,1,0,2,1,-1 moral      Abandon -1 moral,Terrain Tourbe6.png
