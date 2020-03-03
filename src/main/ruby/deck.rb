@@ -1,6 +1,6 @@
 require 'squib'
 
-deck = Squib.csv file: %w(src/resources/data.csv)
+deck = Squib.csv file: %w(src/resources/horde_cards.csv)
 
 Squib::Deck.new(cards: deck["Nom"].size,#cards: deck["Name"].size, # cards: 1,#
                 layout: %w(src/resources/Vlayout.yml src/resources/Vcards.yml)) do
@@ -16,14 +16,12 @@ Squib::Deck.new(cards: deck["Nom"].size,#cards: deck["Name"].size, # cards: 1,#
   fillcolor["Pack"] = "#AAAAFF"
   fillcolor["Traine"] = "#AAFFAA"
   fillcolor["Fer"] = "#FFAAAA"
-  fillcolor["Traceur"] = "#FFFFAA"
+  fillcolor["Traceur"] = "#DD8888"
   fillcolor[""] = "#FFFFFF"
 
   %w(Position).each do |key|
     rect layout: :inside, fill_color:  deck[key].map{|c| fillcolor[c]}
   end
-
-
 
   png file: deck["Image"].map{ |img| "src/resources/images/"+img}, layout: "Image"
 
@@ -31,8 +29,6 @@ Squib::Deck.new(cards: deck["Nom"].size,#cards: deck["Name"].size, # cards: 1,#
     text str: deck[key], layout: key
   end
 
-  
-
-  save_png prefix: deck["Nom"]
+  save_png prefix: deck["Nom"], dir: '_cards'
 
 end
