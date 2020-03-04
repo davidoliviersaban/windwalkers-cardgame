@@ -30,48 +30,68 @@ Description:
     extends: outline
     font: ChunkFive Roman,Bold 12
     x: -= 250
-    y: += 100
+    y: += 150
     width: 500
     height: 300
     align: center
     color: white
     stroke_color: black
-    stroke_width: 2
+    stroke_width: 3
 
 Terrain:
     extends: outline
     font: ChunkFive Roman,Bold 12
-    width: 30
-    height: 30
+    width: 90
+    height: 90
     radius: 0
+    x: -= 20
     valign: middle
     fill_color: '#ffffff55'
     stroke_color: white
-    stroke_width: 1
+    stroke_width: 2
 
 TerrainRed:
     extends: Terrain
     align: center
     color: red
-    x: -=25
+    x: -=45
 
 TerrainGreen:
     extends: Terrain
     align: center
     color: green
-    x: +=25
+    x: +=45
 
 TerrainIncolor:
     extends: Terrain
     align: center
     color: yellow
-    y: -= 35
+    y: -= 55
 
 TerrainTrick:
     extends: Terrain
     align: center
     color: black
-    y: += 35
+    y: += 55
+
+TerrainRGI1:
+    extends: TerrainRed
+TerrainRGI2:
+    extends: TerrainGreen
+TerrainRGI3:
+    extends: TerrainIncolor
+TerrainT1:
+    extends: TerrainTrick
+TerrainT2:
+    extends: TerrainT1
+    x: += 70
+TerrainT3:
+    extends: TerrainT1
+    x: -= 70
+TerrainT4:
+    extends: TerrainT2
+    x: += 70
+                        
 
 Vent:
     extends: outline
@@ -83,12 +103,13 @@ Vent:
     radius: 30
     fill_color: '#ffffff55'
     stroke_color: white
-    stroke_width: 1.5
+    stroke_width: 2
 
 VentIcone:
     extends: Vent
     x: -=1.25in
     y: -=1.10in
+    radius: 40
 
 Vent1:
     extends: Vent
@@ -96,7 +117,6 @@ Vent1Icone:
     extends: VentIcone
     x: +=380
     y: +=615
-    radius: 25
 
 Vent2:
     extends: Vent
@@ -118,7 +138,6 @@ Vent4Icone:
     extends: VentIcone
     x: +=370
     y: +=45
-    radius: 25
 
 Vent5:
     extends: Vent3

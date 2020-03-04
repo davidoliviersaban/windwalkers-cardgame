@@ -274,6 +274,36 @@ Les pouvoirs passifs sont generalement moins puissants et surtout permanents. Il
 * Une configuration speciale de terrains adjacents
 
 
+# Chapitres
+
+## Chapitre 1
+- **Depart**: Aberlaas
+- **Arrivee**: Port-Choon
+- **Distance**: 6 cases
+- **Description**: L'objectif de ce niveau est de traverser une grande variete de paysages et aller depuis Aberlaas vert Port-Choon. Le niveau se compose de 20 tuiles terrain, de 3 tuiles villages abrites (un de chaque couleur).
+- **Repartition des tuiles**: Installez entre chaque village 2 tuiles neutres. Ainsi qu'entre **Aberlaas** et le premier village et entre le dernier village et **Port-Choon**.
+
+## Chapitre 2
+- **Depart**: Port-Choon
+- **Arrivee**: Chawondasee
+- **Distance**: 4 cases
+- **Description**: L'objectif de ce niveau est de choisir entre la trace directe a travers les tuiles d'eau ou de faire le tour de la flaque de Lapsane. Le niveau se compose de 10 tuiles terrain d'eau, 10 tuiles terrain neutre, de 2 tuiles villages abrites.
+- **Repartition des tuiles**: Les tuiles de la flaque doivent etre entre le depart et l'arrivee. Il doit y avoir 3 tuiles entre chaque villages. Entre **Port-Choon** et le premier village ainsi qu'entre le dernier village et **Chawondasee**, il doit y avoir 3 tuiles. La tour fontaine doit avoir 3 tuiles de **Port-Choon** et 3 tuiles de **Chawondasee**. Entre **Chawondasee** et **Port-Choon** il doit y avoir au moins 3 tuiles.
+
+## Chapitre 3
+- **Depart**: Chawondasee
+- **Arrivee**: Alticcio
+- **Distance**: 5 cases
+- **Description**: L'objectif est de compose entre les tuiles neutres et les tuiles desertiques. Le niveau se compose de 10 tuiles terrain desert, 10 tuiles terrain neutre, de 2 tuiles villages abrites.
+- **Repartition des tuiles**: La majorite des tuiles desert doivent se trouver sur la trace directe. Les tuiles desert doivent toutes se toucher. Il doit y avoir 3 tuiles entre chaque villages. Entre **Chawondasee** et le premier village ainsi qu'entre le dernier village et **Alticcio**, il doit y avoir 3 tuiles. Entre **Chawondasee** et **Alticcio** il doit y avoir au moins 4 tuiles.
+
+## Chapitre 4
+- **Depart**: Alticcio
+- **Arrivee**: Camp Boban
+- **Distance**: 10 cases
+- **Description**: L'objectif de ce chapitre est de passer par la Porte d'Hurle. Le niveau se compose de 8 tuiles terrain tourbiere, 20 tuiles terrain neutre, de 2 tuiles villages abrites et 1 tuile desert.
+- **Repartition des tuiles**: Placez la tuile desert juste apres Alticcio puis la porte d'Hurle. Entre **Porte d'Hurle** et le seul village et **Camp Boban**, il doit y avoir 4 tuiles. Les 28 tuiles restantes peuvent etre disposees a votre discretion. Ces tuiles ne peuvent pas toucher **Alticcio**.
+
 # Bonus: 
 ## Une bande son est disponible sur deezer et sur youtube:
 Youtube: https://www.youtube.com/watch?v=kkweDEqT2lI&list=PLq2AWvcoUGR2n7MPpAYIaI2bszStPUblE
