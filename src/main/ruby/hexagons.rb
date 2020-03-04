@@ -4,8 +4,8 @@ deck = Squib.csv file: %w(src/resources/land_cards.csv)
 
 Squib::Deck.new(cards: deck["Chapitre"].size(),
                 layout: %w(src/resources/hexa.yml),
-                width: "2.5in", height: "2.2in") do 
-#                width: "2.8in", height: "2.5in") do 
+#                width: "2.5in", height: "2.2in") do 
+                width: "2.8in", height: "2.5in") do 
 
   png file: deck["Image"].map { |img| 
     if (img == nil) 
