@@ -57,6 +57,16 @@ Squib::Deck.new(cards: deck["Chapitre"].size(),
   layout: "Terrain"+key
   end
 
+  %w(Moral Abandon).each do |key|
+    text str: deck[key], layout: key+"Text"
+    png layout: deck[key].map { |c| 
+      if (c == nil || c == 0)
+        "Empty"
+      else
+        key+"Icon"
+      end
+    }
+  end
 
   %w(Description).each do |key|
     text str: deck[key], layout: key
