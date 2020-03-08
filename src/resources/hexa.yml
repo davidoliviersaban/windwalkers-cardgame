@@ -28,15 +28,15 @@ Image:
 
 Description:
     extends: outline
-    font: ChunkFive Roman,Bold 12
+    font: ChunkFive Roman,Bold 14
     x: -= 250
     y: += 150
     width: 500
     height: 300
     align: center
-    color: black
-    stroke_color: white
-    stroke_width: 2
+    color: white
+    stroke_color: black
+    stroke_width: 1.5
 
 Terrain:
     extends: outline
@@ -154,4 +154,28 @@ Vent6Icone:
     extends: VentIcone
     x: +=105
     y: +=490
-    
+
+
+MoralText:
+    extends: Description
+MoralIcon:
+    extends: MoralText
+    file: src/resources/helpers/moral.png
+    x: += 150
+    y: -= 10
+    width: 50
+    height: :scale
+
+AbandonText:
+    extends: MoralText
+    y: += 50
+AbandonIcon:
+    extends: AbandonText
+    file: src/resources/helpers/abandon.png
+    x: += 150
+    width: 50
+    height: :scale
+
+Empty:
+    width: 1
+    height: 1
