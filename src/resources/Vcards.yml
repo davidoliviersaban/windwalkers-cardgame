@@ -1,7 +1,3 @@
-Image:
-  extends: inside
-  height: :scale
-
 Nom:
   extends: inside
   x: += 10
@@ -32,7 +28,19 @@ Position:
   width: 150
   font: ChunkFive Roman,Bold 10
   align: right
-  
+
+AbandonIcon:
+  extends: Position
+  file: src/resources/helpers/abandon.png
+  x: += 110
+  y: += 40
+  width: 50
+  height: :scale
+
+Empty:
+  width: 1
+  height: 1
+
 Pouvoir_Actif:
   extends: inside
   x: += 50
