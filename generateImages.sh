@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-ruby src/main/ruby/hexagons.rb 
-ruby src/main/ruby/deck.rb 
+ruby src/main/ruby/land_cards.rb
+ruby src/main/ruby/horde_cards.rb
 cd ../printableCardsAppender
-./gradlew run --args="../windwalkers-cardgame/_terrain ../windwalkers-cardgame/imagesToPrint/terrain A4 true" 
-./gradlew run --args="../windwalkers-cardgame/_cards   ../windwalkers-cardgame/imagesToPrint/cards A4 true" 
+./gradlew run --args="../windwalkers-cardgame/_terrain ../windwalkers-cardgame/imagesToPrint/terrain A4 true"
+./gradlew run --args="../windwalkers-cardgame/_cards   ../windwalkers-cardgame/imagesToPrint/cards A4 false"
