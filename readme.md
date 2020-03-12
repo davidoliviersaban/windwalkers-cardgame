@@ -5,6 +5,8 @@ La plupart des resources ici sont soumises a droit d'auteur et je ne les ai pour
 Ni le jeu et son titre / ni les images et pdf ne sont de moi. Je ne fourni que l'idee originale du moteur du jeu.
 
 
+Afin de construire les images a imprimer, utilisez cet autre git repository: [printableCardsAppender](https://github.com/davidoliviersaban/printableCardsAppender)
+
 ---
 # Windwalkers - La Horde du Contrevent
 >À l’origine fut la vitesse, le pur mouvement furtif, le « vent-foudre ». Puis le cosmos décéléra, prit consistance et forme, jusqu’aux lenteurs habitables, jusqu’au vivant, jusqu’à vous. Bienvenue à toi, lent homme lié, poussif tresseur des vitesses. 
@@ -30,6 +32,8 @@ Une Horde est composee par:
 * le **Fer** qui fend le flux du vent grâce à sa formation en pointe ;
 * le **Pack**, constitué de rangs compacts, forme le corps de la Horde;
 * la **Traine**, enfin, rassemble les *crocs* chargés de tracter le matériel de la Horde (vêtements, vaisselle, outils, nourriture, paillasses).
+
+Le **Traceur** est un membre particulier du fer car c'est lui qui trace la route. C'est le leader charismatique qui dirige sa horde afin de passer les epreuves les plus difficiles.
 
 ## Les vents
 Alain Damasio invente tout un vocabulaire pour decrire le vent et une terminologie pour contrer ce vent. Il decrit egalement comment les scribes notent le vent:
