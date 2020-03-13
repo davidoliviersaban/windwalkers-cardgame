@@ -20,3 +20,5 @@ cut:
 inside:
   extends: cut
   color: black
+  width: 675
+  height: 975

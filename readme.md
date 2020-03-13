@@ -397,6 +397,9 @@ Deezer: http://www.deezer.com/album/4605691
 http://arnoalyvan.com/la-horde-du-contrevent/-u5
 https://docplayer.fr/56319913-La-horde-du-contrevent.html
 
+# Credits
 ## Un grand merci a Emilie et son site qui a libere mon imagination pour trouver les noms et les descriptions de mes personnages
 https://fr.fantasynamegenerators.com/
->>>>>>> Renamed all characters. Some major changes in their powers. Lots of files renamed. Readme updated with credits to name generator
+
+## Generateur de cartes: Squib
+https://squib.readthedocs.io/

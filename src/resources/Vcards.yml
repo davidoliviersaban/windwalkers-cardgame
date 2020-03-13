@@ -2,23 +2,37 @@ Nom:
   extends: inside
   x: += 10
   y: += 10
-  width: 550
-  font: ChunkFive Roman,Sans 12
+  width: 500
+  height: 50
+  font: ChunkFive Roman,Bold 10
   color: '#232F23'
   valign: top
   align: left
 
+TopLayer:
+  extends: inside
+  height: 100
+  stroke_color: '#0000'
+  radius: 0
+
+BottomLayer:
+  extends: TopLayer
+  y: += 560
+  height: 150
+
 Image:
   extends: inside
-  x: += 100
-  y: += 100
-  width: 450
-  height: 450
+#  x: += 100
+#  y: += 100
+#  width: 450
+#  height: 450
+  height: 675
 
 Fonction:
   extends: Nom
   y: += 50
   width: 500
+  height: 50
   font: ChunkFive Roman,Italic 8
   align: left
 
@@ -26,7 +40,8 @@ Position:
   extends: Nom
   x: += 500
   width: 150
-  font: ChunkFive Roman,Bold 10
+  height: 50
+  font: ChunkFive Roman,Sans 10
   align: right
 
 AbandonIcon:
@@ -41,20 +56,44 @@ Empty:
   width: 1
   height: 1
 
+TierIcon:
+  extends: Position
+  x: += 60
+  y: += 40
+  width: 50
+  height: :scale
+
+T1Icon:
+  extends: TierIcon
+  file: src/resources/helpers/tier1.png
+
+T2Icon:
+  extends: TierIcon
+  file: src/resources/helpers/tier2.png
+
+T3Icon:
+  extends: TierIcon
+  file: src/resources/helpers/tier3.png
+
+
 Pouvoir_Actif:
   extends: inside
   x: += 50
-  y: += 560
+#  y: += 560
+  y: += 770
   width: 600
+  height: 200
   font: ChunkFive Roman,Sans 10
+  valign: middle
 
 Pouvoir_Passif:
   extends: Pouvoir_Actif
-  y: += 150
+  y: -= 150
   width: 600
   font: ChunkFive Roman,Sans 10
 
 Description:
   extends: Pouvoir_Actif
-  y: += 230
+  y: -= 90
   font: ChunkFive Roman,Sans 7
+  valign: top
