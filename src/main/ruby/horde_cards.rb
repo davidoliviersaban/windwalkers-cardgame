@@ -23,11 +23,12 @@ Squib::Deck.new(cards: deck["Nom"].size,#cards: deck["Name"].size, # cards: 1,#
   fill_color["Traceur"] = "#DD8888"
   fill_color[""] = "#FFFFFF"
 
-  %w(Position).each do |key|
-    rect layout: :inside, fill_color:  deck[key].map{|c| fill_color[c]}
-  end
+  rect layout: :inside, fill_color:  deck['Position'].map{|c| fill_color[c]}
 
   png file: deck["Image"].map{ |img| "src/resources/images/"+img}, layout: "Image"
+
+  rect layout:'TopLayer', fill_color:  deck['Position'].map{|c| fill_color[c]+'66'}
+#  rect layout:'BottomLayer', fill_color:  deck['Position'].map{|c| fill_color[c]+'66'}
 
   %w(Nom Fonction Description Pouvoir_Actif Position).each do |key|
     text str: deck[key], layout: key
@@ -39,6 +40,10 @@ Squib::Deck.new(cards: deck["Nom"].size,#cards: deck["Name"].size, # cards: 1,#
     else
       "Empty"
     end
+  }
+
+  png layout: deck["Tier"].map{ |tier|
+    tier+'Icon'
   }
 
   save_png prefix: deck["Nom"], dir: '_cards'
