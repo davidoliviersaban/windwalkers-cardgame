@@ -287,6 +287,10 @@ Pour une evaluation de votre niveau, je dirais que :
 - 40 - 50 points: Vous etes un grand maitre
 - 51 - 55 points: Vous pourrez m'apprendre a jouer :)
 
+# Pour pouvoir jouer
+Je vous ai fourni un dossier qui se nomme `imagesToPrint` qui contient toutes les images a imprimer sur des feuilles A4.
+Il faudra imprimer 2 fois les fichiers `terrain.0.png` et `terrain.1.png` afin que vous ayez suffisamment de tuiles pour pouvoir jouer dans de bonnes conditions.
+
 # Bonus: 
 ## Une bande son est disponible sur deezer et sur youtube:
 - Youtube: https://www.youtube.com/watch?v=kkweDEqT2lI&list=PLq2AWvcoUGR2n7MPpAYIaI2bszStPUblE
