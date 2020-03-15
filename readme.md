@@ -259,13 +259,42 @@ Vous pourrez ensuite passer en mode campagne et garder votre equipe et son moral
 Ces tuiles ne peuvent pas toucher **Alticcio**.
 [] @TODO -> Photo exemple
 
+# Calcul du score
+Je vous propose de calculer le score de votre partie afin de pouvoir comparer vos strategies et aussi de pouvoir comparer la qualite des equipes que vous montez.
+Le calcul est le suivant et il s'effectue en mode Campagne:
+- 1pt / moral restant a la fin de chaque chapitre
+- 1 pt / hordier qui atteint la derniere ville
+- 1 pt / Vent force 6 traverse
+- 3 pts pour la Porte d'Hurle
+- 2 pts pour la Tour Fontaine
+
+Votre equipe ayant 9 points de moral, le maximum theorique est:
+9 points de moral x 4 chapitres + 8 Hordiers + 6 points du vent + 3 + 2 = 55 pts.
+
+Exemple de partie:
+J'ai lors de mes tests perdu a la derniere case du dernier chapitre.
+- Au chapitre 1, j'ai fini avec 9 points de moral et je n'ai rencontre aucun vent F6 = 9pts
+- Au chapitre 2, j'ai fini avec 8 points de moral et j'ai rencontre 1 vent F6 = 8 + 1 = 9 pts
+- Au chapitre 3, j'ai fini avec 3 points de moral et j'ai rencontre 2 vents F6 = 3 + 2 = 5 pts
+- Au chapitre 4, j'ai perdu contre un vent F6 apres avoir passe 1 vent F6 et la porte d'Hurle = 1 + 3 = 4 pts
+- Au final: 9+9+5+4 = 27 pts
+
+Pour une evaluation de votre niveau, je dirais que :
+- 0 - 10 points, vous devez encore degrossir pas mal de regles, encore une ou 2 parties pour l'etape suivante.
+- 11 - 20 points, vous etes encore un jeune padawan
+- 21 - 30 points, vous y etes presque
+- 31 - 40 points, Bravo! vous avez fini le jeu en mode campagne et vous avez exploite les bons itineraires
+- 40 - 50 points: Vous etes un grand maitre
+- 51 - 55 points: Vous pourrez m'apprendre a jouer :)
+
 # Bonus: 
 ## Une bande son est disponible sur deezer et sur youtube:
-Youtube: https://www.youtube.com/watch?v=kkweDEqT2lI&list=PLq2AWvcoUGR2n7MPpAYIaI2bszStPUblE
-Deezer: http://www.deezer.com/album/4605691
+- Youtube: https://www.youtube.com/watch?v=kkweDEqT2lI&list=PLq2AWvcoUGR2n7MPpAYIaI2bszStPUblE
+- Deezer: http://www.deezer.com/album/4605691
 
-http://arnoalyvan.com/la-horde-du-contrevent/-u5
-https://docplayer.fr/56319913-La-horde-du-contrevent.html
+Autres documents:
+- http://arnoalyvan.com/la-horde-du-contrevent/-u5
+- https://docplayer.fr/56319913-La-horde-du-contrevent.html
 
 # Credits
 ## Un grand merci a Emilie et son site qui a libere mon imagination pour trouver les noms et les descriptions de mes personnages
@@ -283,6 +312,8 @@ https://squib.readthedocs.io/
 * Chaque joueur joue une horde a part
   * Les joueurs peuvent avoir des leaders differents
   * Les joureurs peuvent avoir des plateaux de jeu differents (#FER, #PACK, #TRAINE)
+
+
 
 ### En asymetrique
 * Chaque joueur peut incarner un peuple different avec des objectifs differents:

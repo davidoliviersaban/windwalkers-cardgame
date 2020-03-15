@@ -1,0 +1,178 @@
+bleed:
+    x: 1.40in
+    y: 1.25in
+#    x: 1.25in
+#    y: 1.10in    
+    n: 6
+    radius: 1.40in
+    stroke_color: '#000000'
+    dash: '0.02in 0.02in'
+  
+cut:
+    extends: bleed
+#    radius: 1.25in
+    stroke_color: black
+    
+outline:
+    extends: cut
+#    radius: .85in
+    stroke_color: red
+    dash: ''
+
+Image:
+    extends: outline
+    x: -=1.40in
+    y: -=1.25in
+    width: 2.8in
+    height: scale
+
+Description:
+    extends: outline
+    font: ChunkFive Roman,Bold 14
+    x: -= 250
+    y: += 150
+    width: 500
+    height: 300
+    align: center
+    color: white
+    stroke_color: black
+    stroke_width: 2
+
+Terrain:
+    extends: outline
+    font: ChunkFive Roman,Bold 14
+    width: 100
+    height: 100
+    radius: 0
+    x: -= 30
+    y: -= 40
+    valign: middle
+    fill_color: '#ffffff55'
+    stroke_color: white
+    stroke_width: 2
+
+TerrainRed:
+    extends: Terrain
+    align: center
+    color: red
+    x: -=50
+
+TerrainGreen:
+    extends: Terrain
+    align: center
+    color: green
+    x: +=50
+
+TerrainIncolor:
+    extends: Terrain
+    align: center
+    color: yellow
+    y: -= 55
+
+TerrainTrick:
+    extends: Terrain
+    align: center
+    color: black
+    y: += 65
+
+TerrainRGI1:
+    extends: TerrainRed
+TerrainRGI2:
+    extends: TerrainGreen
+TerrainRGI3:
+    extends: TerrainIncolor
+TerrainT1:
+    extends: TerrainTrick
+TerrainT2:
+    extends: TerrainT1
+    x: += 85
+TerrainT3:
+    extends: TerrainT1
+    x: -= 85
+                        
+
+Vent:
+    extends: outline
+    font: ChunkFive Roman,Bold 14
+    align: center
+    valign: bottom
+    width: 10
+    height: 350
+    radius: 30
+    fill_color: '#ffffff60'
+    stroke_color: white
+    stroke_width: 3
+
+VentIcone:
+    extends: Vent
+    x: -=1.25in
+    y: -=1.10in
+    radius: 40
+    stroke_width: += 2
+
+Vent1:
+    extends: Vent
+Vent1Icone:
+    extends: VentIcone
+    x: +=380
+    y: +=645
+
+Vent2:
+    extends: Vent
+Vent2Icone:
+    extends: VentIcone
+    x: +=642
+    y: +=490
+    
+Vent3:
+    extends: Vent
+Vent3Icone:
+    extends: VentIcone
+    x: +=645
+    y: +=166
+    
+Vent4:
+    extends: Vent1
+Vent4Icone:
+    extends: VentIcone
+    x: +=370
+    y: +=15
+
+Vent5:
+    extends: Vent3
+Vent5Icone:
+    extends: VentIcone
+    x: +=105
+    y: +=170
+    
+Vent6:
+    extends: Vent2
+Vent6Icone:
+    extends: VentIcone
+    x: +=105
+    y: +=490
+
+
+MoralText:
+    extends: Description
+MoralIcon:
+    extends: MoralText
+    file: src/resources/helpers/moral.png
+    x: += 150
+    y: -= 10
+    width: 50
+    height: :scale
+
+AbandonText:
+    extends: MoralText
+    y: += 50
+AbandonIcon:
+    extends: AbandonText
+    file: src/resources/helpers/abandon.png
+    x: += 150
+    width: 50
+    height: :scale
+
+Empty:
+    width: 1
+    height: 1
