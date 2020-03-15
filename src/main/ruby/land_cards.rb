@@ -33,12 +33,12 @@ Squib::Deck.new(cards: deck["Chapitre"].size(),
     text str: key, layout: "Vent"+key, angle: -(key.to_i-1)*3.14159/3
   end
 
-  %w(Incolor Red Green Trick).each do |key|
+#  %w(Incolor Red Green Trick).each do |key|
 #    rect layout: "Terrain"+key, radius: 0, stroke_color: '#00000000'
 #    text str: deck[key], layout: "Terrain"+key
-  end
+#  end
 
-  %w(RGI1 RGI2 RGI3 T1 T2 T3 T4).each do |key|
+  %w(RGI1 RGI2 RGI3 T1 T2 T3).each do |key|
     png file: deck[key].map{ |c| 
     if (c == nil)
       "src/resources/helpers/d6-empty.png"

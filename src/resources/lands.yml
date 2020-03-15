@@ -36,7 +36,7 @@ Description:
     align: center
     color: white
     stroke_color: black
-    stroke_width: 1.5
+    stroke_width: 2
 
 Terrain:
     extends: outline
@@ -73,7 +73,7 @@ TerrainTrick:
     extends: Terrain
     align: center
     color: black
-    y: += 55
+    y: += 65
 
 TerrainRGI1:
     extends: TerrainRed
@@ -85,13 +85,10 @@ TerrainT1:
     extends: TerrainTrick
 TerrainT2:
     extends: TerrainT1
-    x: += 70
+    x: += 85
 TerrainT3:
     extends: TerrainT1
-    x: -= 70
-TerrainT4:
-    extends: TerrainT2
-    x: += 70
+    x: -= 85
                         
 
 Vent:
@@ -102,9 +99,9 @@ Vent:
     width: 10
     height: 350
     radius: 30
-    fill_color: '#ffffff55'
+    fill_color: '#ffffff60'
     stroke_color: white
-    stroke_width: 2
+    stroke_width: 3
 
 VentIcone:
     extends: Vent
