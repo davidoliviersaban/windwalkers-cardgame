@@ -1,56 +1,59 @@
-Nom,Fonction,Position,Description,Pouvoir_Actif,Pouvoir_Passif,Image,crop_x,crop_y,width,height
-Ω Golgoth,traceur,Traceur,neuvième du nom; descend d’une lignée de traceurs. Le traceur est celui qui choisit la Trace pour remonter le vent. En tête de la formation il décide de l’itinéraire de la Horde. Pret a tout pour atteindre l'Extrêmes-Amont; il ne peut pas echouer.,Abandonnez quelqu'un pour avancer et perdez un point de moral,,Golgoth.png
-π Pietro Della Rocca,prince,Fer,Descendant d’une lignée de princes dont refuse de porter le titre. Is veut s'en rendre digne et mériter le prestige qui accompagne son nom.,Sur chacun de vos d6 rajoutez ou retirez 1,,Pietro.png
-) Sov Sevcenko,scribe,Fer,Sov est responsable du carnet de contre. C’est lui qui consigne toute la quête de la Horde et retranscrit les vents rencontrés. Il est en quelque sorte la mémoire de la Horde.,+1 sur vos d6 pour chaque points de moral et perdez 2 points de moral,,Sov.png
-Δ Erg Machaon,combattant-protecteur,Fer,Formé à Ker Derban spécialement pour la protection de la Horde à laquelle il dédie sa vie; il y a développé une technique secrète basée sur le combat aérien.,Reculez une fois sans perdre de moral,,Erg.png
-¬ Talweg Arcippé,géomaître,Fer,Talweg est le géomaitre de la Horde. En tant que tel; il étudie le terrain qu’elle traverse (les roches et les dénivelés) et en déduit les chemins les plus adaptés qu’il suggère à Golgoth.,Ignorez les malus du terrain,+1 sur 1 d6 rouge ou vert,Talweg.png
-> Firost de Toroge,pilier,Fer,Firost est le pilier de la Horde. Il possède une stature robuste; ce qui pousse Caracole à le comparer à « une poutre à deux pattes ».,Pivotez une tuile adjacente d'une section,,Firost.png
-^ Tourse,l'autoursier,Pack,Il occupe le poste d’éleveur et dresseur d’autour (sorte de faucon). Pour ce faire; Tourse a choisi de jouer sur la connivence plutôt que sur l’obéissance. Il nourrit la horde avec Darbon.,Relancez tout ou parties de vos d6,,Tourse.png
-´ Steppe Phorehys,fleuron,Pack,Botaniste; cueilleur et planteur; Steppe Phorehys est le jardinier de la Horde. Un chrone végétal a transformé son crâne en une prairie couverte de fleurs et d’herbes folles.,Regagnez un point de moral lors de l'etablissement d'un camp,,Steppe.png
-)- Arval Redhamaj,éclaireur,Pack,Son rôle est de courir devant pour repérer le terrain et le fleurir de drapeaux afin de permettre aux Hordiers de se repérer. Il parvient toujours à dénicher la route adéquate.,Regardez le vent de 2 tuiles adjacentes,,Arval.png
-ˇ• Darbon,le fauconnier,Pack,Contrairement à Tourse; Darbon élève ses faucons de manière dure; dans le respect strict des règles et codes du métier. Il est responsable de nourir la Horde.,Mettre la valeur d'un d6 sur la face desiree,,Darbon.png
-¿´ Caracole,troubadour,Pack,Il assure son divertissement lors des campements ainsi que sa présentation dans les villes et villages. On dit qu'il est un autochrone; du vent sous forme humaine.,Sous Furevent restaurez tous les pouvoirs de toute l'equipe et perdez un point de moral,,Caracole.png
-∞ Horst Dubka,ailier,Pack,Impressionnants de puissance; il soutient les crocs et couvrent le flanc gauche de la Horde.,Lancez 1d6 supplementaire; vous pouvez retirer 1 a un d6 si vous avez Karst,,Horst.png
-∞ Karst Dubka,ailiers,Pack,Impressionnants de puissance; il soutient les crocs et couvrent le flanc droit de la Horde.,Lancez 1d6 supplementaire; vous pouvez rajouter 1 a un d6 si vous avez Horst,,Karst.png
-x Oroshi Melicerte,aéromaîtresse,Pack,Oroshi est celle qui en sait le plus sur le vent et qui conseille Golgoth sur les formations à adopter dans les cas extrêmes (notamment les furvents).,Retournez autant de vos d6 que les couleur du vent,,Oroshi.png
-(.) Alme Capys,soigneuse,Pack,Soignant aussi bien les plaies du corps que celles de l’âme; Alme Capys joue le double rôle de psychologue et de médecin.,Restaurez le pouvoir d'un membre de l'equipe,,Alme.png
-<> Aoi Nan,cueilleuse et sourcière,Pack,Surnommée « petite goutte »; elle est la cueilleuse et la sourcière de la Horde. C’est elle qui est chargée de trouver de l’eau lorsque celle-ci se raréfie.,Gagnez un point de moral lorsque le vent fait un 1,,Aoi.png
-∫ Larco Scarsa,braconnier du ciel,Pack,Larco est un pêcheur du ciel; c’est-à-dire qu’il pêche dans les nuages à l’aide de cages tractées par des cerfs-volants.,Les Choons(3) vous rendent un point de moral,,Larco.png
-◊ Léarch,artisan du métal,Pack,Doté d’un visage mat et taillé à la serpe; Léarch est le forgeron de la Horde.,+/-1 pour chaque d6 ayant la valeur du vent,,Learch.png
-~ Callirhoé Déicoon,feuleuse,Pack,Artisane du feu; Callirhoé s’occupe de l’allumage des feux sous toutes les conditions ainsi que de la cuisson; de la cuisine et de la poterie.,Installer un camp,,Callirhoe.png
-∂ Boscavo Silamphre,artisan du bois,Pack,Silamphre est l’ébéniste de la Horde. Il fabrique aussi bien des armes que des couverts ou des tabourets. Il a l’ouïe la plus fine et il est convaincu que le vent qui souffle est une musique jouée depuis l’Extrême-Amont.,Echangez un d6 de couleur du vent avec un de non colore,,Boscavo.png
-≈ Coriolis,croc,Traine,Avant d’intégrer la Horde elle était poseuse de filets dans un petit village. En tant que croc; elle tracte le materiel.,Abandonnez ce Hordier et placez autant de d6 que de Hordiers manquants,,Coriolis.png
-√ Sveziest,croc,Traine,Sveziest est le plus jeune des crocs. C’est un battant hargneux qui a été formé par Sov. En tant que croc; il tracte le materiel.,Abandonnez ce Hordier et devoilez toutes les tuiles de vent autour de vous,,Sveziest.png
-]] Barbak,croc,Traine,Avec son immense carcasse capable de remorquer d’énormes charges Barbak est considéré par Golgoth comme le meilleur croc de la Horde.,Abandonnez ce Hordier et ignorez 1d6 du vent,,Barbak.png
-Di Nebbé,croc,Traine,,Abandonnez ce Hordier et lancez autant de d6 que de hordiers dans le FER.,,Di Nebbe.png
-Verval,croc,Traine,,Abandonnez ce Hordier et rechargez 2 pouvoirs,,Verval.png
-7e Golgoth,traceur,Traceur,Traceur de la 32eme horde,Deplacez vous dans le sens du vent. Perdez un point de moral,,Golgoth frere.png
-8e Golgoth,traceur,Traceur,Traceur de la 33ème horde et père de Golgoth,Gardez jusqu'a 3d6 pour plus tard qui ne serviront pas pour contrer. Depensez 1 point de moral pour les utiliser tous.,,Golgoth pere.png
-Alk Serbel,fauconnier,Pack,Compagnon de la mère d'Oroshi,Remplacez un d6 du vent par l'un de vos d6,,Alk.png
-Matsukaze Melicerte,aéromaîtresse,Pack,1ère aéromaîtresse de l'histoire des Hordes et mère de Oroshi,Ignorez un d6 du vent,,Matsukaze.png
-Dekk,croc,Traine,,Abandonnez ce Hordier et faites +/- 1 pour chaque point de moral manquant,,Dekk.png
-ν Lacmila Capys,sourciere,Pack,Mère d'Alme noyée dans la flaque de Lapsane,Ignorez les Chrones,,Lacmila.png
-μ Hektior de Toroge,pilier,Fer,Le père de Firost,Si plusieurs d6 se suivent; rajoutez ou retirez 1 a chacun d'eux.,,Talweg pere.png
-Ξ Arrigo Della Rocca,prince,Fer,,Rajoutez a 1d6 autant de d6 qui ont la meme valeur (a une valeur donnee).,,Arrigo.png
-Filam,croc,Traine,,Abandonnez ce Hordier et faites +/- 1 pour chaque point de moral,,Filam.png
-τ Bold,croc,Traine,Meilleur ami de Mozer,Abandonnez-le et regagnez 2 points de moral. Abandonnez le avec Mozer et regagnez tout,,Bold.png
-τ Mozer,croc,Traine,Meilleur ami de Bold,Abandonnez-le et regagnez 2 points de moral. Abandonnez le avec Bold et regagnez tout,,Mozer.png
-Siphaé Phorehys,fleuron,Pack,la mère de Steppe,Le prochain vent sera une Zefinine et perdez 3 point de moral.,,Siphae.png
-Ψ Carpic,ailier,Fer,,Prenez 1d6 au vent et rajoutez le au prochain vent,,Seleme.png
-Callisto,soigneuse,Pack,Membre de la 27e Horde; se transforme en sel,Les d6 verts sont incolores,,Iphaine.png
-Vernice,fauconnier,Pack,Membre de la 27e Horde; se transforme en copeaux d'os,Sur un terrain ayant au moins 2 d6 rouges gagnez 1 point de moral,,todo.png
-Pyres,géomaître,Pack,Membre de la 27e Horde; se transforme en sable,Les d6 rouges sont incolores,,Silene.png
-2e Golgoth,traceur,Traceur,Membre de la 27e Horde; Se transforme en vilaine neige,Depensez 1 point de moral et lancez 1d6; si sa valeur egale la difficulte du vent; passez,,todo.png
-Φ Erebe,feuleur,Pack,Membre de la 27e Horde; Se transforme en suie lorsqu'il meurt,Sur un terrain ayant au moins 2 d6 verts gagnez 1 point de moral,,todo.png
-27e Scribe, scribe,Fer,Membre de la 27e Horde; Raconte ce qui arrive a la 27e Horde avant de disparaitre,Definissez une couleur(rouge ou vert) et une valeur. Chaque fois qu'un d6 correspondant fait cette valeur; gagnez 1 point de moral,,todo.png
-Silène,assassin,Fer,Formé à Ker Derban spécialement pour l'assassinat,+/- 1 sur 1d6 pour chaque Hordier manquant;doublez ce bonus si vous avez Iphaine,,Silene.png
-Iphaine Desche,protectrice-croc,Traine,Petite amie de Silene; elle donnerait sa vie pour lui,Abandonnez ce Hordier et faites +/- 1 pour chaque Hordier manquant doublez ce bonus si vous avez Silene,,Iphaine.png
-風. Tula,invocatrice-croc,Traine,Invocatrice du vent doux,Abandonnez ce Hordier et le prochain vent sera un Slamino(2),,Tula.png
-風' Topilzin,invocateur-croc,Traine,Invocateur du vent humide,Abandonnez ce Hordier et le prochain vent sera un Choon(3),,Topilzin.png
-Carasco,croc,Traine,,Abandonnez ce Hordier et lancez autant de d6 que de hordiers dans le PACK.,,Carasco.png
-Croque,croc,Traine,Chien de trait extremement pratique dans le desert.,Abandonnez ce Hordier et retrouvez un Hordier abandonne,,Chien.png
-Croque,croc,Traine,Chien de trait extremement pratique dans le desert.,Abandonnez ce Hordier et retrouvez un Hordier abandonne,,Chien.png
-ε Elkin,commodore,Fer,commodore de l'Escadre Frêle,Relancez les d6 du vent,,Elkin.png
-υ Sharav,contre-amiral,Fer,commandant l'Escadre Frêle,Pour chaque vents de meme force rencontres a la suite; lancez un d6 supplementaire,,Sharav.png
-火 Nouchka,danseuse,Pack,Danseuse rencontree par la Horde sur l'Escadre Frêle,Si 1d6 a la meme valeur que la force du vent; mettez le sur la valeur que vous souhaitez.,,Nouchka.png
-1e Golgoth,,Traceur,,Tant que le vent a le meme nombre de couleurs; lancez un d6 supplementaire. Perdez un point de moral sinon et bloquez son pouvoir jusqu'au prochain camp.,,todo.png,,,,
+Nom,Fonction,Position,Description,Pouvoir_Actif,Pouvoir_Passif,Tier,Image,crop_x,crop_y,width,height
+Uther le Fonceur,traceur,Traceur,Uther avance. Il va droit. Ne cherchez pas a le detourner de sa trace; elle ne connaitra pas une courbe.,Abandonnez quelqu'un pour avancer et perdez un point de moral,,T1,Golgoth.png,,,,
+Rokka le Cerf-Volant,traceuse,Traceur,Comme un cerf-volant; Rokka sait reconnaitre les courants et saisir le moment opportun pour progresser.,Deplacez vous dans le sens du vent. Perdez un point de moral,,T1,Rokka.png,,,,
+Safa l'Econome,traceuse,Traceur,Safa sait garder ses forces et se reposer sur son groupe. Safa fait confiance et la Horde lui rend bien.,Gardez jusqu'a 3d6 pour plus tard qui ne serviront pas pour contrer. Bloquez son pouvoir pour les utiliser.,,T2,Safa.png,,,,
+Ryage le Joueur,traceur,Traceur,Ryage est un jeune traceur talentueux qui ose et gagne. Son intuition lui permet de passer lorsque tout semble perdu.,Depensez 1 point de moral et lancez 1d6; si sa valeur superieure la difficulte du vent; passez,,T2,Golgoth frere.png,,,,
+Arphaf le Perfectionniste,traceur,Traceur,Arphaf concoit sa trace comme un musicien compose une melodie. C'est son inspiration qui fait progresser son equipe.,Tant que le vent a le meme nombre de couleurs; gagnez 1 d6. Perdez un point de moral sinon et bloquez ce pouvoir.,,T3,Arrigo.png,,,,
+Thomassin de Gaude de Vallois,prince,Fer,Fils de Blanchette et de Hubert; Thomassin aime partager et trouver du sens quand tout semble perdu,Faites +/-1 sur chacun de vos d6.,,T1,Pietro.png,,,,
+Ukkiba Tomoshi,scribe,Fer,La discipline est le maitre mot d'Ukkiba. Ukkiba sait trouver les mots qu'il faut pour faire progresser le groupe. Meme si ses mots sont durs,Faites +/-1 sur vos d6 pour chaque points de moral et perdez 2 points de moral.,,T2,Silene.png,,,,
+Walo Waldmann,protecteur,Fer,Waldo a toujours eu le sens de l'esquive. Il sait quand il est opportun de faire un pas de cote pour progresser,Reculez une fois sans perdre de moral,,T2,Erg.png,,,,
+Filibert Franz,géomaître,Fer,Filibert lit le terrain comme on lit un livre d'enfant Il trouve des solutions a chaque nouveau danger; meme les plus mortels,Ignorez les malus du terrain,+1 sur 1 d6 rouge ou vert,T1,Talweg.png,,,,
+Hypekelus,pilier,Fer,Hypekelus est un grand frere aimant qui a toujours vu loin. Sa grande taille lui permet de voir plus loin que les autres,Pivotez une tuile adjacente d'une section,,T3,Firost.png,,,,
+Thoratos,pilier,Fer,Thoratos est capable de faire des miracles mais il a toujours eu besoin du soutien d'Hypekelus,Pivotez votre tuile d'une section et perdez un point de moral sauf si Hypekelus est avec vous,,T2,Elkin.png,,,,
+Athinatos Catanus,ailier,Fer,La famille Catanus est celebre dans le pays pour la force et l'audace de ses membres. Athinatos n'y fait pas exception.,Si plusieurs d6 se suivent; faites +/-1 a chacun d'eux.,,T3,Talweg pere.png,,,,
+Blanchette de Gaude,princesse,Fer,On peut etre une princesse et faire face des tempetes.,Faites +/-1 a autant de d6 que de d6 qui ont la meme valeur.,,T2,Blanchette.png,,,,
+Ed Abro Ragerage,ailier,Fer,Ed a une comprehension du vent qui depasse beaucoup celle du commun des mortels. Il a cet instinct que d'autres (Kunigunde en tete) lui envient.,Prenez 1d6 au vent et rajoutez le au prochain vent,,T1,Seleme.png,,,,
+Kunigunde Nosske,aeromaitresse,Fer,Kunigunde n'aime pas qu'on la contrarie. ,Relancez les d6 du vent,,T3,Kunigunde.png,,,,
+Hannicia,airpailleuse,Fer,Les cerfs-volants d'Hannicia sont un ravissement qui suivent des courants bien specifiques. Chacun necessite un reglage particulier pour soulever les charges et delester le groupe.,Pour chaque vents de meme force rencontres a la suite; lancez un d6 supplementaire,,T2,Hannicia.png,,,,
+Josmina,peintre et poetesse,Fer,Josmina se definie comme une femme de la terre et une esthete. Ses oeuvres ont aussi belles que manicheennes. Si le beau existe il doit etre mineral ou vegetal.,Definissez une couleur(rouge ou vert) et une valeur. Gagnez autant de moral que de d6 identiques a ce d6,,T3,Josmina.png,,,,
+Oshora,assassin,Fer,Oshora aime le silence et les huis-clos. C'est quand le groupe est petit qu'elle peut s'exprimer le mieux,+/- 1 sur 1d6 pour chaque Hordier manquant;doublez ce bonus si vous avez Zhalinka,,T3,Oshora.png,,,,
+Khypico Torantor,ailier,Pack,Khypico et Bepphon sont des valeurs sures. Solides sur leurs appuis ils renforcent le groupe avec bienveillance.,Lancez 1d6 supplementaire; faites -1 a un d6 si vous avez Bepphon,,T3,Horst.png,,,,
+Bepphon Torantor,ailier,Pack,Khypico et Bepphon sont des valeurs sures. Solides sur leurs appuis ils renforcent le groupe avec bienveillance.,Lancez 1d6 supplementaire; faites +1 a un d6 si vous avez Khypico,,T3,Karst.png,,,,
+Jared Smeth,autoursier,Pack,Responsable de la chasse et du souper; Jared est un homme plein de ressources et de bon sens.,Relancez tout ou parties de vos d6,,T2,Tourse.png,,,,
+Gianni Raymondi,cuisinier,Pack,Gianni travaille de maniere simple et efficace. Cuisinier de talent; il associe les gouts pour raviver des plats souvent peu varies.,Mettre la valeur d'un d6 sur la face desiree,,T1,Sharav.png,,,,
+Justin Rubino,botaniste,Pack,Justin aime les plantes. Il connait leurs noms et surtout leurs effets. Il peut aider Gianni et Vera dans leurs taches difficiles.,Regagnez un point de moral lors de l'etablissement d'un camp,,T2,Steppe.png,,,,
+Ernest Twat,éclaireur,Pack,Vif et surprenant sont les meilleurs qualificatifs pour Ernest. Il trouve toujours le meilleur chemin pour faire progresser le groupe.,Regardez le vent de 2 tuiles adjacente,,T1,Arval.png,,,,
+Galas Thunderflayer,troubadour,Pack,C'est dans les pires situtations que l'on reconnait les grands hommes. Galas doit etre l'un de ceux-la.,Sous Furevent(6) restaurez tous les pouvoirs de toute l'equipe et perdez un point de moral,,T2,Caracole.png,,,,
+Alicone Minh-row,aéromaîtresse,Pack,Alicone trouve dans chaque recoint du vent une source pour se mouvoir mais egalement pour faire mouvoir la horde.,Retournez autant de vos d6 que les couleur du vent,,T2,Alicone.png,,,,
+Vera,rebouteuse,Pack,Vera demonte et remonte les gens comme on le ferait avec un pantin. Ses talents de rebouteuse remettent l'aplomb les hordiers les plus mals en point.,Restaurez le pouvoir d'un membre de l'equipe,,T2,Alme.png,,,,
+Lethune de Prals,sourcière,Pack,L'eau potable est un luxe dont il est difficile de se passer. Lethune connait les techniques pour trouver de l'eau meme quand il n'y en a pas.,Gagnez un point de moral lorsque le vent fait un 1,,T2,Aoi.png,,,,
+Baramas,braconnier,Pack,Il aime les vents chauds et humides qui apportent avec eux autant d'oiseaux dodus que de mammiferes appetissants,Les Choons(3) vous rendent un point de moral.,,T2,Alk.png,,,,
+Amonmas Amon,ferrailleur,Pack,Tout fini un jour par se briser. Amon le sait. Amon le repare. Amon cree ce que le monde detruit.,+/-1 pour chaque d6 ayant la valeur du vent.,,T2,Learch.png,,,,
+Ashley,feuleuse,Pack,Rien n'est plus important qu'un feu. Lorsque les os sont geles; lorsque la peau est trempee; lorsque les ventres sont vides.,Installer un camp,,T1,Callirhoe.png,,,,
+Ivo Baumann,artisan du bois,Pack,Tour a tour menuisier ebeniste luthier et musicien; Ivo sait reparer les outils meubles et les esprits,Echangez un d6 de couleur avec un de non colore,,T2,Boscavo.png,,,,
+Adolar Rossel,fauconnier,Pack,Adolar commande et l'oiseau obeit. ,Remplacez un d6 du vent par l'un de vos d6,,T2,Darbon.png,,,,
+Wanda Pfeffer,aéromaîtresse,Pack,Le vent souffle dans l'oreille de Wanda et Wanda souffle a l'oreille du traceur,Ignorez un d6 du vent,,T1,Matsukaze.png,,,,
+Rochelle Niephaus,pretresse du vent,Pack,Quand Rochelle s'isole le vent se calme et le sang coule et personne ne pose de question.,Le prochain vent sera une Zefinine(1) et perdez 3 point de moral.,,T2,Rochelle.png,,,,
+Alwine Böhnisch,ranger,Pack,Alwine a un sens de l'orientation hors du commun qui se precise en zones boisees.,Les d6 verts sont incolores,,T2,Iphaine.png,,,,
+Saskia Böhnisch,archere,Pack,Saskia chasse le cerf et le sanglier. La foret est son terrain de predilection,Sur un terrain ayant au moins 2 d6 verts gagnez 1 point de moral,,T1,Saskia.png,,,,
+Bertram Haring,géomaître,Pack,Les montagnes ont des secrets que Bertram sait exploiter. Il voit dans le schiste les fractures et decele les grottes a des kilometres.,Les d6 rouges sont incolores,,T2,Silene.png,,,,
+Oliver Haucksson,feuleur et acrobate,Pack,Si vous avez le vertige sur les corniches escarpees vous n'arriverez pas a le suivre. N'ayez crainte; Oliver sera la pour vous assurer.,Sur un terrain ayant au moins 2 d6 rouges gagnez 1 point de moral,,T1,Bold.png,,,,
+Arabine,danseuse,Pack,Arabine sait danser; elle danse si bien que le vent lui meme s'arrete pour la voir bouger.,Si 1d6 a la meme valeur que la force du vent; mettez le sur la valeur que vous souhaitez.,,T3,Nouchka.png,,,,
+Sabrella,sourciere,Pack,Sabrella est belle. Si belle qu'on mourrait pour elle et ce n'est pas sa seule qualite. Elle sait trouver l'eau qui vous sauvera.,Ne perdez pas de moral en utilsant vos alliers,,T1,Lacmila.png,,,,
+Bellune,croc,Traine,Bellune est une jeune femme inspirante et pleine d'empathie. Elle saura se sacrifier pour sauver son groupe.,Abandonnez ce Hordier et placez autant de d6 que de Hordiers manquants,,T2,Coriolis.png,,,,
+Fuego,croc,Traine,Il aime le vent comme on aime quelqu'un. Fuego aimerait devenir eclaireur mais il manque d'experience.,Abandonnez ce Hordier et devoilez toutes les tuiles de vent autour de vous,,T3,Sveziest.png,,,,
+Osuros,croc,Traine,Osuros est une force de la nature taciturne qui sait attirer la sympathie de ses compagnons.,Abandonnez ce Hordier et ignorez 1d6 du vent,,T2,Barbak.png,,,,
+Bargard,croc,Traine,Bargard se place toujours derriere le Fer pour les soutenir. Il les allege autant qu'il peut.,Abandonnez ce Hordier et lancez autant de d6 que de membres dans le FER.,,T2,Di Nebbe.png,,,,
+Abriyen,croc,Traine,Abriyen est sauvage. Il vivait parmi les loups et a su les apprivoiser. On dit que c'est la vue de Benelim qui l'a fait rejoindre le groupe.,Abandonnez ce Hordier et rechargez 2 pouvoirs,,T2,Verval.png,,,,
+Illion,croc,Traine,Petit deja Illion chantait en travaillant dans les mines de charbon. Il n'a pas perdu cette habitude.,Abandonnez ce Hordier et faites +/- 1 pour chaque point de moral manquant,,T3,Dekk.png,,,,
+Laenar,croc,Traine,Laenar porte un poids qui l'a rendu muet. Son village fut rase apres un Blaast dont il est le seul survivant.,Abandonnez ce Hordier et faites +/- 1 pour chaque point de moral,,T1,Filam.png,,,,
+Mere,croc,Traine,Mere aime Pere et le monde. Elle soigne et soulage.,Abandonnez-le et regagnez 2 points de moral. Abandonnez le avec Pere et regagnez tout,,T1,Mere.png,,,,
+Pere,croc,Traine,Pere aime Mere et le monde. Il prie et inspire.,Abandonnez-le et regagnez 2 points de moral. Abandonnez le avec Mere et regagnez tout,,T1,Pere.png,,,,
+Zhalinka,protectrice-croc,Traine,Amante d'Oshora de longue date. Elle est prete a tout abandonner pour lui venir en aide.,Abandonnez ce Hordier et faites +/- 2 pour chaque Hordier manquant doublez ce bonus si vous avez Oshora,,T1,Siphae.png,,,,
+Tula,invocatrice-croc,Traine,Tula a suivi les traces des Invocateurs. Tula chante des airs de Slamino.,Abandonnez ce Hordier et le prochain vent sera un Slamino(2),,T1,Tula.png,,,,
+Topilzin,invocateur-croc,Traine,Invocateur de la premiere heure. Topilzin vient des terres humides des Choon.,Abandonnez ce Hordier et le prochain vent sera un Choon(3),,T2,Topilzin.png,,,,
+Benelim,croc,Traine,Son sourire est divin et son visage angeleur. Benelim est responsable des affaires du Pack.,Abandonnez ce Hordier et lancez autant de d6 que de hordiers dans le PACK.,,T2,Mozer.png,,,,
+Croque,croc,Traine,Mi chien;mi loup; Croque a ete entraine par Abryien pour sauver les aventuriers.,Abandonnez ce Hordier et retrouvez un Hordier abandonne,,T1,Chien.png,,,,
+Croque,croc,Traine,Mi chien;mi loup; Croque a ete entraine par Abryien pour sauver les aventuriers,Abandonnez ce Hordier et retrouvez un Hordier abandonne,,T1,Chien.png,,,,
+Sensemune,invocatrice-croc,Traine,Les soeurs Sense travaillent sur les formations des hordes et ont des avis opposes.,Sacfifiez ce Hordier et placez un de vos Hordier du FER a sa place.,,T1,Sensemune.png
+Sensesune,invocatrice-croc,Traine,Les soeurs Sense travaillent sur les formations des hordes et ont des avis opposes.,Sacrifiez ce Hordier et placez un de vos Hordier du PACK a sa place.,,T1,Sensesune.png

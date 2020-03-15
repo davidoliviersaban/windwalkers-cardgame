@@ -1,0 +1,12 @@
+# MacOS files
+.DS_Store
+# Project files
+.idea/
+project/
+target/
+#Temporary files
+outputs/
+_*/
+
+# My inspiration folder
+inspiration/
