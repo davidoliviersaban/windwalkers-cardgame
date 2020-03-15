@@ -303,6 +303,39 @@ https://fr.fantasynamegenerators.com/
 ## Generateur de cartes: Squib
 https://squib.readthedocs.io/
 
+# Jeu a plusieurs: Course contre la montre
+Le but du jeu est de parcourir la carte depuis sa ville de depart jusqu'a la ville de l'adversaire.
+Le joueur qui arrive le premier a gagne. Sinon, c'est le joueur qui a marque le plus de points selon les regles du jeu solo.
+A 2 joueurs, il n'est pas necessaire de passer par la ville checkpoint pour gagner.
+
+## Installation du jeu a 2 joueurs
+Prenez toutes les tuiles terrain, melangez-les et creez une zone de 32 tuiles terrain pour 2 (, + 7 tuiles terrain par joueur supplementaire.)
+Les 32 tuiles sont placees en quiconce de la maniere suivante:
+- La ville de depart/arrivee
+- 2 tuiles (cote 2 et 3 par rapport a la ville)
+- 3 tuiles
+- 2 tuiles
+- 3 tuiles
+- 4 tuiles
+- 4 tuiles + la tuile ville checkpoint (je propose que ce soit la Tour Fontaine)
+Finissez en symetrique.
+les 2 dernieres tuiles arriveront sur les positions 5 et 6 de la ville d'arrivee.
+
+## Draft de l'equipe
+Chaque joueur recoit 2 traceurs et choisi celui qu'il prefere.
+Puis, melangez tous les personnages du FER et prenez en 3 chacun. Choisissez en 1 et passez le paquet a votre voisin jusqu'a ce que votre FER soit plein. 
+Melangez tous les personnages du PACK et prenez en 4 chacun. Choisissez en 1 et passez le paquet a votre voisin jusqu'a ce que votre PACK soit plein.
+Melangez tous les personnages de TRAINE et prenez en 4 chacun. Choisissez en 2.
+
+## Placement des villages supplementaires
+Chaque joueur pioche un village et remplace la tuile de son choix par le village qu'il tient en main et qu'il place dans le sens qu'il le desire.
+
+[] @TODO: Clarifier ce point plus tard? 
+A 4 joueurs, le village situe entre les joueurs 3 et 4 sera a mi distance des 2 joueurs.
+
+
+Au premier tour, les joueurs ont le droit a un bulletin meteo qu'ils pourront utiliser a n'importe quel moment.
+Ce bulletin permet de reveler un vent sur la tuile de son choix.
 
 # Idees
 ## Jeu a plusieurs
@@ -312,7 +345,6 @@ https://squib.readthedocs.io/
 * Chaque joueur joue une horde a part
   * Les joueurs peuvent avoir des leaders differents
   * Les joureurs peuvent avoir des plateaux de jeu differents (#FER, #PACK, #TRAINE)
-
 
 
 ### En asymetrique
