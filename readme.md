@@ -4,10 +4,14 @@
 La plupart des resources ici sont soumises a droit d'auteur et je ne les ai pour l'instant pas contacte.
 Ni le jeu et son titre / ni les images et pdf ne sont de moi. Je ne fourni que l'idee originale du moteur du jeu.
 
-
 Afin de construire les images a imprimer, utilisez cet autre git repository: [printableCardsAppender](https://github.com/davidoliviersaban/printableCardsAppender)
 
----
+- [] @TODO: Un vent peut avoir une variation de +/- 1 c'est le nombre de des en + ou en - qui doivent etre lances pour le vent.
+- [] @TODO: Pour battre un vent, le joueur lance autant de d6 qu'il a de hordiers.
+- [] @TODO: Renommer les lieux comme les personnages ont ete renommes.
+- [] @TODO: (mettre a jour les chapitres avec les photos)
+- [] @TODO: faire un petit fascicule avec une histoire a lire. 
+
 # Windwalkers - La Horde du Contrevent
 >À l’origine fut la vitesse, le pur mouvement furtif, le « vent-foudre ». Puis le cosmos décéléra, prit consistance et forme, jusqu’aux lenteurs habitables, jusqu’au vivant, jusqu’à vous. Bienvenue à toi, lent homme lié, poussif tresseur des vitesses. 
 *Damasio, Alain. La Horde du Contrevent (Sc. Fiction) (French Edition) (Kindle Locations 84-86). La Volte. Kindle Edition.*
@@ -91,9 +95,6 @@ Vous rencontrez un vent de force 2 avec 3 couleurs.
 * En appairant les d6 du joueur avec ceux du vent, on voit que les 3 couleurs ne sont respectees pas car la Horde a obtenu un 1. La Horde a egalement obtenu deux 3 et un 6 qui correspondent au d6 incolores du vent.
 Le vent etant de force 2, il exige que 2 d6 soient identiques a son jet. Nous avons respecte cette contrainte car 4 de nos d6 sont identiques. Le vent ayant 3 couleurs, nous devons d'abord reussir a remplir cette contrainte et ce n'est pas realise. Nous pouvons donc pas progresser et revenir en arriere a moins d'utiliser les pouvoirs de notre Horde.
 
-- [] @TODO: Un vent peut avoir une variation de +/- 1 c'est le nombre de des en + ou en - qui doivent etre lances pour le vent.
-- [] @TODO: Pour battre un vent, le joueur lance autant de d6 qu'il a de hordiers.
-
 ### Ce qui fait baisser le moral
 * Relancer tous les d6 de la Horde
 * Se faire pousser par le vent
@@ -169,7 +170,7 @@ Ensuite, lorsque l'on pose la horde sur la ville du depart. Dans l'exemple ci de
 
 Le joueur decide alors de deplacer sa Horde sur l'une des tuiles adjacentes (sur la tuile C par exemple) et il decouvre alors la force du vent. Pour ce faire (@TODO encore une tuile? un lance de d6?)
 
-Il n'y a de vent que sur les tuiles possedant des chiffres 1 a 6. Il n'y a donc pas de vent sur les villages abrites, les villes ou certains lieux speciaux.
+Il n'y a pas de vent sur les villages abrites, les villes ou certains lieux speciaux.
 
 Le *terrain* possede 3 des colores et/ou incolores qui sont ajoutes aux d6 du vent. Le vent rajoute 3 d6 incolores aux d6 du terrain.
 Dans l'exemple ci-dessus, si la tuile A a 2 d6 rouge et 1 d6 incolore ; la Horde devra contrer 2 d6 rouges et 4 d6 incolores. On retourne la tuile vent sur la case A. C'est un vent de force 3, le vent a donc 3 d6 d'exigeance. On doit donc resoudre les 2d6 du terrain en premier (il faut tenir compte des couleurs en premier) puis n'importe lequel des d6 incolores du vent.
@@ -182,9 +183,34 @@ Vous rencontrez un vent de force 3 avec 2 couleurs.
 * En appairant les d6 du joueur avec ceux du vent, on voit que les 2 couleurs sont respectees car la Horde a obtenu un 5 et un 1. La Horde a egalement obtenu un 3 et un 6 qui correspondent au d6 incolores du vent.
 Le vent etant de force 3, il exige que 3 d6 soient identiques a son jet. Nous avons respecte cette contrainte car 4 de nos d6 sont identiques. Le vent ayant 2 couleurs, nous devons d'abord reussir a remplir cette contrainte ce qui est fait avec le 5 et le 1. Finalement, les valeurs restantes sont 3 et 4 pour le vent et 3 et 6 pour la Horde. La somme des d6 du vent fait 3+4=7 ; la somme des d6 restant de la Horde est de 3+6=9. Le resultat de la Horde est >= au resultat du vent. Nous pouvons donc progresser.
 
+## Regles des d6 noirs
+Certains lieux ou terrains possedent des d6 noirs.
+Ces d6 noirs sont des d6 supplementaires qui devront etre a la fois lances pour le terrain et lances par le joueur.
+Un joueur allant sur une case demandant un d6 noir devra donc lancer 7 d6 dont 1 noir pour le vent. Puis 7 d6 dont un noir pour lui-meme.
+
+1. **Un d6 noir exigent une egalite parfaite.**
+1. Un d6 noir n'est pas colores. 
+1. Un d6 noir d'epreuve ne peut etre enleve ou echange ou ignore ou relance.
+
+
+## Regles speciales pour les lieux avec des d6 noirs
+Certains lieux speciaux ont des d6 noirs dessus. C'est une epreuve qui doit etre surmontee par l'equipe et qui aura des effets differents en fonction du lieu.
+
+### La tour fontaine
+La tour fontaine est un lieu avec une epreuve.  C'est un lieu qui n'a donc pas de "vent".
+
+Lancez 1 d6 noir pour l'epreuve puis 1d6 noir pour vous. Si vous echouez l'epreuve, perdez un membre de votre horde. Vous pourrez vous reposer sur place.
+
+### La porte d'hurle
+La porte d'hurle est un lieu special avec 6 d6 noirs. C'est un lieu qui n'a donc pas de "vent". 
+Les 6 d6 noirs sont une epreuve qui va demander une difficulte equivalente a une epreuve de force 6.
+Si l'epreuve est echouee, perdez un membre de votre horde et recommenez.
+Vous ne pouvez pas vous reposer sur place.
+
+
 ## Regle additionnelle de deplacement
-Afin d'augmenter l'impacte du vent sur le deplacement, chaque chiffre de la tuile terrain possede une couleur ; ils indiquent les vents locaux en bord de tuile. Les 1 et 4 sont jaunes, les 2 et 5 sont verts et les 6 et 3 sont bleus. Lors de votre progression, et pour chacune des 3 tuiles adjacentes dans le sens de progression; si la couleur presente sur le bord votre tuile actuelle correspond a la couleur du bord de la tuile adjacente, le vent aura un d6 colore de la couleur du bord; le cas contraire, le vent a 1 d6 incolore.
-Dans le pire des cas, le vent aura donc 3 d6 colores en plus, un de chaque couleur.
+Afin d'augmenter l'impacte du vent sur le deplacement, chaque chiffre de la tuile terrain possede une forme ; ils indiquent les vents locaux en bord de tuile. Les 1 et 4 sont des cercles, les 2 et 5 sont des triangles et les 6 et 3 sont des carres. Lors de votre progression, et pour chacune des 3 tuiles adjacentes dans le sens de progression; si la forme presente sur le bord votre tuile actuelle correspond a la forme du bord de la tuile adjacente, le vent aura un d6 colore supplementaire; le cas contraire, le vent a 1 d6 incolore.
+Dans le pire des cas, le vent aura donc 3 d6 colores en plus, un pour chaque forme dans le sens de progression.
 
 Dans l'exemple ci-dessus, la tuile A n'a qu'une seule couleur commune avec ses *tuiles de contre* (tuiles B, C, et D): la valeur 5 qui joint A et B. Une Horde sur la tuile A qui souhaite avancer fera donc face a un vent avec 2 d6 incolores et 1 d6 colore.
 
@@ -195,6 +221,59 @@ Pour chaque village abrite, definissez une couleur et proposez 3 cartes personna
 Pour chaque ville, proposez 3 cartes personnages de chaque couleur.
 
 Le joueur peut recruter dans sa horde autant de personnage qu'il le souhaite tant qu'il respecte les conditions de son plateau Horde. Le joueur peut egalement decider de se separer de certains de ses Hordiers au benefices d'autres plus adequates pour la mission suivante.
+
+# Chapitres
+Ce jeu peut se joueur chapitre apres chapitre. Il est recommande pour la prise en main de pouvoir recommencer avec une equipe toute neuve apres chaque chapitre.
+Vous pourrez ensuite passer en mode campagne et garder votre equipe et son moral d'un chapitre a l'autre. Le mode campagne est donc bien plus difficile que le mode normal.
+
+## Chapitre 1
+- **Depart**: Aberlaas
+- **Arrivee**: Port-Choon
+- **Distance**: 6 cases
+- **Description**: L'objectif de ce niveau est de traverser une grande variete de paysages et aller depuis Aberlaas vert Port-Choon. Le niveau se compose de 20 tuiles terrain, de 3 tuiles villages abrites (un de chaque couleur).
+- **Repartition des tuiles**: Installez entre chaque village 2 tuiles neutres. Ainsi qu'entre **Aberlaas** et le premier village et entre le dernier village et **Port-Choon**.
+[] @TODO -> Photo exemple
+
+## Chapitre 2
+- **Depart**: Port-Choon
+- **Arrivee**: Chawondasee
+- **Distance**: 4 cases
+- **Description**: L'objectif de ce niveau est de choisir entre la trace directe a travers les tuiles d'eau ou de faire le tour de la flaque de Lapsane. Le niveau se compose de 10 tuiles terrain d'eau, 10 tuiles terrain neutre, de 2 tuiles villages abrites.
+- **Repartition des tuiles**: Les tuiles de la flaque doivent etre entre le depart et l'arrivee. Il doit y avoir 3 tuiles entre chaque villages. Entre **Port-Choon** et le premier village ainsi qu'entre le dernier village et **Chawondasee**, il doit y avoir 3 tuiles. La tour fontaine doit avoir 3 tuiles de **Port-Choon** et 3 tuiles de **Chawondasee**. Entre **Chawondasee** et **Port-Choon** il doit y avoir au moins 3 tuiles.
+[] @TODO -> Photo exemple
+
+## Chapitre 3
+- **Depart**: Chawondasee
+- **Arrivee**: Alticcio
+- **Distance**: 5 cases
+- **Description**: L'objectif est de compose entre les tuiles neutres et les tuiles desertiques. Le niveau se compose de 10 tuiles terrain desert, 10 tuiles terrain neutre, de 2 tuiles villages abrites.
+- **Repartition des tuiles**: La majorite des tuiles desert doivent se trouver sur la trace directe. Les tuiles desert doivent toutes se toucher. Il doit y avoir 3 tuiles entre chaque villages. Entre **Chawondasee** et le premier village ainsi qu'entre le dernier village et **Alticcio**, il doit y avoir 3 tuiles. Entre **Chawondasee** et **Alticcio** il doit y avoir au moins 4 tuiles.
+[] @TODO -> Photo exemple
+
+## Chapitre 4
+- **Depart**: Alticcio
+- **Arrivee**: Camp Boban
+- **Distance**: 7 cases
+- **Description**: L'objectif de ce chapitre est de passer par la Porte d'Hurle. Le niveau se compose de 8 tuiles terrain marais, 20 tuiles terrain neutre et de 1 tuiles villages abrites.
+- **Repartition des tuiles**: Placez la tuile **Porte d'Hurle** juste apres **Alticcio**. Entre **Porte d'Hurle** et le seul village et **Camp Boban**, il doit y avoir 4 tuiles. Il doit y avoir 7 tuiles au total entre **Alticcio** et **Camp Boban**. Les 28 tuiles restantes peuvent etre disposees a votre discretion. 
+Ces tuiles ne peuvent pas toucher **Alticcio**.
+[] @TODO -> Photo exemple
+
+# Bonus: 
+## Une bande son est disponible sur deezer et sur youtube:
+Youtube: https://www.youtube.com/watch?v=kkweDEqT2lI&list=PLq2AWvcoUGR2n7MPpAYIaI2bszStPUblE
+Deezer: http://www.deezer.com/album/4605691
+
+http://arnoalyvan.com/la-horde-du-contrevent/-u5
+https://docplayer.fr/56319913-La-horde-du-contrevent.html
+
+# Credits
+## Un grand merci a Emilie et son site qui a libere mon imagination pour trouver les noms et les descriptions de mes personnages
+https://fr.fantasynamegenerators.com/
+
+## Generateur de cartes: Squib
+https://squib.readthedocs.io/
+
 
 # Idees
 ## Jeu a plusieurs
@@ -276,42 +355,3 @@ Les pouvoirs passifs sont generalement moins puissants et surtout permanents. Il
 * Le type de terrain
 * Des suites de terrain, vent
 * Une configuration speciale de terrains adjacents
-
-
-# Chapitres
-
-## Chapitre 1
-- **Depart**: Aberlaas
-- **Arrivee**: Port-Choon
-- **Distance**: 6 cases
-- **Description**: L'objectif de ce niveau est de traverser une grande variete de paysages et aller depuis Aberlaas vert Port-Choon. Le niveau se compose de 20 tuiles terrain, de 3 tuiles villages abrites (un de chaque couleur).
-- **Repartition des tuiles**: Installez entre chaque village 2 tuiles neutres. Ainsi qu'entre **Aberlaas** et le premier village et entre le dernier village et **Port-Choon**.
-
-## Chapitre 2
-- **Depart**: Port-Choon
-- **Arrivee**: Chawondasee
-- **Distance**: 4 cases
-- **Description**: L'objectif de ce niveau est de choisir entre la trace directe a travers les tuiles d'eau ou de faire le tour de la flaque de Lapsane. Le niveau se compose de 10 tuiles terrain d'eau, 10 tuiles terrain neutre, de 2 tuiles villages abrites.
-- **Repartition des tuiles**: Les tuiles de la flaque doivent etre entre le depart et l'arrivee. Il doit y avoir 3 tuiles entre chaque villages. Entre **Port-Choon** et le premier village ainsi qu'entre le dernier village et **Chawondasee**, il doit y avoir 3 tuiles. La tour fontaine doit avoir 3 tuiles de **Port-Choon** et 3 tuiles de **Chawondasee**. Entre **Chawondasee** et **Port-Choon** il doit y avoir au moins 3 tuiles.
-
-## Chapitre 3
-- **Depart**: Chawondasee
-- **Arrivee**: Alticcio
-- **Distance**: 5 cases
-- **Description**: L'objectif est de compose entre les tuiles neutres et les tuiles desertiques. Le niveau se compose de 10 tuiles terrain desert, 10 tuiles terrain neutre, de 2 tuiles villages abrites.
-- **Repartition des tuiles**: La majorite des tuiles desert doivent se trouver sur la trace directe. Les tuiles desert doivent toutes se toucher. Il doit y avoir 3 tuiles entre chaque villages. Entre **Chawondasee** et le premier village ainsi qu'entre le dernier village et **Alticcio**, il doit y avoir 3 tuiles. Entre **Chawondasee** et **Alticcio** il doit y avoir au moins 4 tuiles.
-
-## Chapitre 4
-- **Depart**: Alticcio
-- **Arrivee**: Camp Boban
-- **Distance**: 10 cases
-- **Description**: L'objectif de ce chapitre est de passer par la Porte d'Hurle. Le niveau se compose de 8 tuiles terrain tourbiere, 20 tuiles terrain neutre, de 2 tuiles villages abrites et 1 tuile desert.
-- **Repartition des tuiles**: Placez la tuile desert juste apres Alticcio puis la porte d'Hurle. Entre **Porte d'Hurle** et le seul village et **Camp Boban**, il doit y avoir 4 tuiles. Les 28 tuiles restantes peuvent etre disposees a votre discretion. Ces tuiles ne peuvent pas toucher **Alticcio**.
-
-# Bonus: 
-## Une bande son est disponible sur deezer et sur youtube:
-Youtube: https://www.youtube.com/watch?v=kkweDEqT2lI&list=PLq2AWvcoUGR2n7MPpAYIaI2bszStPUblE
-Deezer: http://www.deezer.com/album/4605691
-
-http://arnoalyvan.com/la-horde-du-contrevent/-u5
-https://docplayer.fr/56319913-La-horde-du-contrevent.html
