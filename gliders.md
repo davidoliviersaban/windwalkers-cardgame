@@ -103,6 +103,8 @@ Un navire est limite par:
  
  Les cartes **equipement** ont un titre, une image, une description un pouvoir passif et un pouvoir actif.
  
+Le navire commence avec 9 points de carburants et 4 places en soute.
+
 # Les Missions
 Le navire peut effectuer plusieurs missions:
 - Affronter un vent puissant
@@ -110,4 +112,5 @@ Le navire peut effectuer plusieurs missions:
 - Amener un Hordier a la Horde
 - Transporter du materiel/denrees a une autre ville
 
-Chaque mission rapporte ensuite une carte equipement.
+Chaque mission rapporte ensuite une carte equipement/consommable.
+Une mission perilleuse pourrait proposer d'ameliorer definitivement le vaisseau?
