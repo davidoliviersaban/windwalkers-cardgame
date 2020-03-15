@@ -1,0 +1,13 @@
+Nom,Type,Description,Pouvoir_Actif,Pouvoir_Passif,Tier,Image
+Voile renforcee,Equipement,Cette voile particulierement bien dessinee et solide,,+1 resistance au vent,T3,
+Voile profilee,Equipement,Cette voile particulierement bien dessinee et solide,,+1 a la force du vent ignore,T3,
+Extension de cale,Equipement,,,Augmentez la capacite de 2 taille de la cale,T3,
+Extension de cale,Equipement,,,Augmentez la capacite de 2 taille de la cale,T3,
+Pile,Consommable,,Restaurez 3 points du carburant,,T3,
+Generateur,Equipement,,Restaurez 3 points du carburant a l'atterrissage,,T3,
+Parachute de securite,Consommable,Parachute a usage unique,-1 a la force du vent,,,
+Eolienne,Consommable,Usage Unique,Faites pivoter la tuile ou vous vous trouvez d'une section,,,
+Tonneaux de biere,Denree,Fameuse biere ambree venant des terres desertiques du Leergreem particulierement appreciee par les airpailleurs,,,,
+Jarres de ble,Denree,Fameuse biere ambree venant des terres desertiques du Leergreem particulierement appreciee par les airpailleurs,,,,
+Tonneaux de biere,Denree,Fameuse biere ambree venant des terres desertiques du Leergreem particulierement appreciee par les airpailleurs,,,,
+Tonneaux de biere,Denree,Fameuse biere ambree venant des terres desertiques du Leergreem particulierement appreciee par les airpailleurs,,,,

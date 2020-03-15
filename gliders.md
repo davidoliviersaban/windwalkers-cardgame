@@ -76,12 +76,38 @@ La direction du vent est capitale car elle influera sur la difficulte de navigue
 - **Vent Arriere** est un vent qui est dans la direction de votre navire. Pour aller de A vers C, un vent arriere correspond au vent force 4.
 - **Vent Debout** correspond a un vent de face et donc oppose a la direction de votre navire. Pour aller de A vers C, vent debout correspond au vent de force 1.
 
-# Pouvoirs possible du Navire
+# Capacites possible du Navire
 Un navire commence avec une certaine capacite de soute et de capacite deplacement.
 Un navire est limite par:
  - la force du vent qu'il peut franchir
  - le nombre d'elements qu'il peut transporter
  - le nombre de deplacements qu'il pourra effectuer
  - la faciliter a passer certains vents
+ - la quantite d'energie du navire
  
- ## Plateau 
+ ## Plateau du Navire
+ Sur le plateau du navire, il apparait des espaces representant la soute, les capacites du navire ainsi que sa reserve de carburant.
+ Un navire a aussi un emplacement pour sa carte mission.
+ 
+ En debut de partie, le navire aura une soute pleine de denrees sans pouvoir particulier.
+ 
+ 
+ #Les equipements du Navire
+ Tous les equipements/personnes du navire sont stockes dans la soute.
+ 
+ Les cartes **equipement** representent:
+ - Des ameliorations
+ - Des personnages
+ - Des denrees
+ - Du materiel de construction
+ 
+ Les cartes **equipement** ont un titre, une image, une description un pouvoir passif et un pouvoir actif.
+ 
+# Les Missions
+Le navire peut effectuer plusieurs missions:
+- Affronter un vent puissant
+- Construire un batiment/village sur la carte
+- Amener un Hordier a la Horde
+- Transporter du materiel/denrees a une autre ville
+
+Chaque mission rapporte ensuite une carte equipement.
