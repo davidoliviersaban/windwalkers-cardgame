@@ -1,0 +1,18 @@
+Nom,Fonction,Position,Description,Pouvoir_Actif,Pouvoir_Passif,Tier,Image
+Sensemune,invocatrice-croc,Traine,Les soeurs Sense travaillent sur les formations des hordes et ont des avis opposes.,Sacfifiez ce Hordier et placez un de vos Hordier du FER a sa place.,,T1,Sensemune.png
+Sensesune,invocatrice-croc,Traine,Les soeurs Sense travaillent sur les formations des hordes et ont des avis opposes.,Sacrifiez ce Hordier et placez un de vos Hordier du PACK a sa place.,,T1,Sensesune.png
+Mere,croc,Traine,Mere aime Pere et le monde. Elle soigne et soulage.,Abandonnez-la et regagnez 2 points de moral. Abandonnez le avec Pere et regagnez tout,,T1,Mere.png
+Pere,croc,Traine,Pere aime Mere et le monde. Il prie et inspire.,Abandonnez-le et regagnez 2 points de moral. Abandonnez le avec Mere et regagnez tout,,T1,Pere.png
+Regitha,invocateur-croc,Traine,Regitha,Abandonnez-la toutes les couleurs sont incolores,,T1,Regitha.png
+Hjaldr,oiseleur-croc,Traine,,Abandonnez-le toutes les incolores sont verts,,T1,Hjaldr.png
+Ama Ama,oiseleuse-croc,Traine,,Abandonnez-la toutes les incolores sont rouges,,T1,Ama.png
+Barakiel,demineur-croc,Traine,,Abandonnez-le toutes les d6 noirs sont incolores,,T1,Barakiel.png
+Maarveen Guillor,troubadour,Fer,,Definissez une valeur et mettez tous vos d6 sur cette valeur,,T1,Maarveen.png
+Minerva,invocatrice-croc,Traine,,Abandonnez-la et echangez un de vos Hordiers avec n'importe quel autre de meme position,,T1,Minerva.png
+Donmaer,trappeur,Fer,,Retournez autant de d6 du vent que de Crocs.,,T2,Donmaer.png
+Dunseth Calsan,shaman,Fer,Les freres Calsan sont issus d'une puissante dynastie. On dit de Dunseth qu'il est le plus sensible.,Abandonnez un FER s'il n'est pas Calsan et recrutez un Calsan. Faites +/-1 par Calsan.,,T2,Dunseth.png
+Irilad Calsan,shaman,Fer,Les freres Calsan sont issus d'une puissante dynastie. On dit d'Irilad qu'il peut etre magnanime,Placez autant de vos d6 que de Croc et abandonnez un Croc.,,T1,Irilad.png
+Oravan Calsan,shaman,Fer,Les freres Calsan sont issus d'une puissante dynastie. On dit d'Oravan qu'il est sans mercie.,Placez autant de d6 vos que de PACK et abandonnez un PACK.,,T1,Oravan.png
+Dorothy,combattante,Pack,,Faites +1 sur vos d6 par FER,,T3,Dorothy.png
+Emelyn,protectrice,Pack,,Faites -1 sur vos d6 par PACK,,T3,Emelyn.png
+Noggangrid Ingotshield,aeromaitresse,Pack,Noggangrid est une mangeuse de livre. Certains disent qu'elles les auraient tous lu.,Remettez un vent du plateau dans la pioche,,T1,Noggangrid.png

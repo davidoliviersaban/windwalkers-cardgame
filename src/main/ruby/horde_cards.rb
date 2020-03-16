@@ -1,11 +1,10 @@
 require 'squib'
 
-deck = Squib.csv file: %w(src/resources/horde_cards.csv)
+deck1 = Squib.csv file: %w(src/resources/horde_cards.csv)
+deck2 = Squib.csv file: %w(src/resources/horde2_cards.csv)
 #deck = Squib.csv file: %w(src/resources/data.csv)
 
-Squib::Deck.new(cards: deck["Nom"].size,#cards: deck["Name"].size, # cards: 1,#
-                layout: %w(src/resources/Vlayout.yml src/resources/Vcards.yml),
-                width: '2.5in', height: '3.5in') do
+def drawCards(deck,dirname)
 #  rect layout: :bleed
 #  rect layout: 'cut', stroke_color: :black # cut line as defined by TheGameCrafter
 #  cut_zone radius: 0.0,  stroke_color: :black
@@ -46,6 +45,19 @@ Squib::Deck.new(cards: deck["Nom"].size,#cards: deck["Name"].size, # cards: 1,#
     tier+'Icon'
   }
 
-  save_png prefix: deck["Nom"], dir: '_cards'
+  save_png prefix: deck["Nom"], dir: dirname#dir: '_cards'
 
+end
+
+
+Squib::Deck.new(cards: deck1["Nom"].size,#cards: deck["Name"].size, # cards: 1,#
+                layout: %w(src/resources/Vlayout.yml src/resources/Vcards.yml),
+                width: '2.5in', height: '3.5in') do
+  drawCards(deck1,'_cards1')
+end
+
+Squib::Deck.new(cards: deck2["Nom"].size,#cards: deck["Name"].size, # cards: 1,#
+                layout: %w(src/resources/Vlayout.yml src/resources/Vcards.yml),
+                width: '2.5in', height: '3.5in') do
+  drawCards(deck2,'_cards2')
 end
