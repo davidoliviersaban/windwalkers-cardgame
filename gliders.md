@@ -71,10 +71,10 @@ Plus bas, les exemples seront tous pris selon la case A et un navire se dirigean
 - **Vent Debout** correspond a un vent de face et donc oppose a la direction de votre navire. Pour aller de A vers C, vent debout correspond au vent de force 1.
 
 La direction du vent est capitale car elle influera sur la difficulte de naviguer. Cela sera represente par des bonus ou des penalites de deplacement.
-- **Bon Pre** reduira la difficulte du vent a affronte de 1 en force.
-- **Grand Largue** est un vent a 60 degres par rapport a la direction de votre navire. Pour aller de A vers C, un vent grand largue correspond aux vents de force 3 et 5. 
-- **Vent Arriere** est un vent qui est dans la direction de votre navire. Pour aller de A vers C, un vent arriere correspond au vent force 4.
-- **Vent Debout** correspond a un vent de face et donc oppose a la direction de votre navire. Pour aller de A vers C, vent debout correspond au vent de force 1.
+- **Bon Pre** reduira la difficulte du vent a affronte de 1 en force (il peut y avoir des vents force 0)
+- **Grand Largue** n'a aucun effet 
+- **Vent Arriere** le vent a un d6 noir
+- **Vent Debout** le vent a +1 en force (il peut y avoir des vents force 7)
 
 # Capacites possible du Navire
 Un navire commence avec une certaine capacite de soute et de capacite deplacement.
@@ -96,6 +96,7 @@ Un navire est limite par:
  Tous les equipements/personnes du navire sont stockes dans la soute.
  
  Les cartes **equipement** representent:
+ - Un capitaine/amiral
  - Des ameliorations
  - Des personnages
  - Des denrees
