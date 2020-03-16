@@ -36,7 +36,7 @@ Description:
     align: center
     color: white
     stroke_color: black
-    stroke_width: 2
+    stroke_width: 3
 
 Terrain:
     extends: outline
