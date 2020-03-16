@@ -1,0 +1,5 @@
+Nom,Fonction,Position,Description,Pouvoir_Actif,Pouvoir_Passif,Tier,Image,crop_x,crop_y,width,height
+Sensemune,invocatrice-croc,Traine,Les soeurs Sense travaillent sur les formations des hordes et ont des avis opposes.,Sacfifiez ce Hordier et placez un de vos Hordier du FER a sa place.,,T1,Sensemune.png
+Sensesune,invocatrice-croc,Traine,Les soeurs Sense travaillent sur les formations des hordes et ont des avis opposes.,Sacrifiez ce Hordier et placez un de vos Hordier du PACK a sa place.,,T1,Sensesune.png
+Mere,croc,Traine,Mere aime Pere et le monde. Elle soigne et soulage.,Abandonnez-le et regagnez 2 points de moral. Abandonnez le avec Pere et regagnez tout,,T1,Mere.png,,,,
+Pere,croc,Traine,Pere aime Mere et le monde. Il prie et inspire.,Abandonnez-le et regagnez 2 points de moral. Abandonnez le avec Mere et regagnez tout,,T1,Pere.png,,,,

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+rm -rf _cards _terrain
 ruby src/main/ruby/land_cards.rb
 ruby src/main/ruby/horde_cards.rb
 cd ../printableCardsAppender
