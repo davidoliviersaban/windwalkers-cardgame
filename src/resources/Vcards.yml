@@ -78,19 +78,22 @@ T3Icon:
 
 Pouvoir_Actif:
   extends: inside
-  x: += 50
+  x: += 10
 #  y: += 560
   y: += 770
-  width: 600
+  width: 650
   height: 200
-  font: ChunkFive Roman,Sans 10
+  font: ChunkFive Roman,Sans 9
   valign: middle
 
 Pouvoir_Passif:
+#  extends: Position
+#  x: -= 150
+#  width: 300
   extends: Pouvoir_Actif
-  y: -= 150
-  width: 600
-  font: ChunkFive Roman,Sans 10
+  y: -= 90
+  height: 200
+  font: ChunkFive Roman,Italic 9
 
 Description:
   extends: Pouvoir_Actif

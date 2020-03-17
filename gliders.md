@@ -34,8 +34,8 @@ Le vaisseau lancera toujours 6 d6, tout comme les hordiers mais le vent aura tou
 Pour permettre aux Gliders d'avoir un vrai challenge, les valeurs de d6 manquant vaudront toujours la force du vent.
 Ainsi, pour un vent de force 6, meme sans d6 impose par le plateau, le vent fera sur chacun de ses d6 "6".
 
-Prenons l'exemple d'un navire en case A , un vent sur cette tuile aurait 1d6 a cause de la case F, + 1d6 de la case B + 1d6 de la case G soit 3d6.
-Ces d6 obeissent aux memes regles que celles de Windwalkers. Ce sont des d6 colores, le navire devra donc faire exactement la meme valeur que ces d6.
+Prenons l'exemple d'un navire en case A , un Choon(3) sur cette tuile aurait 1d6 a cause de la case F, + 1d6 de la case B + 1d6 de la case G soit 3d6.
+Ces d6 obeissent aux memes regles que celles de Windwalkers. Ce sont des d6 colores, le navire devra donc faire exactement la meme valeur que ces d6. Les 3 autres valeurs que fera le vent seront des 3.
 
 ```  
 sens du vent: de bas en haut
@@ -71,10 +71,19 @@ Plus bas, les exemples seront tous pris selon la case A et un navire se dirigean
 - **Vent Debout** correspond a un vent de face et donc oppose a la direction de votre navire. Pour aller de A vers C, vent debout correspond au vent de force 1.
 
 La direction du vent est capitale car elle influera sur la difficulte de naviguer. Cela sera represente par des bonus ou des penalites de deplacement.
-- **Bon Pre** reduira la difficulte du vent a affronte de 1 en force (il peut y avoir des vents force 0)
+- **Bon Pre** reduira la difficulte du vent a affronte de 1 en force (il peut y avoir des vents ressentis de force 0)
 - **Grand Largue** n'a aucun effet 
 - **Vent Arriere** le vent a un d6 noir
-- **Vent Debout** le vent a +1 en force (il peut y avoir des vents force 7)
+- **Vent Debout** le vent a +1 en force (il peut y avoir des vents ressentis de force 7)
+
+## L'Exploration
+Au cours de la partie, votre navire va se deplacer sur le plateau afin d'accomplir certaines missions.
+Pour ce faire, vous avez a votre disposition la puissace de vos voiles et moteurs ; cependant il faudra faire face parfois des vents complexes avec sagesse et puissance.
+D'un point de vue "roleplay", vos voiles seront representees par les d6 que vous lancerez et l'investissement des moteurs se fera a travers le carburant que vous depenserez pour ajuster vos d6.
+
+Un navire s'arrete quand il le desire ou quand il n'a plus de carburant. Si vous devez vous arreter pendant que vous affrontez un vent, vous perdrez une piece d'equipement ou une partie de votre cargaison.
+
+Lorsqu'un navire se pose, il recupere tout son carburant et passe son tour. Sinon, le navire avance et joue tant qu'il le peut/le veut.
 
 # Capacites possible du Navire
 Un navire commence avec une certaine capacite de soute et de capacite deplacement.
@@ -92,7 +101,7 @@ Un navire est limite par:
  En debut de partie, le navire aura une soute pleine de denrees sans pouvoir particulier.
  
  
- #Les equipements du Navire
+ # Les equipements du Navire
  Tous les equipements/personnes du navire sont stockes dans la soute.
  
  Les cartes **equipement** representent:
@@ -112,6 +121,9 @@ Le navire peut effectuer plusieurs missions:
 - Construire un batiment/village sur la carte
 - Amener un Hordier a la Horde
 - Transporter du materiel/denrees a une autre ville
+- Aller explorer certains points cle de la carte.
 
 Chaque mission rapporte ensuite une carte equipement/consommable.
 Une mission perilleuse pourrait proposer d'ameliorer definitivement le vaisseau?
+
+

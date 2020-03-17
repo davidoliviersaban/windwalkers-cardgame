@@ -1,31 +1,32 @@
-Nom,Type,Description,Pouvoir_Actif,Pouvoir_Passif,Tier,Image
-Voile performante,Equipement,Cette voile s'adapte tres vite aux fluctuations du vent,,Diminuez la valeurs de vos d6 gratuitement,T3,
-Voile renforcee,Equipement,Cette voile particulierement bien dessinee et solide,,+1 resistance au vent,T3,
-Voile profilee,Equipement,Cette voile particulierement bien dessinee et solide,,+1 a la force du vent ignore,T3,
-Extension de cale,Equipement,,,Augmentez la capacite de 2 taille de la cale,T3,
-Batteries petite capacite,Equipement,,,Augmentez la reserve de carburant de 3,T3,
-Batteries grande capacite,Equipement,,,Augmentez la reserve de carburant de 4,T3,
-Bulletin meteo,Consommable,Simple et precis le bulletin meteo vous indiquera la force des vents,Devoilez un vent sur la tuile de votre choix,
-Syphon venteux,Consommable,,Defaussez un equipement et echangez 2 vents,
-Combustible,Consommable,,Restaurez 3 points du carburant,,T3,
-Generateur,Equipement,,Restaurez 5 points du carburant a l'atterrissage,,T3,
-Parachute de securite,Consommable,Parachute a usage unique,-1 a la force du vent,,,
-Eolienne,Consommable,Usage Unique,Faites pivoter la tuile ou vous vous trouvez d'une section,,,
-Puissante Eolienne,Consommable,Usage Unique,Faites pivoter la tuile ou vous vous trouvez,,,
-Terraformation,Consommable,Usage Unique,Rajoutez ou retirez 1 d6 rouge sur la tuile en cours,,,
-Plantations,Consommable,Usage Unique,Rajoutez ou retirez 1 d6 vert sur la tuile en cours,,,
-Plans d'habrit,Consommable,Avec des materiaux de construction et de la nourriture; ces plans vous permettront d'installer une nouvelle ville,Remplacez la tuile courante par une tuile village,,T3,
-Tonneaux de biere,Denree,Fameuse biere ambree venant des terres desertiques du Leergreem particulierement appreciee par les airpailleurs,,,,
-Equipement medical,Denree,Fameuse biere ambree venant des terres desertiques du Leergreem particulierement appreciee par les airpailleurs,,,,
-Eau potable,Denree,Fameuse biere ambree venant des terres desertiques du Leergreem particulierement appreciee par les airpailleurs,,,,
-Nourriture,Denree,Fameuse biere ambree venant des terres desertiques du Leergreem particulierement appreciee par les airpailleurs,,,,
-Jarres de Vin,Denree,Fameuse biere ambree venant des terres desertiques du Leergreem particulierement appreciee par les airpailleurs,,,,
-Materiaux de base,Denree,Fameuse biere ambree venant des terres desertiques du Leergreem particulierement appreciee par les airpailleurs,,,,
-Materiaux de construction,Denree,Fameuse biere ambree venant des terres desertiques du Leergreem particulierement appreciee par les airpailleurs,,,,
-Capitaine Zamani,Capitaine,Try again,Si vous echouez a passer ne perdez pas de marchandise,,
-Commandante Lwandle,Capitaine,Ocean,Retournez un d6 du vent,,
-Amirale Ramla,Capitaine,Prophetess,
-Contre-Amirale Nokuthula,Capitaine,Mother Of Peace,
-Maitresse Andile,Capitaine,The Family Is Growing,
-Major Sibusiso,Capitaine,Blessing,,Gagnez 1 carburant par deplacement,
-Commandante Nobantu,Capitaine,Mother of people,
+Nom,Fonction,Description,Pouvoir_Actif,Pouvoir_Passif,Tier,Image
+Voile performante,Equipement,Cette voile s'adapte tres vite aux fluctuations du vent,,∞: Diminuez la valeurs de vos d6 gratuitement,T3,Equipement.png
+Voile renforcee,Equipement,Cette voile particulierement bien dessinee et solide,,∞: +1 resistance au vent,T3,Equipement.png
+Voile profilee,Equipement,Cette voile particulierement bien dessinee et solide,,∞: +1 a la force du vent ignore,T3,Equipement.png
+Moteur puissant,Equipement,Ces moteurs ,,∞: Faites +3 a un de vos d6,T2,Equipement.png
+Extension de cale,Equipement,,,∞: Augmentez la capacite de 2 taille de la cale,T1,Equipement.png
+Batteries Pte capacite,Equipement,,,∞: Augmentez la reserve de carburant de 3,T3,Equipement.png
+Batteries Gde capacite,Equipement,,,∞: Augmentez la reserve de carburant de 4,T2,Equipement.png
+Generateur,Equipement,,τ: Restaurez 5 points du carburant,,T1,Equipement.png
+Bulletin meteo,Consommable,Simple et precis le bulletin meteo vous indiquera la force des vents,τ: Devoilez un vent sur la tuile de votre choix,,T1,Consommable.png
+Syphon venteux,Consommable,,τ: Defaussez un equipement et echangez 2 vents,,T1,Consommable.png
+Combustible,Consommable,,τ: Restaurez 3 points du carburant,,T2,Consommable.png
+Parachute de securite,Consommable,Parachute a usage unique,τ: -1 a la force du vent,,,Consommable.png
+Ecluse,Consommable,Usage Unique,τ: Faites pivoter la tuile ou vous vous trouvez d'une section,,,Consommable.png
+Puissante Ecluse,Consommable,Usage Unique,τ: Faites pivoter la tuile ou vous vous trouvez,,,Consommable.png
+Terraformation,Consommable,Usage Unique,τ: Rajoutez ou retirez 1 d6 rouge sur la tuile en cours de maniere permanente,,,Consommable.png
+Plantations,Consommable,Usage Unique,τ: Rajoutez ou retirez 1 d6 vert sur la tuile en cours de maniere permanente,,,Consommable.png
+Plans d'habrit,Consommable,Avec des materiaux de construction et de la nourriture; ces plans vous permettront d'installer une nouvelle ville,τ: Remplacez la tuile courante par une tuile village,,T3,Consommable.png
+Tonneaux de biere,Denree,Fameuse biere ambree venant des terres desertiques du Leergreem particulierement appreciee par les airpailleurs,,,,Denree.png
+Equipement medical,Denree,Fameuse biere ambree venant des terres desertiques du Leergreem particulierement appreciee par les airpailleurs,,,,Denree.png
+Eau potable,Denree,Fameuse biere ambree venant des terres desertiques du Leergreem particulierement appreciee par les airpailleurs,,,,Denree.png
+Nourriture,Denree,Fameuse biere ambree venant des terres desertiques du Leergreem particulierement appreciee par les airpailleurs,,,,Denree.png
+Jarres de Vin,Denree,Fameuse biere ambree venant des terres desertiques du Leergreem particulierement appreciee par les airpailleurs,,,,Denree.png
+Materiaux de base,Denree,Fameuse biere ambree venant des terres desertiques du Leergreem particulierement appreciee par les airpailleurs,,,,Denree.png
+Mat. de construction,Denree,Fameuse biere ambree venant des terres desertiques du Leergreem particulierement appreciee par les airpailleurs,,,,Denree.png
+Capitaine Zamani,Capitaine,Try again,τ: Si vous echouez a passer ne perdez pas de marchandise,∞: Depensez 1 carburant par deplacement,,Capitaine.png
+Commandante Lwandle,Capitaine,Ocean,τ: Retournez un de vos d6,∞: Retournez un d6 du vent,,Capitaine.png
+Contre-Amirale Ramla,Capitaine,Prophetess,τ: Devoilez un vent sur une tuile adjacente,∞: Depensez 1 carburant par deplacement,,Capitaine.png
+Amirale Nokuthula,Capitaine,Mother Of Peace,τ: Conservez jusqu'a 2d6 du vent. Ne les relancez pas.,∞: Conservez jusqu'a 3 de vos d6. Ne les relancez pas.,,Capitaine.png
+Maitresse Andile,Capitaine,The Family Is Growing,τ: Appliquez le pouvoir d'un passager,∞: Ignorez un d6 noir,,Capitaine.png
+Major Sibusiso,Capitaine,Blessing,τ: Appliquez le pouvoir d'un consommable sans le consommer,∞: Gagnez 3 carburants par deplacement,,Capitaine.png
+Commandante Nobantu,Capitaine,Mother of people,τ: Ignorez tous les d6 identiques a la force du vent,∞: Si le vent fait 2 d6 identiques; ignorez l'un d'eux,,Capitaine.png
