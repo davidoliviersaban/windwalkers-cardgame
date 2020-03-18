@@ -5,11 +5,11 @@ Accalmie,consommable,Consommable,Le temps se calme et on peut envisager de progr
 Temps calme,consommable,Consommable,Le temps se calme et on peut envisager de progresser dans de meilleures conditions,Baissez la force d'un vent de 2,,T3,consommables/Accalmie.png
 Petite Astuce,consommable,Consommable,Quelqu'un m'a dit ... que le voisin lui a dit ... qu'une connaissance aurait dit...,Utilisez la capacite d'un Hordier visible,,T2,consommables/Astuce.png
 Astuce,consommable,Consommable,Quelqu'un m'a dit ... qu'une connaissance aurait dit...,Utilisez la capacite d'un Hordier visible sans restriction,,T3,consommables/Astuce.png
-Vent contraire,consommable,Consommable,,Echangez la place de 2 vents.,,T3,consommables/Bourrasque.png
-Bourrasques,consommable,Consommable,,Augmentez la puissance de votre prochain vent de 1 ainsi que celle de vos adversaires.,,T3,consommables/Bourrasque.png
-Blaast,consommable,Consommable,,Placez tous les d6 de votre vent sur la face <6>. Il en sera de meme pour les autres joueurs.,,T3,consommables/Bourrasque.png
+Vent contraire,consommable,Consommable,Prendre c'est bien mais donner c'est mieux.,Echangez la place de 2 vents.,,T3,consommables/Bourrasque.png
+Bourrasques,consommable,Consommable,Si on serre les fesses ca devrait bien se passer.,Augmentez la puissance de votre prochain vent de 1 ainsi que celle des vents de vos adversaires.,,T3,consommables/Bourrasque.png
+Blaast,consommable,Consommable,Il faut savoir enfoncer son casque et parer a toutes les eventualites.,Placez tous les d6 de votre vent sur la face <6>. Il en sera de meme pour les autres joueurs.,,T3,consommables/Bourrasque.png
 Bulletin,consommable,Consommable,Prevoyance est mere de surete.,Devoilez le vent d'une tuile,,T1,consommables/Bulletin.png
-Consentement,consommable,Consommable,,Changez une regle du jeu avec l'accord des autres joueurs,,T2,consommables/Consentement.png
+Consentement,consommable,Consommable,Si vous savez mettre tout le monde d'accord. Voila une carte qui est faite pour vous.,Changez une regle du jeu avec l'accord des autres joueurs,,T2,consommables/Consentement.png
 Transfer,consommable,Consommable,Vous avez en votre possession un document tellement officiel qu'il est irrefutable,Echangez un de vos hordiers avec celui/celle d'un autre joueur,,T3,consommables/Partage.png
 Partage,consommable,Consommable,Il faut savoir relever des defis. Tous ensemble.,Tous les joueurs jouent avec un d6 de moins,,T2,consommables/Partage.png
 Le tout pour le tout,consommable,Consommable,Meme pas peur.,A partir de maintenant jouez avec un d6 de moins et marquez un point de plus par tuile traversee,,T2,consommables/Partage.png
