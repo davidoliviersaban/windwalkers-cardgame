@@ -20,7 +20,8 @@ def drawCards(deck,dirname)
   fill_color["Traine"] = "#AAFFAA"
   fill_color["Fer"] = "#FFAAAA"
   fill_color["Traceur"] = "#DD8888"
-  fill_color[""] = "#FFFFFF"
+  fill_color["Consommable"] = "#FFFFFF"
+
 
   rect layout: :inside, fill_color:  deck['Position'].map{|c| fill_color[c]}
 

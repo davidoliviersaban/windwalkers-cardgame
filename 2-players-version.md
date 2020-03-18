@@ -39,15 +39,12 @@ A 4 joueurs, le village situe entre les joueurs 3 et 4 sera a mi distance des 2 
 Au premier tour, les joueurs ont le droit a un bulletin meteo qu'ils pourront utiliser a n'importe quel moment.
 Ce bulletin permet de reveler un vent sur la tuile de son choix.
 
-# Idees
-Il faut des cartes supplementaires pour mettre des crasses a l'autre ou s'en proteger.
--> Il faut trouver un moyen d'en piocher. (Villages? Certains Vents? Certains persos speciaux)
--> Des nouveaux persos?
+## Regle optionnelle - Cartes consommables
+Les cartes consommables sont des cartes speciales qui restent en main et qui ne sont devoilees que pour etre utilisees. Elles sont a usage unique comme leur nom l'indique.
 
-Exemples de pouvoirs:
-- Votre vent prend +1 en force, le prochain vent de votre adversaire egalement.
-- Le vent de votre adversaire prend +1 en force, le votre egalement.
-- Eboulement, une tuile terrain n'est plus accessible
-- Echange de vents
-- Bulletin meteo
-- Echange de perso lorsqu'on se croise
+Chaque joueur en pioche 2 en debut de partie et peut en recuperer une dans un village.
+On ne peut pas joueur plus d'un consommable par tour ni en avoir plus de 2 en main.
+
+Les cartes consommables sont la pour mettre du **fun** dans le jeu. Si certaines ne sont pas adaptees a votre style de jeu, retirez les de la pioche ou bien choisissez en quelques unes et faites un phase de draft supplementaire.
+
+[] @TODO: Je ne sais pas encore si les cartes consommables de Gliders pourront etre utilisees dans cette version.
