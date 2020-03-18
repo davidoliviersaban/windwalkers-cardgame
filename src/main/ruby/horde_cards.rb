@@ -2,7 +2,7 @@ require 'squib'
 
 deck1 = Squib.csv file: %w(src/resources/horde_cards.csv)
 deck2 = Squib.csv file: %w(src/resources/horde2_cards.csv)
-#deck = Squib.csv file: %w(src/resources/data.csv)
+deck_Vs = Squib.csv file: %w(src/resources/horde_vs_cards.csv)
 
 def drawCards(deck,dirname)
 #  rect layout: :bleed
@@ -61,4 +61,10 @@ Squib::Deck.new(cards: deck2["Nom"].size,#cards: deck["Name"].size, # cards: 1,#
                 layout: %w(src/resources/Vlayout.yml src/resources/Vcards.yml),
                 width: '2.5in', height: '3.5in') do
   drawCards(deck2,'_cards2')
+end
+
+Squib::Deck.new(cards: deck_Vs["Nom"].size,#cards: deck["Name"].size, # cards: 1,#
+                layout: %w(src/resources/Vlayout.yml src/resources/Vcards.yml),
+                width: '2.5in', height: '3.5in') do
+  drawCards(deck_Vs,'_cards_vs')
 end
