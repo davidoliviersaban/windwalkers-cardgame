@@ -72,8 +72,8 @@ Plus bas, les exemples seront tous pris selon la case A et un navire se dirigean
 
 La direction du vent est capitale car elle influera sur la difficulte de naviguer. Cela sera represente par des bonus ou des penalites de deplacement.
 - **Bon Pre** reduira la difficulte du vent a affronte de 1 en force (il peut y avoir des vents ressentis de force 0)
-- **Grand Largue** n'a aucun effet 
-- **Vent Arriere** le vent a un d6 noir
+- **Grand Largue** le vent a 1 d6 noir
+- **Vent Arriere** le vent a 2 d6 noir
 - **Vent Debout** le vent a +1 en force (il peut y avoir des vents ressentis de force 7)
 
 ## L'Exploration
@@ -84,6 +84,8 @@ D'un point de vue "roleplay", vos voiles seront representees par les d6 que vous
 Un navire s'arrete quand il le desire ou quand il n'a plus de carburant. Si vous devez vous arreter pendant que vous affrontez un vent, vous perdrez une piece d'equipement ou une partie de votre cargaison.
 
 Lorsqu'un navire se pose, il recupere tout son carburant et passe son tour. Sinon, le navire avance et joue tant qu'il le peut/le veut.
+
+Un vaisseau qui n'a pas la capacite de passer un vent puissant doit jeter un element en soute pour avoir le droit d'affronter le vent.
 
 # Capacites possible du Navire
 Un navire commence avec une certaine capacite de soute et de capacite deplacement.
