@@ -32,9 +32,13 @@ def drawCards(deck,dirname)
     text str: deck[key], layout: key
   end
 
-#  png layout: deck["Tier"].map{ |tier|
-#    tier+'Icon'
-#  }
+  png layout: deck["Tier"].map{ |tier|
+    if (tier)
+      tier+'Icon'
+    else
+      'Empty'
+    end
+  }
 
   save_png prefix: deck["Nom"], dir: dirname#dir: '_cards'
 

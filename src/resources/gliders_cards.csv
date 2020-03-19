@@ -30,14 +30,14 @@ Amirale Nokuthula,Capitaine,Mother Of Peace,τ: Conservez jusqu'a 2d6 du vent. N
 Maitresse Andile,Capitaine,The Family Is Growing,τ: Appliquez le pouvoir d'un passager,∞: Ignorez un d6 noir,,Andile.png
 Major Sibusiso,Capitaine,Blessing,τ: Appliquez le pouvoir d'un consommable sans le consommer,∞: Gagnez 3 carburants par deplacement,,Sibusiso.png
 Commandante Nobantu,Capitaine,Mother of people,τ: Ignorez tous les d6 identiques a la force du vent,∞: Si le vent fait 2 d6 identiques; ignorez l'un d'eux,,Nobantu.png
-Mission,Mission,Preparation: Si vous n'avez pas de plan de construction; mettez cette carte a disposition dans un village,Mission: Construisez un village et laissez y 3 Denrees.,,T1,Denree.png
-Mission,Mission,,Mission: Transportez sans encombres des 2 Hordiers d'un village a une ville.,,T1,Denree.png
-Mission,Mission,Preparation: Deposez un hordier sur un lieu special; s'il n'y en a pas piochez la premiere mission avec un lieu special,Mission: Allez secourir ce Hordier et ramenez le dans une ville ou un village,,T3,Denree.png
-Mission,Mission,,Mission: Amenez 1 Hordier de chaque couleur a la Horde.,,T1,Denree.png
-Mission,Mission,,Mission: Transformez un terrain pour faciliter le deplacement de la Horde,,T1,Denree.png
-Mission,Mission,Preparation: installez le Nid d'Aigle sur la tuile avec le plus de d6 rouges.,Mission: Faites en sorte que le Nid d'Aigle ait 3 vents colores,,T3,../../terrain/Gliders Nid Aigle.png
+Mission,Mission,Preparation: Si vous n'avez pas de plan de construction; mettez cette carte a disposition dans un village,Mission: Construisez un village et laissez y 3 Denrees.,,T3,Denree.png
+Mission,Mission,,Mission: Transportez sans encombres des 2 Hordiers d'un village a une ville.,,T3,Denree.png
+Mission,Mission,Preparation: Deposez un hordier sur un lieu special; s'il n'y en a pas piochez la premiere mission avec un lieu special,Mission: Allez secourir ce Hordier et ramenez le dans une ville ou un village,,T1,Denree.png
+Mission,Mission,,Mission: Amenez 1 Hordier de chaque couleur a la Horde.,,T3,Denree.png
+Mission,Mission,,Mission: Transformez un terrain pour faciliter le deplacement de la Horde,,T3,Denree.png
+Mission,Mission,Preparation: installez le Nid d'Aigle sur la tuile avec le plus de d6 rouges.,Mission: Faites en sorte que le Nid d'Aigle ait 3 vents colores,,T1,../../terrain/Gliders Nid Aigle.png
 Mission,Mission,Preparation: Installez la rotonde des q'une stèche(4) apparait sur une tuile adjacente et placez un oiseleur de la defausse sur une ville,Mission: Deposez l'oiseleur dans la Rotonde,,T2,../../terrain/Gliders Rotonde.png
-Mission,Mission,Preparation: Installez le Syphon des qu'un blizzard(5) apparait sur une tuile adjacente; tous les vents adjacents sont des blizzards(5),Mission: Traversez le Syphon(6). Defaussez-le et tous les vents adjacents,,T3,../../terrain/Gliders Syphon.png
+Mission,Mission,Preparation: Installez le Syphon des qu'un blizzard(5) apparait sur une tuile adjacente; tous les vents adjacents sont des blizzards(5),Mission: Traversez le Syphon(6). Defaussez-le et tous les vents adjacents,,T1,../../terrain/Gliders Syphon.png
 Mission,Mission,Preparation: Installez les Cites Volantes en bord de carte; installez la Maison a 6 tuiles de distance.,Mission: Ravitaillez la Maison en Denrees avec du materiel recupere sur les Cites Volantes,,T2,../../terrain/Gliders Cites Volantes.png
 Mission,Mission,Preparation: Installez Le Rocher au milieu de l'eau. S'il n'y a pas d'eau ou pas assez; rajoutez les tuiles necessaires ou faites des trous.,Mission: Assistez la Horde dans l'ascension du Rocher,,T2,../../terrain/Gliders Le Rocher.png
-Mission,Mission,Preparation: Installez la Maison sur une tuile ayant 1d de chaque couleur; a defaut au centre de la carte,Mission: La Horde doit passer et laisser un Hordier dans la Maison et vous devez ramener ce Hordier dans une ville.,,T3,../../terrain/Gliders Maison.png
+Mission,Mission,Preparation: Installez la Maison sur une tuile ayant 1d de chaque couleur; a defaut au centre de la carte,Mission: La Horde doit passer et laisser un Hordier dans la Maison et vous devez ramener ce Hordier dans une ville.,,T1,../../terrain/Gliders Maison.png
