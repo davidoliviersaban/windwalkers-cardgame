@@ -16,10 +16,10 @@ def drawCards(deck,dirname)
 
   fill_color = Hash.new
   fill_color["Denree"] = "#AAAAFF"
-  fill_color["Consommable"] = "#AAFFAA"
+  fill_color["Consommable"] = "#FFFFFF"
   fill_color["Equipement"] = "#FFAAAA"
   fill_color["Capitaine"] = "#DD8888"
-  fill_color[""] = "#FFFFFF"
+  fill_color["Mission"] = "#AA88AA"
 
   rect layout: :inside, fill_color:  deck['Fonction'].map{|c| fill_color[c]}
 

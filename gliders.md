@@ -118,14 +118,17 @@ Un navire est limite par:
 Le navire commence avec 9 points de carburants et 4 places en soute.
 
 # Les Missions
-Le navire peut effectuer plusieurs missions:
-- Affronter un vent puissant
-- Construire un batiment/village sur la carte
-- Amener un Hordier a la Horde
-- Transporter du materiel/denrees a une autre ville
-- Aller explorer certains points cle de la carte.
+Le navire doit effectuer 2 missions par chapitre pendant que la Horde traverse la carte.
+Ces 2 missions doivent etre remplies pour que le chapitre s'acheve avec succes. Si la horde echoue a traverser ou que vous echouez a remplir vos 2 missions, la partie se termine et vous comptez vos points.
 
-Chaque mission rapporte ensuite une carte equipement/consommable.
-Une mission perilleuse pourrait proposer d'ameliorer definitivement le vaisseau?
+En debut de partie, piochez 3 missions et choisissez en au moins une.
+Une nouvelle mission peut etre piochee chaque fois que votre vaisseau se rend en ville.
+Vous ne pouvez pas avoir plus de 3 missions en main.
+
+Lorsque vous decidez d'effectuer une mission ou que l'une d'elle s'active, posez la mission devant vous et faites les actions necessaires.
+Rajoutez alors en ville autant d'equipements que le niveau de la mission.
+Une fois accomplie votre mission, rajoutez une carte equipement en ville.
+
+En fin de chapitre, chaque mission remplie rapporte autant de points que son grade. Les missions grade 1 rapportent donc 1 point, les 2 rapportent 2 points et les 3 rapportent 3 points.
 
 
