@@ -22,10 +22,10 @@ BottomLayer:
 
 Image:
   extends: inside
-#  x: += 100
-#  y: += 100
-#  width: 450
-#  height: 450
+  #  x: += 100
+  #  y: += 100
+  #  width: 450
+  #  height: 450
   height: 675
 
 Fonction:
@@ -79,7 +79,7 @@ T3Icon:
 Pouvoir_Actif:
   extends: inside
   x: += 10
-#  y: += 560
+  #  y: += 560
   y: += 770
   width: 650
   height: 200
