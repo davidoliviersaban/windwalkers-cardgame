@@ -6,12 +6,6 @@ Ni le jeu et son titre / ni les images et pdf ne sont de moi. Je ne fourni que l
 
 Afin de construire les images a imprimer, utilisez cet autre git repository: [printableCardsAppender](https://github.com/davidoliviersaban/printableCardsAppender)
 
-- [] @TODO: Un vent peut avoir une variation de +/- 1 c'est le nombre de des en + ou en - qui doivent etre lances pour le vent.
-- [] @TODO: Pour battre un vent, le joueur lance autant de d6 qu'il a de hordiers.
-- [] @TODO: Renommer les lieux comme les personnages ont ete renommes.
-- [] @TODO: (mettre a jour les chapitres avec les photos)
-- [] @TODO: faire un petit fascicule avec une histoire a lire. 
-
 # Windwalkers - La Horde du Contrevent
 >À l’origine fut la vitesse, le pur mouvement furtif, le « vent-foudre ». Puis le cosmos décéléra, prit consistance et forme, jusqu’aux lenteurs habitables, jusqu’au vivant, jusqu’à vous. Bienvenue à toi, lent homme lié, poussif tresseur des vitesses. 
 *Damasio, Alain. La Horde du Contrevent (Sc. Fiction) (French Edition) (Kindle Locations 84-86). La Volte. Kindle Edition.*
@@ -27,17 +21,28 @@ Vous incarnez une horde, un groupe de personnages appeles Hordiers, qui devront 
 
 **Note:** *Le Jeu est concu pour l'instant pour un seul joueur mais je travaille pour qu'il passe en multi.*
 
+# Le Materiel
+
+Pour joueur a ce jeu, il vous faudra au minimum: 6 d6 pour votre horde et 6 d6 pour le vent. Certains personnages ont des pouvoirs speciaux qui vous rajouteront des d6, il serait donc bon d'avoir au moins 12 d6 pour votre horde et 6 d6 pour le vent et 6 d6 noirs.
+Personnellement, je joue avec:
+- 9d6 roses pour ma horde
+- 6d6 blancs pour le vent
+- 6d6 noirs pour les epreuves
+- 3d6 rouges et 3d6 verts et 3d6 jaunes.
+- 54 cartes personnages a imprimer (`imagesToPrint/cards_v1`)
+- 58 tuiles (2x `imagesToPrint/terrain.0`, 2x`imagesToPrint/terrain.1`, 1x `imagesToPrint/terrain.2`)
+
 # Presentation et Vocabulaire
 
 ## La Horde
 Une horde est un groupe de personnages appeles Hordiers. Chaque personne de la Horde a une fonction particuliere et une position. Cette position est importante pour permettre a la Horde de progresser.
 
 Une Horde est composee par:
-* le **Fer** qui fend le flux du vent grâce à sa formation en pointe ;
-* le **Pack**, constitué de rangs compacts, forme le corps de la Horde;
-* la **Traine**, enfin, rassemble les *crocs* chargés de tracter le matériel de la Horde (vêtements, vaisselle, outils, nourriture, paillasses).
+* le **Fer** qui fend le flux du vent grâce à sa formation en pointe, ils influence grandement les effets du vents sur le reste du groupe.
+* le **Pack**, constitué de rangs compacts, forme le corps de la Horde; ils ont plus souvent des roles de support ou des action plus ponctuelles sur la horde ou le vent.
+* la **Traine**, enfin, rassemble les *crocs* chargés de tracter le matériel de la Horde (vêtements, vaisselle, outils, nourriture, paillasses). Ils ne feront partie integrante de la horde qu'un fois qu'ils auront prouve leur valeur.
 
-Le **Traceur** est un membre particulier du fer car c'est lui qui trace la route. C'est le leader charismatique qui dirige sa horde afin de passer les epreuves les plus difficiles.
+Le **Traceur** est un membre particulier du Fer car c'est lui qui trace la route. C'est le leader charismatique qui dirige sa horde afin de passer les epreuves les plus difficiles. Une horde peut progresser sans traceur mais il est generalement celui qui dirige la composition generale du groupe.
 
 ## Les vents
 Alain Damasio invente tout un vocabulaire pour decrire le vent et une terminologie pour contrer ce vent. Il decrit egalement comment les scribes notent le vent:
@@ -71,7 +76,7 @@ Lors de la progression de votre Horde sur le terrain, il vous sera possible de c
 Pour effectuer sa Trace, la Horde doit contrer le vent. Contrer est l'action d'avancer a contre vent pour rejoindre les villes intermediaires et enfin rejoindre Camp Boban.
 
 Chaque vent possede un nombre de couleurs et une force. La couleur donne le nombre de des colores que l'on doit lancer pour le vent.
-Un vent est compose de 6 d6.
+Un vent est toujours compose de 6 d6.
 
 La force du vent impose a la Horde le nombre de d6 qui doivent etre identiques au vent. Les couleurs doivent etre egalees avant les d6 incolores du vent.
 
@@ -214,17 +219,21 @@ Dans le pire des cas, le vent aura donc 3 d6 colores en plus, un pour chaque for
 
 Dans l'exemple ci-dessus, la tuile A n'a qu'une seule couleur commune avec ses *tuiles de contre* (tuiles B, C, et D): la valeur 5 qui joint A et B. Une Horde sur la tuile A qui souhaite avancer fera donc face a un vent avec 2 d6 incolores et 1 d6 colore.
 
+## Le plateau de jeu
+Une horde est composee de 8 membres d'equipe. 3 Fer dont le Traceur, 3 Pack et 2 Crocs.
+Sur le plateau de jeu apparait egalement une echelle qui represente le moral de la Horde. Vous commencez avec 9 points de moral (le maximum).
+
 ## Le Recrutement (@TODO a retravailler)
 Les grandes villes proposent un grand nombre de personnages qui peuvent etre recruter.
 Les villages abrites quant a eux, n'ont qu'un choix restreint de personnages.
-Pour chaque village abrite, definissez une couleur et proposez 3 cartes personnage pour chacun d'eux.
-Pour chaque ville, proposez 3 cartes personnages de chaque couleur.
+Pour chaque village, proposez 2 cartes personnage de la couleur du village pour chacun d'eux.
+Pour chaque ville, proposez 2 cartes personnages de chaque couleur.
 
 Le joueur peut recruter dans sa horde autant de personnage qu'il le souhaite tant qu'il respecte les conditions de son plateau Horde. Le joueur peut egalement decider de se separer de certains de ses Hordiers au benefices d'autres plus adequates pour la mission suivante.
 
 # Chapitres
 Ce jeu peut se joueur chapitre apres chapitre. Il est recommande pour la prise en main de pouvoir recommencer avec une equipe toute neuve apres chaque chapitre.
-Vous pourrez ensuite passer en mode campagne et garder votre equipe et son moral d'un chapitre a l'autre. Le mode campagne est donc bien plus difficile que le mode normal.
+Vous pourrez ensuite passer en mode campagne et garder votre equipe et son moral d'un chapitre a l'autre. Le mode campagne est donc bien plus difficile que le mode normal. Au debut de chaque chapitre, votre horde regagnera un point de moral afin d'entamer son periple dans de meilleures conditions.
 
 ## Chapitre 1
 - **Depart**: Aberlaas
@@ -306,3 +315,10 @@ https://fr.fantasynamegenerators.com/
 
 ## Generateur de cartes: Squib
 https://squib.readthedocs.io/
+
+# Ma Todo list a faire ou pas :)
+- [] @TODO: Un vent peut avoir une variation de +/- 1 c'est le nombre de des en + ou en - qui doivent etre lances pour le vent.
+- [] @TODO: Pour battre un vent, le joueur lance autant de d6 qu'il a de hordiers.
+- [] @TODO: Renommer les lieux comme les personnages ont ete renommes.
+- [] @TODO: (mettre a jour les chapitres avec les photos)
+- [] @TODO: faire un petit fascicule avec une histoire a lire. 
