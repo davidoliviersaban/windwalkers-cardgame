@@ -20,6 +20,7 @@ BottomLayer:
   y: += 560
   height: 150
 
+
 Image:
   extends: inside
   #  x: += 100
