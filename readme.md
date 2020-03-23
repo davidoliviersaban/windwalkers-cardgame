@@ -100,13 +100,17 @@ Vous rencontrez un vent de force 2 avec 3 couleurs.
 * En appairant les d6 du joueur avec ceux du vent, on voit que les 3 couleurs ne sont respectees pas car la Horde a obtenu un 1. La Horde a egalement obtenu deux 3 et un 6 qui correspondent au d6 incolores du vent.
 Le vent etant de force 2, il exige que 2 d6 soient identiques a son jet. Nous avons respecte cette contrainte car 4 de nos d6 sont identiques. Le vent ayant 3 couleurs, nous devons d'abord reussir a remplir cette contrainte et ce n'est pas realise. Nous pouvons donc pas progresser et revenir en arriere a moins d'utiliser les pouvoirs de notre Horde.
 
-### Ce qui fait baisser le moral
-* Relancer tous les d6 de la Horde
-* Se faire pousser par le vent
-* Changer la valeur +/-1 sur 1 d6 de la Horde
-* Monter un camp (sous Zefirine (force 1) ??)
+## Le Moral
+Le moral est crucial pour un groupe qui va traverser autant d'epreuves difficiles telles que vous vous appretez a vivre. Il faut donc le garder au plus haut. Cependant, on peut user de ce moral pour accomplir des actions heroiques qui permettront au groupe de progresser en situation de crise.
 
-## Regle additionnelle pour le Furevent (vent de force 6)
+Ainsi n'oubliez pas les actions suivantes qui 
+### Ce qui fait baisser le moral
+* **Relancer tous les d6 de la Horde**: Un petit coup de poker qui peut payer. Ou pas.
+* **Se faire pousser par le vent**: Ne pas reussir a contrer est difficile pour le moral des troupes. Personne n'aime se faire balader par le vent, surtout quand son travail est de contrer. Il faut pourtant savoir parfois lacher prise et repartir dans de meilleures conditions.
+* **Changer la valeur +/-1 sur 1 d6 de la Horde**: L'action la plus souvent utilisee, vous pouvez influence l'un de vos d6 de +/- 1 par point de moral depense. Attention car meme si cette action parait anodine, c'est elle qui peut vous faire gagner ou perdre une partie.
+* **Monter un camp et passer son tour**: __Apres__ avoir combattu un vent, un groupe peut decider de monter un camps afin de recuperer des forces et restaurer le pouvoir de tous ses personnages. Il vous en coutera un tour de jeu et un point de moral.
+
+## Regle additionnelle pour le Furevent (vent de force 6) -> A tester
 Les 6 sur les furevent font apparaitre des chrones qui ont des effets aleatoires. Ces effets peuvent aussi bien etre positifs que negatifs.
 Exemples d'effets:
 1. Regagner un point de moral
@@ -276,6 +280,7 @@ Le calcul est le suivant et il s'effectue en mode Campagne:
 - 1 pt / Furvent (6) traverse
 - 3 pts pour la Porte d'Hurle
 - 2 pts pour la Tour Fontaine
+- -1 pt par tuile entre vous et l'arrivee.
 
 Votre equipe ayant 9 points de moral, le maximum theorique est:
 9 points de moral x 4 chapitres + 8 Hordiers + 6 points de Furevent + 3 + 2 = 55 pts.
@@ -285,8 +290,8 @@ J'ai lors de mes tests perdu a la derniere case du dernier chapitre.
 - Au chapitre 1, j'ai fini avec 9 points de moral et je n'ai rencontre aucun Furevent = 9pts
 - Au chapitre 2, j'ai fini avec 8 points de moral et j'ai rencontre 1 Furevent = 8 + 1 = 9 pts
 - Au chapitre 3, j'ai fini avec 3 points de moral et j'ai rencontre 2 Furevents F6 = 3 + 2 = 5 pts
-- Au chapitre 4, j'ai perdu contre un Furevent apres avoir passe 1 Furevent et la porte d'Hurle = 1 + 3 = 4 pts
-- Au final: 9+9+5+4 = 27 pts
+- Au chapitre 4, j'ai perdu contre un Furevent sur la derniere tuile apres avoir passe 1 Furevent et la porte d'Hurle = 1 + 3 - 1 (derniere tuile)= 3 pts
+- Au final: 9+9+5+3 = 26 pts
 
 Pour une evaluation de votre niveau, je dirais que :
 - 0 - 10 points, vous devez encore degrossir pas mal de regles, encore une ou 2 parties pour l'etape suivante.
