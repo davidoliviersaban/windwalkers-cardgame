@@ -40,7 +40,17 @@ def drawCards(deck,dirname)
     end
   }
 
-  save_png prefix: deck["Nom"], dir: dirname#dir: '_cards'
+  png layout: deck["Fonction"].map{ |pos| pos+"Icon"}
+
+  png file: deck["Extension"].map{ |ext|
+    if (ext != nil)
+      "src/resources/helpers/"+ext+".png"
+    else
+      "src/resources/helpers/d6-empty.png"
+    end
+  }, layout: "ExtensionIcon"
+
+  save_png prefix: deck["Fonction"].zip(deck["Nom"]), dir: dirname#dir: '_cards'
 
 end
 

@@ -1,8 +1,6 @@
 require 'squib'
 
 deck1 = Squib.csv file: %w(src/resources/horde_cards.csv)
-deck2 = Squib.csv file: %w(src/resources/horde2_cards.csv)
-#deck = Squib.csv file: %w(src/resources/data.csv)
 
 def drawCards(deck,dirname)
 #  rect layout: :bleed
@@ -20,7 +18,8 @@ def drawCards(deck,dirname)
   fill_color["Traine"] = "#AAFFAA"
   fill_color["Fer"] = "#FFAAAA"
   fill_color["Traceur"] = "#DD8888"
-  fill_color[""] = "#FFFFFF"
+  fill_color["Consommable"] = "#FFFFFF"
+
 
   rect layout: :inside, fill_color:  deck['Position'].map{|c| fill_color[c]}
 
@@ -33,19 +32,21 @@ def drawCards(deck,dirname)
     text str: deck[key], layout: key
   end
 
-  png layout: deck["Position"].map{ |pos|
-    if (pos == "Traine")
-      "AbandonIcon"
+  png layout: deck["Position"].map{ |pos| pos+"Icon"}
+
+  png file: deck["Extension"].map{ |ext|
+    if (ext != nil)
+      "src/resources/helpers/"+ext+".png"
     else
-      "Empty"
+      "src/resources/helpers/d6-empty.png"
     end
-  }
+  }, layout: "ExtensionIcon"
 
   png layout: deck["Tier"].map{ |tier|
     tier+'Icon'
   }
 
-  save_png prefix: deck["Nom"], dir: dirname#dir: '_cards'
+  save_png prefix: deck["Position"].zip(deck["Nom"]), dir: dirname#dir: '_cards'
 
 end
 
@@ -54,10 +55,4 @@ Squib::Deck.new(cards: deck1["Nom"].size,#cards: deck["Name"].size, # cards: 1,#
                 layout: %w(src/resources/Vlayout.yml src/resources/Vcards.yml),
                 width: '2.5in', height: '3.5in') do
   drawCards(deck1,'_cards1')
-end
-
-Squib::Deck.new(cards: deck2["Nom"].size,#cards: deck["Name"].size, # cards: 1,#
-                layout: %w(src/resources/Vlayout.yml src/resources/Vcards.yml),
-                width: '2.5in', height: '3.5in') do
-  drawCards(deck2,'_cards2')
 end

@@ -1,43 +1,43 @@
-Nom,Fonction,Description,Pouvoir_Actif,Pouvoir_Passif,Tier,Image
-Voile performante,Equipement,Cette voile s'adapte tres vite aux fluctuations du vent,,∞: Diminuez la valeurs de vos d6 gratuitement,T3,Equipement.png
-Voile renforcee,Equipement,Cette voile particulierement bien dessinee et solide,,∞: +1 resistance au vent,T3,Equipement.png
-Voile profilee,Equipement,Cette voile particulierement bien dessinee et solide,,∞: +1 a la force du vent ignore,T3,Equipement.png
-Moteur puissant,Equipement,Ces moteurs ,,∞: Faites +3 a un de vos d6,T2,Equipement.png
-Extension de cale,Equipement,,,∞: Augmentez la capacite de 2 taille de la cale,T1,Equipement.png
-Batteries Pte capacite,Equipement,,,∞: Augmentez la reserve de carburant de 3,T3,Equipement.png
-Batteries Gde capacite,Equipement,,,∞: Augmentez la reserve de carburant de 4,T2,Equipement.png
-Generateur,Equipement,,τ: Restaurez 5 points du carburant,,T1,Equipement.png
-Bulletin meteo,Consommable,Simple et precis le bulletin meteo vous indiquera la force des vents,τ: Devoilez un vent sur la tuile de votre choix,,T1,Consommable.png
-Syphon venteux,Consommable,,τ: Defaussez un equipement et echangez 2 vents,,T1,Consommable.png
-Combustible,Consommable,,τ: Restaurez 3 points du carburant,,T2,Consommable.png
-Parachute de securite,Consommable,Parachute a usage unique,τ: -1 a la force du vent,,,Consommable.png
-Ecluse,Consommable,Usage Unique,τ: Faites pivoter la tuile ou vous vous trouvez d'une section,,,Consommable.png
-Puissante Ecluse,Consommable,Usage Unique,τ: Faites pivoter la tuile ou vous vous trouvez,,,Consommable.png
-Terraformation,Consommable,Usage Unique,τ: Rajoutez ou retirez 1 d6 rouge sur la tuile en cours de maniere permanente,,,Consommable.png
-Plantations,Consommable,Usage Unique,τ: Rajoutez ou retirez 1 d6 vert sur la tuile en cours de maniere permanente,,,Consommable.png
-Plans d'habrit,Consommable,Avec des materiaux de construction et de la nourriture; ces plans vous permettront d'installer une nouvelle ville,τ: Remplacez la tuile courante par une tuile village,,T3,Consommable.png
-Tonneaux de biere,Denree,Fameuse biere ambree venant des terres desertiques du Leergreem particulierement appreciee par les airpailleurs,,,,Denree.png
-Equipement medical,Denree,Fameuse biere ambree venant des terres desertiques du Leergreem particulierement appreciee par les airpailleurs,,,,Denree.png
-Eau potable,Denree,Fameuse biere ambree venant des terres desertiques du Leergreem particulierement appreciee par les airpailleurs,,,,Denree.png
-Nourriture,Denree,Fameuse biere ambree venant des terres desertiques du Leergreem particulierement appreciee par les airpailleurs,,,,Denree.png
-Jarres de Vin,Denree,Fameuse biere ambree venant des terres desertiques du Leergreem particulierement appreciee par les airpailleurs,,,,Denree.png
-Materiaux de base,Denree,Fameuse biere ambree venant des terres desertiques du Leergreem particulierement appreciee par les airpailleurs,,,,Denree.png
-Mat. de construction,Denree,Fameuse biere ambree venant des terres desertiques du Leergreem particulierement appreciee par les airpailleurs,,,,Denree.png
-Capitaine Zamani,Capitaine,Try again,τ: Si vous echouez a passer ne perdez pas de marchandise,∞: Depensez 1 carburant par deplacement,,Zamani.png
-Commandante Lwandle,Capitaine,Ocean,τ: Retournez un de vos d6,∞: Retournez un d6 du vent,,Lwandle.png
-Contre-Amirale Ramla,Capitaine,Prophetess,τ: Devoilez un vent sur une tuile adjacente,∞: Depensez 1 carburant par deplacement,,Capitaine.png
-Amirale Nokuthula,Capitaine,Mother Of Peace,τ: Conservez jusqu'a 2d6 du vent. Ne les relancez pas.,∞: Conservez jusqu'a 3 de vos d6. Ne les relancez pas.,,Nokuthula.png
-Maitresse Andile,Capitaine,The Family Is Growing,τ: Appliquez le pouvoir d'un passager,∞: Ignorez un d6 noir,,Andile.png
-Major Sibusiso,Capitaine,Blessing,τ: Appliquez le pouvoir d'un consommable sans le consommer,∞: Gagnez 3 carburants par deplacement,,Sibusiso.png
-Commandante Nobantu,Capitaine,Mother of people,τ: Ignorez tous les d6 identiques a la force du vent,∞: Si le vent fait 2 d6 identiques; ignorez l'un d'eux,,Nobantu.png
-Mission,Mission,Preparation: Si vous n'avez pas de plan de construction; mettez cette carte a disposition dans un village,Mission: Construisez un village et laissez y 3 Denrees.,,T3,Denree.png
-Mission,Mission,,Mission: Transportez sans encombres des 2 Hordiers d'un village a une ville.,,T3,Denree.png
-Mission,Mission,Preparation: Deposez un hordier sur un lieu special; s'il n'y en a pas piochez la premiere mission avec un lieu special,Mission: Allez secourir ce Hordier et ramenez le dans une ville ou un village,,T1,Denree.png
-Mission,Mission,,Mission: Amenez 1 Hordier de chaque couleur a la Horde.,,T3,Denree.png
-Mission,Mission,,Mission: Transformez un terrain pour faciliter le deplacement de la Horde,,T3,Denree.png
-Mission,Mission,Preparation: installez le Nid d'Aigle sur la tuile avec le plus de d6 rouges.,Mission: Faites en sorte que le Nid d'Aigle ait 3 vents colores,,T1,../../terrain/Gliders Nid Aigle.png
-Mission,Mission,Preparation: Installez la rotonde des q'une stèche(4) apparait sur une tuile adjacente et placez un oiseleur de la defausse sur une ville,Mission: Deposez l'oiseleur dans la Rotonde,,T2,../../terrain/Gliders Rotonde.png
-Mission,Mission,Preparation: Installez le Syphon des qu'un blizzard(5) apparait sur une tuile adjacente; tous les vents adjacents sont des blizzards(5),Mission: Traversez le Syphon(6). Defaussez-le et tous les vents adjacents,,T1,../../terrain/Gliders Syphon.png
-Mission,Mission,Preparation: Installez les Cites Volantes en bord de carte; installez la Maison a 6 tuiles de distance.,Mission: Ravitaillez la Maison en Denrees avec du materiel recupere sur les Cites Volantes,,T2,../../terrain/Gliders Cites Volantes.png
-Mission,Mission,Preparation: Installez Le Rocher au milieu de l'eau. S'il n'y a pas d'eau ou pas assez; rajoutez les tuiles necessaires ou faites des trous.,Mission: Assistez la Horde dans l'ascension du Rocher,,T2,../../terrain/Gliders Le Rocher.png
-Mission,Mission,Preparation: Installez la Maison sur une tuile ayant 1d de chaque couleur; a defaut au centre de la carte,Mission: La Horde doit passer et laisser un Hordier dans la Maison et vous devez ramener ce Hordier dans une ville.,,T1,../../terrain/Gliders Maison.png
+Nom,Fonction,Description,Pouvoir_Actif,Pouvoir_Passif,Tier,Image,Extension
+Voile performante,Equipement,Cette voile s'adapte tres vite aux fluctuations du vent,,∞: Diminuez la valeurs de vos d6 gratuitement,T3,Equipement.png,gliders
+Voile renforcee,Equipement,Cette voile particulierement bien dessinee et solide,,∞: +1 resistance au vent,T3,Equipement.png,gliders
+Voile profilee,Equipement,Cette voile particulierement bien dessinee et solide,,∞: +1 a la force du vent ignore,T3,Equipement.png,gliders
+Moteur puissant,Equipement,Ces moteurs ,,∞: Faites +3 a un de vos d6,T2,Equipement.png,gliders
+Extension de cale,Equipement,,,∞: Augmentez la capacite de 2 taille de la cale,T1,Equipement.png,gliders
+Batteries Pte capacite,Equipement,,,∞: Augmentez la reserve de carburant de 3,T3,Equipement.png,gliders
+Batteries Gde capacite,Equipement,,,∞: Augmentez la reserve de carburant de 4,T2,Equipement.png,gliders
+Generateur,Equipement,,τ: Restaurez 5 points du carburant,,T1,Equipement.png,gliders
+Bulletin meteo,Consommable,Simple et precis le bulletin meteo vous indiquera la force des vents,τ: Devoilez un vent sur la tuile de votre choix,,T1,Consommable.png,gliders
+Syphon venteux,Consommable,,τ: Defaussez un equipement et echangez 2 vents,,T1,Consommable.png,gliders
+Combustible,Consommable,,τ: Restaurez 3 points du carburant,,T2,Consommable.png,gliders
+Parachute de securite,Consommable,Parachute a usage unique,τ: -1 a la force du vent,,,Consommable.png,gliders
+Ecluse,Consommable,Usage Unique,τ: Faites pivoter la tuile ou vous vous trouvez d'une section,,,Consommable.png,gliders
+Puissante Ecluse,Consommable,Usage Unique,τ: Faites pivoter la tuile ou vous vous trouvez,,,Consommable.png,gliders
+Terraformation,Consommable,Usage Unique,τ: Rajoutez ou retirez 1 d6 rouge sur la tuile en cours de maniere permanente,,,Consommable.png,gliders
+Plantations,Consommable,Usage Unique,τ: Rajoutez ou retirez 1 d6 vert sur la tuile en cours de maniere permanente,,,Consommable.png,gliders
+Plans d'habrit,Consommable,Avec des materiaux de construction et de la nourriture; ces plans vous permettront d'installer une nouvelle ville,τ: Remplacez la tuile courante par une tuile village,,T3,Consommable.png,gliders
+Tonneaux de biere,Denree,Fameuse biere ambree venant des terres desertiques du Leergreem particulierement appreciee par les airpailleurs,,,,Denree.png,gliders
+Equipement medical,Denree,Fameuse biere ambree venant des terres desertiques du Leergreem particulierement appreciee par les airpailleurs,,,,Denree.png,gliders
+Eau potable,Denree,Fameuse biere ambree venant des terres desertiques du Leergreem particulierement appreciee par les airpailleurs,,,,Denree.png,gliders
+Nourriture,Denree,Fameuse biere ambree venant des terres desertiques du Leergreem particulierement appreciee par les airpailleurs,,,,Denree.png,gliders
+Jarres de Vin,Denree,Fameuse biere ambree venant des terres desertiques du Leergreem particulierement appreciee par les airpailleurs,,,,Denree.png,gliders
+Materiaux de base,Denree,Fameuse biere ambree venant des terres desertiques du Leergreem particulierement appreciee par les airpailleurs,,,,Denree.png,gliders
+Mat. de construction,Denree,Fameuse biere ambree venant des terres desertiques du Leergreem particulierement appreciee par les airpailleurs,,,,Denree.png,gliders
+Capitaine Zamani,Capitaine,Try again,τ: Si vous echouez a passer ne perdez pas de marchandise,∞: Gagnez 1 carburant par deplacement,,Zamani.png,gliders
+Commandante Lwandle,Capitaine,Ocean,τ: Retournez un de vos d6,∞: Retournez un d6 du vent,,Lwandle.png,gliders
+Contre-Amirale Ramla,Capitaine,Prophetess,τ: Devoilez un vent sur une tuile adjacente,∞: Depensez 2 carburant par deplacement,,Capitaine.png,gliders
+Amirale Nokuthula,Capitaine,Mother Of Peace,τ: Conservez jusqu'a 2d6 du vent. Ne les relancez pas.,∞: Conservez jusqu'a 3 de vos d6. Ne les relancez pas.,,Nokuthula.png,gliders
+Maitresse Andile,Capitaine,The Family Is Growing,τ: Appliquez le pouvoir d'un passager,∞: Ignorez 1 d6 noir,,Andile.png,gliders
+Major Sibusiso,Capitaine,Blessing,τ: Appliquez le pouvoir d'un consommable sans le consommer,∞: Faites -1 a 1 d6 du vent,,Sibusiso.png,gliders
+Commandante Nobantu,Capitaine,Mother of people,τ: Ignorez tous les d6 identiques a la force du vent,∞: Si le vent fait 2 d6 identiques; ignorez l'un d'eux,,Nobantu.png,gliders
+Mission,Mission,Preparation: Si vous n'avez pas de plan de construction; mettez cette carte a disposition dans un village,Mission: Construisez un village et laissez y 3 Denrees.,,T3,Denree.png,gliders
+Mission,Mission,,Mission: Transportez sans encombres des 2 Hordiers d'un village a une ville.,,T3,Denree.png,gliders
+Mission,Mission,Preparation: Deposez un hordier sur un lieu special; s'il n'y en a pas piochez la premiere mission avec un lieu special,Mission: Allez secourir ce Hordier et ramenez le dans une ville ou un village,,T1,Denree.png,gliders
+Mission,Mission,,Mission: Amenez 1 Hordier de chaque couleur a la Horde.,,T3,Denree.png,gliders
+Mission,Mission,,Mission: Transformez un terrain pour faciliter le deplacement de la Horde,,T3,Denree.png,gliders
+Mission,Mission,Preparation: installez le Nid d'Aigle sur la tuile avec le plus de d6 rouges.,Mission: Faites en sorte que le Nid d'Aigle ait 3 vents colores,,T1,../../terrain/Gliders Nid Aigle.png,gliders
+Mission,Mission,Preparation: Installez la rotonde des q'une stèche(4) apparait sur une tuile adjacente et placez un oiseleur de la defausse sur une ville,Mission: Deposez l'oiseleur dans la Rotonde,,T2,../../terrain/Gliders Rotonde.png,gliders
+Mission,Mission,Preparation: Installez le Syphon des qu'un blizzard(5) apparait sur une tuile adjacente; tous les vents adjacents sont des blizzards(5),Mission: Traversez le Syphon(6). Defaussez-le et tous les vents adjacents,,T1,../../terrain/Gliders Syphon.png,gliders
+Mission,Mission,Preparation: Installez les Cites Volantes en bord de carte; installez la Maison a 6 tuiles de distance.,Mission: Ravitaillez la Maison en Denrees avec du materiel recupere sur les Cites Volantes,,T2,../../terrain/Gliders Cites Volantes.png,gliders
+Mission,Mission,Preparation: Installez Le Rocher au milieu de l'eau. S'il n'y a pas d'eau ou pas assez; rajoutez les tuiles necessaires ou faites des trous.,Mission: Assistez la Horde dans l'ascension du Rocher,,T2,../../terrain/Gliders Le Rocher.png,gliders
+Mission,Mission,Preparation: Installez la Maison sur une tuile ayant 1d de chaque couleur; a defaut au centre de la carte,Mission: La Horde doit passer et laisser un Hordier dans la Maison et vous devez ramener ce Hordier dans une ville.,,T1,../../terrain/Gliders Maison.png,gliders

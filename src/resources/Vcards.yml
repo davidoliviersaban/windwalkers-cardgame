@@ -20,6 +20,7 @@ BottomLayer:
   y: += 560
   height: 150
 
+
 Image:
   extends: inside
   #  x: += 100
@@ -44,6 +45,10 @@ Position:
   font: ChunkFive Roman,Sans 10
   align: right
 
+Empty:
+  width: 1
+  height: 1
+
 AbandonIcon:
   extends: Position
   file: src/resources/helpers/abandon.png
@@ -52,9 +57,35 @@ AbandonIcon:
   width: 50
   height: :scale
 
-Empty:
-  width: 1
-  height: 1
+TraineIcon:
+  extends: Position
+  file: src/resources/helpers/abandon.png
+  x: += 110
+  y: += 40
+  width: 50
+  height: :scale
+FerIcon:
+  extends: Empty
+PackIcon:
+  extends: Empty
+
+TraceurIcon:
+  extends: Position
+  file: src/resources/helpers/traceur.png
+  x: += 110
+  y: += 40
+  width: 50
+  height: :scale
+CapitaineIcon:
+  extends: TraceurIcon
+EquipementIcon:
+  extends: Empty
+DenreeIcon:
+  extends: Empty
+ConsommableIcon:
+  extends: Empty
+MissionIcon:
+  extends: Empty
 
 TierIcon:
   extends: Position
@@ -74,6 +105,10 @@ T2Icon:
 T3Icon:
   extends: TierIcon
   file: src/resources/helpers/tier3.png
+
+ExtensionIcon:
+  extends: TraceurIcon
+  y: += 872
 
 
 Pouvoir_Actif:

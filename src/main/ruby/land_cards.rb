@@ -72,6 +72,7 @@ Squib::Deck.new(cards: deck["Chapitre"].size(),
     text str: deck[key], layout: key
   end
 
+  polygon layout: :outline, stroke_width: deck["Outline"], stroke_color: :white
 
   save_png prefix: deck["Chapitre"].map{|str| str+"."}, dir: '_terrain'
 end
