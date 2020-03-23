@@ -1,35 +1,35 @@
 Chapitre,Type,Red,Green,Incolor,Trick,Description,Image,RGI1,RGI2,RGI3,T1,T2,T3,T4,Moral,Abandon,Outline
-chapitre,village,,,,,Village vert,Village 2.png,,,,,,,,,,2
-chapitre,village,,,,,Village bleu,Village 1.png,,,,,,,,,,2
-chapitre,village,,,,,Village rouge,Village 3.png,,,,,,,,,,2
-chapitre,depart,,,,,Aberlaas      (Extreme-Amont),Ville PortChoon.png,,,,,,,,,,2
-chapitre,arrivee,,,,,Port-Choon,Ville PortChoon2.png,,,,,,,,,,2
-chapitre,village,,,,1,Tour Fontaine,Village Tour Fontaine.png,T,,,,,,,,,2
-chapitre,arrivee,,,,,Chawondasee,Ville Chawondasee.png,,,,,,,,,,2
-chapitre,arrivee,,,,,Alticcio,Ville Alticcio2.png,,,,,,,,,,2
-chapitre,terrain,,,,6,Porte d'Hurle,Terrain Porte d'Hurle2.png,T,T,T,T,T,T,,,,2
-chapitre,arrivee,,,,,Camp Boban,Ville Camp Boban.png,,,,,,,,,,2
-chapitre 1,terrain,3,0,0,,,Terrain Steppe2.png,R,R,R,,,,,,,
-chapitre 1,terrain,2,1,0,,,Terrain Steppe2.png,R,R,G,,,,,,,
-chapitre 1,terrain,2,0,1,,,Terrain Steppe2.png,R,R,I,,,,,,,
-chapitre 1,terrain,1,2,0,,,Terrain Foret3.png,R,G,G,,,,,,,
-chapitre 1,terrain,1,1,1,,,Terrain Steppe5.png,R,G,I,,,,,,,
-chapitre 1,terrain,1,0,2,,,Terrain Steppe5.png,R,I,I,,,,,,,
-chapitre 1,terrain,0,3,0,,,Terrain Foret3.png,G,G,G,,,,,,,
-chapitre 1,terrain,0,2,1,,,Terrain Foret3.png,G,G,I,,,,,,,
-chapitre 1,terrain,0,1,2,,,Terrain Steppe5.png,G,I,I,,,,,,,
-chapitre 1,terrain,0,0,3,,,Terrain Steppe5.png,I,I,I,,,,,,,
-chapitre 2,terrain,0,0,3,1,,Terrain Eau4.png,I,I,I,T,,,,-1,,
-chapitre 2,terrain,0,1,2,1,,Terrain Eau4.png,G,I,I,T,,,,-1,,
-chapitre 2,terrain,0,0,3,2,,Terrain Eau4.png,I,I,I,T,T,,,-1,,
-chapitre 2,terrain,0,1,2,2,,Terrain Eau4.png,G,I,I,T,T,,,-1,,
-chapitre 2,terrain,0,0,3,3,,Terrain Eau4.png,I,I,I,T,T,T,,-1,,
-chapitre 3,terrain,0,0,3,,,Terrain Desert1.png,I,I,I,T,,,,-1,-2,
-chapitre 3,terrain,1,0,2,,,Terrain Desert2.png,R,I,I,,,,,-2,-1,
-chapitre 3,terrain,0,0,3,,,Terrain Desert3.png,I,I,I,,,,,-3,-1,
-chapitre 3,terrain,0,0,3,,,Terrain Desert1.png,I,I,I,T,,,,-1,-2,
-chapitre 3,terrain,1,0,2,,,Terrain Desert1.png,R,I,I,T,,,,-1,-2,
-chapitre 4,terrain,0,1,2,1,,Terrain Tourbe3.png,G,I,I,T,,,,-1,-1,
-chapitre 4,terrain,1,0,2,1,,Terrain Tourbe3.png,R,I,I,T,,,,-1,-1,
-chapitre 4,terrain,0,0,3,1,,Terrain Tourbe3.png,I,I,I,T,,,,-1,-1,
-chapitre 4,terrain,1,1,1,1,,Terrain Tourbe3.png,R,G,I,T,,,,-1,-1,
+chapitre,village,,,,,Village vert,Village 2.png,,,,,,,,,,10
+chapitre,village,,,,,Village bleu,Village 1.png,,,,,,,,,,10
+chapitre,village,,,,,Village rouge,Village 3.png,,,,,,,,,,10
+chapitre,depart,,,,,Aberlaas,Ville PortChoon.png,,,,,,,,,,10
+chapitre,arrivee,,,,,Port-Choon,Ville PortChoon2.png,,,,,,,,,,10
+chapitre,village,,,,1,Tour Fontaine,Village Tour Fontaine.png,T,,,,,,,,,10
+chapitre,arrivee,,,,,Chawondasee,Ville Chawondasee.png,,,,,,,,,,10
+chapitre,arrivee,,,,,Alticcio,Ville Alticcio2.png,,,,,,,,,,10
+chapitre,terrain,,,,6,Porte d'Hurle,Terrain Porte d'Hurle2.png,T,T,T,T,T,T,,,,10
+chapitre,arrivee,,,,,Camp Boban,Ville Camp Boban.png,,,,,,,,,,10
+chapitre 1,terrain,3,0,0,,,Terrain Steppe2.png,R,R,R,,,,,,,0
+chapitre 1,terrain,2,1,0,,,Terrain Steppe2.png,R,R,G,,,,,,,0
+chapitre 1,terrain,2,0,1,,,Terrain Steppe2.png,R,R,I,,,,,,,0
+chapitre 1,terrain,1,2,0,,,Terrain Foret3.png,R,G,G,,,,,,,0
+chapitre 1,terrain,1,1,1,,,Terrain Steppe5.png,R,G,I,,,,,,,0
+chapitre 1,terrain,1,0,2,,,Terrain Steppe5.png,R,I,I,,,,,,,0
+chapitre 1,terrain,0,3,0,,,Terrain Foret3.png,G,G,G,,,,,,,0
+chapitre 1,terrain,0,2,1,,,Terrain Foret3.png,G,G,I,,,,,,,0
+chapitre 1,terrain,0,1,2,,,Terrain Steppe5.png,G,I,I,,,,,,,0
+chapitre 1,terrain,0,0,3,,,Terrain Steppe5.png,I,I,I,,,,,,,0
+chapitre 2,terrain,0,0,3,1,,Terrain Eau4.png,I,I,I,T,,,,-1,,0
+chapitre 2,terrain,0,1,2,1,,Terrain Eau4.png,G,I,I,T,,,,-1,,0
+chapitre 2,terrain,0,0,3,2,,Terrain Eau4.png,I,I,I,T,T,,,-1,,0
+chapitre 2,terrain,0,1,2,2,,Terrain Eau4.png,G,I,I,T,T,,,-1,,0
+chapitre 2,terrain,0,0,3,3,,Terrain Eau4.png,I,I,I,T,T,T,,-1,,0
+chapitre 3,terrain,0,0,3,,,Terrain Desert1.png,I,I,I,T,,,,-1,-2,0
+chapitre 3,terrain,1,0,2,,,Terrain Desert2.png,R,I,I,,,,,-2,-1,0
+chapitre 3,terrain,0,0,3,,,Terrain Desert3.png,I,I,I,,,,,-3,-1,0
+chapitre 3,terrain,0,0,3,,,Terrain Desert1.png,I,I,I,T,,,,-1,-2,0
+chapitre 3,terrain,1,0,2,,,Terrain Desert1.png,R,I,I,T,,,,-1,-2,0
+chapitre 4,terrain,0,1,2,1,,Terrain Tourbe3.png,G,I,I,T,,,,-1,-1,0
+chapitre 4,terrain,1,0,2,1,,Terrain Tourbe3.png,R,I,I,T,,,,-1,-1,0
+chapitre 4,terrain,0,0,3,1,,Terrain Tourbe3.png,I,I,I,T,,,,-1,-1,0
+chapitre 4,terrain,1,1,1,1,,Terrain Tourbe3.png,R,G,I,T,,,,-1,-1,0
