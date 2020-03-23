@@ -44,6 +44,14 @@ def drawCards(deck,dirname)
     end
   }
 
+  png file: deck["Extension"].map{ |ext|
+    if (ext != nil)
+      "src/resources/helpers/"+ext+".png"
+    else
+      "src/resources/helpers/d6-empty.png"
+    end
+  }, layout: "ExtensionIcon"
+
   png layout: deck["Tier"].map{ |tier|
     tier+'Icon'
   }
