@@ -20,6 +20,7 @@ BottomLayer:
   y: += 560
   height: 150
 
+
 Image:
   extends: inside
   #  x: += 100
@@ -47,6 +48,14 @@ Position:
 AbandonIcon:
   extends: Position
   file: src/resources/helpers/abandon.png
+  x: += 110
+  y: += 40
+  width: 50
+  height: :scale
+
+TraceurIcon:
+  extends: Position
+  file: src/resources/helpers/traceur.png
   x: += 110
   y: += 40
   width: 50
