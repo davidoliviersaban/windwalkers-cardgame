@@ -84,6 +84,10 @@ T3Icon:
   extends: TierIcon
   file: src/resources/helpers/tier3.png
 
+ExtensionIcon:
+  extends: TraceurIcon
+  y: += 872
+
 
 Pouvoir_Actif:
   extends: inside
