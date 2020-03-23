@@ -17,6 +17,7 @@ outline:
     extends: cut
 #    radius: .85in
     stroke_color: red
+    stroke_width: 10
     dash: ''
 
 Image:
