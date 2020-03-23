@@ -37,6 +37,8 @@ def drawCards(deck,dirname)
   png layout: deck["Position"].map{ |pos|
     if (pos == "Traine")
       "AbandonIcon"
+    elsif (pos == "Traceur")
+      "TraceurIcon"
     else
       "Empty"
     end
@@ -46,7 +48,7 @@ def drawCards(deck,dirname)
     tier+'Icon'
   }
 
-  save_png prefix: deck["Nom"], dir: dirname#dir: '_cards'
+  save_png prefix: deck["Position"].zip(deck["Nom"]), dir: dirname#dir: '_cards'
 
 end
 

@@ -1,14 +1,14 @@
-Chapitre,Type,Red,Green,Incolor,Trick,Description,Image,RGI1,RGI2,RGI3,T1,T2,T3,T4,Moral,Abandon,
-chapitre,village,,,,,Village vert,Village 2.png,,,,,,,,,,
-chapitre,village,,,,,Village bleu,Village 1.png,,,,,,,,,,
-chapitre,village,,,,,Village rouge,Village 3.png,,,,,,,,,,
-chapitre,depart,,,,,Aberlaas,Ville Aberlaas2.png,,,,,,,,,,
-chapitre,arrivee,,,,,Port-Choon,Ville PortChoon2.png,,,,,,,,,,
-chapitre,village,,,,1,Tour Fontaine,Village Tour Fontaine.png,T,,,,,,,,,
-chapitre,arrivee,,,,,Chawondasee,Ville Chawondasee.png,,,,,,,,,,
-chapitre,arrivee,,,,,Alticcio,Ville Alticcio2.png,,,,,,,,,,
-chapitre,terrain,,,,6,Porte d'Hurle,Terrain Porte d'Hurle2.png,T,T,T,T,T,T,,,,
-chapitre,arrivee,,,,,Camp Boban,Ville Camp Boban.png,,,,,,,,,,
+Chapitre,Type,Red,Green,Incolor,Trick,Description,Image,RGI1,RGI2,RGI3,T1,T2,T3,T4,Moral,Abandon,Outline
+chapitre,village,,,,,Village vert,Village 2.png,,,,,,,,,,2
+chapitre,village,,,,,Village bleu,Village 1.png,,,,,,,,,,2
+chapitre,village,,,,,Village rouge,Village 3.png,,,,,,,,,,2
+chapitre,depart,,,,,Aberlaas,Ville PortChoon.png,,,,,,,,,,2
+chapitre,arrivee,,,,,Port-Choon,Ville PortChoon2.png,,,,,,,,,,2
+chapitre,village,,,,1,Tour Fontaine,Village Tour Fontaine.png,T,,,,,,,,,2
+chapitre,arrivee,,,,,Chawondasee,Ville Chawondasee.png,,,,,,,,,,2
+chapitre,arrivee,,,,,Alticcio,Ville Alticcio2.png,,,,,,,,,,2
+chapitre,terrain,,,,6,Porte d'Hurle,Terrain Porte d'Hurle2.png,T,T,T,T,T,T,,,,2
+chapitre,arrivee,,,,,Camp Boban,Ville Camp Boban.png,,,,,,,,,,2
 chapitre 1,terrain,3,0,0,,,Terrain Steppe2.png,R,R,R,,,,,,,
 chapitre 1,terrain,2,1,0,,,Terrain Steppe2.png,R,R,G,,,,,,,
 chapitre 1,terrain,2,0,1,,,Terrain Steppe2.png,R,R,I,,,,,,,
