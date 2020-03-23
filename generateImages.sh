@@ -5,4 +5,4 @@ ruby src/main/ruby/horde_cards.rb
 cd ../printableCardsAppender
 ./gradlew run --args="../windwalkers-cardgame/_terrain ../windwalkers-cardgame/imagesToPrint/terrain A4 true"
 ./gradlew run --args="../windwalkers-cardgame/_cards1   ../windwalkers-cardgame/imagesToPrint/cards_v1_ A4 false"
-./gradlew run --args="../windwalkers-cardgame/_cards2   ../windwalkers-cardgame/imagesToPrint/cards_v2_ A4 false"
+#./gradlew run --args="../windwalkers-cardgame/_cards2   ../windwalkers-cardgame/imagesToPrint/cards_v2_ A4 false"
