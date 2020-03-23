@@ -100,13 +100,17 @@ Vous rencontrez un vent de force 2 avec 3 couleurs.
 * En appairant les d6 du joueur avec ceux du vent, on voit que les 3 couleurs ne sont respectees pas car la Horde a obtenu un 1. La Horde a egalement obtenu deux 3 et un 6 qui correspondent au d6 incolores du vent.
 Le vent etant de force 2, il exige que 2 d6 soient identiques a son jet. Nous avons respecte cette contrainte car 4 de nos d6 sont identiques. Le vent ayant 3 couleurs, nous devons d'abord reussir a remplir cette contrainte et ce n'est pas realise. Nous pouvons donc pas progresser et revenir en arriere a moins d'utiliser les pouvoirs de notre Horde.
 
-### Ce qui fait baisser le moral
-* Relancer tous les d6 de la Horde
-* Se faire pousser par le vent
-* Changer la valeur +/-1 sur 1 d6 de la Horde
-* Monter un camp (sous Zefirine (force 1) ??)
+## Le Moral
+Le moral est crucial pour un groupe qui va traverser autant d'epreuves difficiles telles que vous vous appretez a vivre. Il faut donc le garder au plus haut. Cependant, on peut user de ce moral pour accomplir des actions heroiques qui permettront au groupe de progresser en situation de crise.
 
-## Regle additionnelle pour le Furevent (vent de force 6)
+Ainsi n'oubliez pas les actions suivantes qui 
+### Ce qui fait baisser le moral
+* **Relancer tous les d6 de la Horde**: Un petit coup de poker qui peut payer. Ou pas.
+* **Se faire pousser par le vent**: Ne pas reussir a contrer est difficile pour le moral des troupes. Personne n'aime se faire balader par le vent, surtout quand son travail est de contrer. Il faut pourtant savoir parfois lacher prise et repartir dans de meilleures conditions.
+* **Changer la valeur +/-1 sur 1 d6 de la Horde**: L'action la plus souvent utilisee, vous pouvez influence l'un de vos d6 de +/- 1 par point de moral depense. Attention car meme si cette action parait anodine, c'est elle qui peut vous faire gagner ou perdre une partie.
+* **Monter un camp et passer son tour**: Apres avoir combattu un vent, un groupe peut decider de monter un camps afin de recuperer des forces et restaurer le pouvoir de tous ses personnages. Il vous en coutera un tour de jeu et un point de moral.
+
+## Regle additionnelle pour le Furevent (vent de force 6) -> A tester
 Les 6 sur les furevent font apparaitre des chrones qui ont des effets aleatoires. Ces effets peuvent aussi bien etre positifs que negatifs.
 Exemples d'effets:
 1. Regagner un point de moral
