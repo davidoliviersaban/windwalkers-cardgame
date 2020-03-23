@@ -53,6 +53,14 @@ AbandonIcon:
   width: 50
   height: :scale
 
+TraceurIcon:
+  extends: Position
+  file: src/resources/helpers/traceur.png
+  x: += 110
+  y: += 40
+  width: 50
+  height: :scale
+
 Empty:
   width: 1
   height: 1
