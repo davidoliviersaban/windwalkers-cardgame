@@ -2,14 +2,13 @@ require 'squib'
 
 deck = Squib.csv file: %w(src/resources/land_cards.csv)
 
-Squib::Deck.new(cards: deck["Chapitre"].size(),
+Squib::Deck.new(cards: deck["Chapter"].size(),
                 layout: %w(src/resources/lands.yml),
-#                width: "2.5in", height: "2.2in") do 
                 width: "2.8in", height: "2.5in") do 
 
   png file: deck["Image"].map { |img| 
     if (img == nil) 
-      "src/resources/terrain/Terrain Contre.png" 
+      "src/resources/terrain/city/_aberlaas.png" 
     else 
       "src/resources/terrain/"+img
     end
@@ -32,11 +31,6 @@ Squib::Deck.new(cards: deck["Chapitre"].size(),
   %w(1 2 3 4 5 6).each do |key|
     text str: key, layout: "Vent"+key, angle: -(key.to_i-1)*3.14159/3
   end
-
-#  %w(Incolor Red Green Trick).each do |key|
-#    rect layout: "Terrain"+key, radius: 0, stroke_color: '#00000000'
-#    text str: deck[key], layout: "Terrain"+key
-#  end
 
   %w(RGI1 RGI2 RGI3 T1 T2 T3).each do |key|
     png file: deck[key].map{ |c| 
@@ -72,7 +66,7 @@ Squib::Deck.new(cards: deck["Chapitre"].size(),
     text str: deck[key], layout: key
   end
 
-  polygon layout: :outline, stroke_width: deck["Outline"], stroke_color: :white
+  polygon layout: deck["Type"]
 
-  save_png prefix: deck["Chapitre"].map{|str| str+"."}, dir: '_terrain'
+  save_png prefix: deck["Chapter"].map{|str| str+"."}, dir: '_terrain'
 end
