@@ -17,8 +17,20 @@ outline:
     extends: cut
 #    radius: .85in
     stroke_color: red
-    stroke_width: 10
     dash: ''
+
+land:
+    extends: outline
+    stroke_width: 0
+city:
+    extends: outline
+    stroke_width: 15
+    stroke_color: '#ffffffaa'
+village:
+    extends: city
+place:
+    extends: city
+    stroke_color: '#ffff66aa'
 
 Image:
     extends: outline
