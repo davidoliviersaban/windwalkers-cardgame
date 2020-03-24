@@ -45,6 +45,10 @@ Position:
   font: ChunkFive Roman,Sans 10
   align: right
 
+Empty:
+  width: 1
+  height: 1
+
 AbandonIcon:
   extends: Position
   file: src/resources/helpers/abandon.png
@@ -53,6 +57,18 @@ AbandonIcon:
   width: 50
   height: :scale
 
+TraineIcon:
+  extends: Position
+  file: src/resources/helpers/abandon.png
+  x: += 110
+  y: += 40
+  width: 50
+  height: :scale
+FerIcon:
+  extends: Empty
+PackIcon:
+  extends: Empty
+
 TraceurIcon:
   extends: Position
   file: src/resources/helpers/traceur.png
@@ -60,10 +76,6 @@ TraceurIcon:
   y: += 40
   width: 50
   height: :scale
-
-Empty:
-  width: 1
-  height: 1
 
 TierIcon:
   extends: Position
