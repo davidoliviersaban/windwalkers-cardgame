@@ -34,15 +34,15 @@ def drawCards(deck,dirname)
     text str: deck[key], layout: key
   end
 
-  png layout: deck["Position"].map{ |pos|
-    if (pos == "Traine")
-      "AbandonIcon"
-    elsif (pos == "Traceur")
-      "TraceurIcon"
+  png layout: deck["Position"].map{ |pos| pos+"Icon"}
+
+  png file: deck["Extension"].map{ |ext|
+    if (ext != nil)
+      "src/resources/helpers/"+ext+".png"
     else
-      "Empty"
+      "src/resources/helpers/d6-empty.png"
     end
-  }
+  }, layout: "ExtensionIcon"
 
   png file: deck["Extension"].map{ |ext|
     if (ext != nil)
