@@ -6,7 +6,7 @@ Ni le jeu et son titre / ni les images et pdf ne sont de moi. Je ne fourni que l
 
 Afin de construire les images a imprimer, utilisez cet autre git repository: [printableCardsAppender](https://github.com/davidoliviersaban/printableCardsAppender)
 
-# Windwalkers - La Horde du Contrevent
+# A Contre-Vent
 >À l’origine fut la vitesse, le pur mouvement furtif, le « vent-foudre ». Puis le cosmos décéléra, prit consistance et forme, jusqu’aux lenteurs habitables, jusqu’au vivant, jusqu’à vous. Bienvenue à toi, lent homme lié, poussif tresseur des vitesses. 
 *Damasio, Alain. La Horde du Contrevent (Sc. Fiction) (French Edition) (Kindle Locations 84-86). La Volte. Kindle Edition.*
 
@@ -38,10 +38,11 @@ Personnellement, je joue avec:
 Une horde est un groupe de personnages appeles Hordiers. Chaque personne de la Horde a une fonction particuliere et une position. Cette position est importante pour permettre a la Horde de progresser.
 
 Une Horde est composee par:
-* le **Fer** qui fend le flux du vent grâce à sa formation en pointe, ils influence grandement les effets du vents sur le reste du groupe.
-* le **Pack**, constitué de rangs compacts, forme le corps de la Horde; ils ont plus souvent des roles de support ou des action plus ponctuelles sur la horde ou le vent.
-* la **Traine**, enfin, rassemble les *crocs* chargés de tracter le matériel de la Horde (vêtements, vaisselle, outils, nourriture, paillasses). Ils ne feront partie integrante de la horde qu'un fois qu'ils auront prouve leur valeur.
+* ![fer]le **Fer** qui fend le flux du vent grâce à sa formation en pointe, ils influence grandement les effets du vents sur le reste du groupe.
+* ![pack]le **Pack**, constitué de rangs compacts, forme le corps de la Horde; ils ont plus souvent des roles de support ou des action plus ponctuelles sur la horde ou le vent.
+* ![croc]la **Traine**, enfin, rassemble les *crocs* chargés de tracter le matériel de la Horde (vêtements, vaisselle, outils, nourriture, paillasses). Ils ne feront partie integrante de la horde qu'un fois qu'ils auront prouve leur valeur.
 
+![traceur]
 Le **Traceur** est un membre particulier du Fer car c'est lui qui trace la route. C'est le leader charismatique qui dirige sa horde afin de passer les epreuves les plus difficiles. Une horde peut progresser sans traceur mais il est generalement celui qui dirige la composition generale du groupe.
 
 ## Les vents
@@ -124,26 +125,26 @@ Un seul effet par furevent. (@TODO: retravailler cette partie)
 
 ## Le terrain
 Le terrain est compose de tuiles hexagonales. Il existe 3 types de tuiles: 
-* les Villes et Villages abrites
-* les Terrain
+* les **Villes** et **Villages** abrites 
+* les **Terrains** ![Terrain][land1]
 * les difficultes de vent
 
+![aberlaas]
 Les **Villes** sont les points de depart et d'arrivee de la Horde entre chacun des 4 chapitres que nous allons vous proposer. Le but de chaque chapitre est donc de progresser d'une ville, par exemple Aberlaas en Extreme-Aval du vent vers Port-Choon pour le premier chapitre. Dans ces villes, vous pourrez reposer votre Horde et la recomposer. Pour ce faire, une phase de recrutement est possible. [Voir section recrutement](). 
 La Horde peut egalement monter un camp pour se reposer. Ainsi, chaque personnage recupere son pouvoire et regagne un point de moral.
 
+![village]
 Il est egalement possible de recruter dans les *villages abrites* avec moins de choix et de reposer son equipe. La Horde ne regagne pas de moral dans les *villages abrites*.
-
-Les villes sont considerees comme n'etant pas de la couleur du vent (@TODO clarifier cette partie)
 
 Le vent s'ecoule toujours dans le meme sens sur le plateau: d'Ouest en Est.
 
-Le **Terrain** represente le sol et indique dans quel sens coule le vent. Il est compose de prairies, deserts, montagnes, steppes et lacs. Parfois, quelques forets et bosquets.
+![land1] Le **Terrain** represente le sol et indique dans quel sens coule le vent. Il est compose de prairies, deserts, montagnes, steppes et lacs. Parfois, quelques forets et bosquets.
 Sur ce plateau, on viendra d'abord poser la couleur du vent puis sa force.
 
 Les chiffres indiques sur chaque tuile montrent dans quel sens le vent pousse la Horde. 
 Dans l'exemple ci-dessous, ma Horde arrive sur la tuile A. Le Vent soufle d'Ouest en Est, il remonte donc. Si ma Horde echoue a progresser, les vents de force 1 et 4 la feront reculer en F, les vents de force 2 et 5 vers E et les vents de force 3 et 6 en G.
 Si ma horde reussi a passer le vent, elle pourra progresser ou elle le souhaite.
-Toujours dans l'exemple ci dessous, si ma Horde arrive sur la tuile C, elle reculera vers A pour les vents de forece 3 et 6, vers B pour les vents de force 5 et 2 et vers la tuile D pour les vents de force 1 et 4.
+Toujours dans l'exemple ci dessous, si ma Horde arrive sur la tuile C, elle reculera vers A pour les vents de force 3 et 6, vers B pour les vents de force 5 et 2 et vers la tuile D pour les vents de force 1 et 4.
 
 On nomme tuile adjacentes les tuiles qui entourent une autre tuile. Ici, les tuiles B,C,D,E,F et G sont adjacentes a la tuile A. La plupart du temps, nous nous interesserons aux tuiles adjacentes, dans le sens du contre, c'est a dire les tuiles B, C et D. On les nommera **tuiles de contre**.
 ```  
@@ -193,6 +194,10 @@ Vous rencontrez un vent de force 3 avec 2 couleurs.
 Le vent etant de force 3, il exige que 3 d6 soient identiques a son jet. Nous avons respecte cette contrainte car 4 de nos d6 sont identiques. Le vent ayant 2 couleurs, nous devons d'abord reussir a remplir cette contrainte ce qui est fait avec le 5 et le 1. Finalement, les valeurs restantes sont 3 et 4 pour le vent et 3 et 6 pour la Horde. La somme des d6 du vent fait 3+4=7 ; la somme des d6 restant de la Horde est de 3+6=9. Le resultat de la Horde est >= au resultat du vent. Nous pouvons donc progresser.
 
 ## Regles des d6 noirs
+![land2]
+![land3]
+![land4]
+
 Certains lieux ou terrains possedent des d6 noirs.
 Ces d6 noirs sont des d6 supplementaires qui devront etre a la fois lances pour le terrain et lances par le joueur.
 Un joueur allant sur une case demandant un d6 noir devra donc lancer 7 d6 dont 1 noir pour le vent. Puis 7 d6 dont un noir pour lui-meme.
@@ -203,6 +208,8 @@ Un joueur allant sur une case demandant un d6 noir devra donc lancer 7 d6 dont 1
 
 
 ## Regles speciales pour les lieux avec des d6 noirs
+![portedhurle]
+
 Certains lieux speciaux ont des d6 noirs dessus. C'est une epreuve qui doit etre surmontee par l'equipe et qui aura des effets differents en fonction du lieu.
 
 ### La tour fontaine
@@ -216,6 +223,15 @@ Les 6 d6 noirs sont une epreuve qui va demander une difficulte equivalente a une
 Si l'epreuve est echouee, perdez un membre de votre horde et recommenez.
 Vous ne pouvez pas vous reposer sur place.
 
+## Symboles supplementaires sur les tuiles
+
+Certains symboles apparaissent en plus sur les tuiles. Une flamme![moral] ou un personnage qui pleure![abandon].
+Ces symbolisent le moral perdu.
+- ![moral] fait perdre immediatement les points de moral indiques a cote
+- ![abandon] fait perdre les points de moral indiques seulement si on abandonne quelqu'un sur cette tuile. Ce symbole represente le fait que d'abandonner un croc ici (car ce sont les crocs que l'on abandonne generalement), le fera certainement mourir.
+
+### Exemple
+![land3] fait perdre immediatement 1 point de moral lorsque l'on rentre sur cette tuile. et fait perdre 2 points de moral supplementaire par utilisation de pouvoirs de personnages ayant cette icone (typiquement les crocs que l'on abandonne).
 
 ## Regle additionnelle de deplacement
 Afin d'augmenter l'impacte du vent sur le deplacement, chaque chiffre de la tuile terrain possede une forme ; ils indiquent les vents locaux en bord de tuile. Les 1 et 4 sont des cercles, les 2 et 5 sont des triangles et les 6 et 3 sont des carres. Lors de votre progression, et pour chacune des 3 tuiles adjacentes dans le sens de progression; si la forme presente sur le bord votre tuile actuelle correspond a la forme du bord de la tuile adjacente, le vent aura un d6 colore supplementaire; le cas contraire, le vent a 1 d6 incolore.
@@ -327,3 +343,17 @@ https://squib.readthedocs.io/
 - [] @TODO: Renommer les lieux comme les personnages ont ete renommes.
 - [] @TODO: (mettre a jour les chapitres avec les photos)
 - [] @TODO: faire un petit fascicule avec une histoire a lire. 
+
+[Aberlaas]: src/resources/readme/aberlaas.png
+[village]: src/resources/readme/village.png
+[portedhurle]: src/resources/readme/portedhurle.png
+[land1]: src/resources/readme/land.png
+[land2]: src/resources/readme/land2.png
+[land3]: src/resources/readme/land3.png
+[land4]: src/resources/readme/land4.png
+[moral]: src/resources/readme/moral.png
+[abandon]: src/resources/readme/abandon.png
+[traceur]: src/resources/readme/card_traceur.png
+[fer]: src/resources/readme/card_fer.png
+[pack]: src/resources/readme/card_pack.png
+[croc]: src/resources/readme/card_croc.png
