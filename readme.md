@@ -32,6 +32,8 @@ Personnellement, je joue avec:
 - 54 cartes personnages a imprimer (`imagesToPrint/cards_v1`)
 - 58 tuiles (2x `imagesToPrint/terrain.0`, 2x`imagesToPrint/terrain.1`, 1x `imagesToPrint/terrain.2`)
 
+Si vous ne desirez pas lire l'integralite des regles maintenant, je vous propose de vous rendre au ![chapitre1] afin de decouvrir les regles dans un petit scenario.
+
 # Presentation et Vocabulaire
 
 ## La Horde
@@ -90,14 +92,14 @@ Le joueur lance alors les d6 de sa Horde et du vent simultanement et resoud les 
 ### Exemple de reussite
 Vous rencontrez un vent de force 3 avec 2 couleurs. 
 * Le vent fait le jet suivant pour ses des colores: 1 et 5, et pour ses des incolores: 3, 3, 4, 6.
-* La Horde fait le jet suivant avec ses des (tous incolores @TODO pour l'instant): 1, 2, 3, 5, 6, 6.
+* La Horde fait le jet suivant avec ses des: 1, 2, 3, 5, 6, 6.
 * En appairant les d6 du joueur avec ceux du vent, on voit que les 2 couleurs sont respectees car la Horde a obtenu un 5 et un 1. La Horde a egalement obtenu un 3 et un 6 qui correspondent au d6 incolores du vent.
 Le vent etant de force 3, il exige que 3 d6 soient identiques a son jet. Nous avons respecte cette contrainte car 4 de nos d6 sont identiques. Le vent ayant 2 couleurs, nous devons d'abord reussir a remplir cette contrainte ce qui est fait avec le 5 et le 1. Finalement, les valeurs restantes sont 3 et 4 pour le vent et 3 et 6 pour la Horde. La somme des d6 du vent fait 3+4=7 ; la somme des d6 restant de la Horde est de 3+6=9. Le resultat de la Horde est >= au resultat du vent. Nous pouvons donc progresser.
 
 ### Exemple d'echec
 Vous rencontrez un vent de force 2 avec 3 couleurs. 
 * Le vent fait le jet suivant pour ses des colores: 1, 1 et 5, et pour ses des incolores: 3, 3, 6.
-* La Horde fait le jet suivant avec ses des (tous incolores @TODO pour l'instant): 1, 2, 3, 3, 6, 6.
+* La Horde fait le jet suivant avec ses des: 1, 2, 3, 3, 6, 6.
 * En appairant les d6 du joueur avec ceux du vent, on voit que les 3 couleurs ne sont respectees pas car la Horde a obtenu un 1. La Horde a egalement obtenu deux 3 et un 6 qui correspondent au d6 incolores du vent.
 Le vent etant de force 2, il exige que 2 d6 soient identiques a son jet. Nous avons respecte cette contrainte car 4 de nos d6 sont identiques. Le vent ayant 3 couleurs, nous devons d'abord reussir a remplir cette contrainte et ce n'est pas realise. Nous pouvons donc pas progresser et revenir en arriere a moins d'utiliser les pouvoirs de notre Horde.
 
@@ -110,18 +112,6 @@ Ainsi n'oubliez pas les actions suivantes qui
 * **Se faire pousser par le vent**: Ne pas reussir a contrer est difficile pour le moral des troupes. Personne n'aime se faire balader par le vent, surtout quand son travail est de contrer. Il faut pourtant savoir parfois lacher prise et repartir dans de meilleures conditions.
 * **Changer la valeur +/-1 sur 1 d6 de la Horde**: L'action la plus souvent utilisee, vous pouvez influence l'un de vos d6 de +/- 1 par point de moral depense. Attention car meme si cette action parait anodine, c'est elle qui peut vous faire gagner ou perdre une partie.
 * **Monter un camp et passer son tour**: __Apres__ avoir combattu un vent, un groupe peut decider de monter un camps afin de recuperer des forces et restaurer le pouvoir de tous ses personnages. Il vous en coutera un tour de jeu et un point de moral.
-
-## Regle additionnelle pour le Furevent (vent de force 6) -> A tester
-Les 6 sur les furevent font apparaitre des chrones qui ont des effets aleatoires. Ces effets peuvent aussi bien etre positifs que negatifs.
-Exemples d'effets:
-1. Regagner un point de moral
-1. Sacrifiez un personnage
-1. Le prochain vent est necessairement une zefirine (force 1)
-1. Echangez un personnage contre le premier de la pile
-1. Perdez un point de moral
-1. Retrouvez un hordier perdu
-
-Un seul effet par furevent. (@TODO: retravailler cette partie)
 
 ## Le terrain
 Le terrain est compose de tuiles hexagonales. Il existe 3 types de tuiles: 
@@ -178,7 +168,7 @@ En debut de parties, les difficultes seront plutot faibles et plus vous progress
 En debut de chapitre, on dispose les tuiles comme indique par le scenario. Les tuiles indiquent le sens des vent ainsi que la topologie du terrain.
 Ensuite, lorsque l'on pose la horde sur la ville du depart. Dans l'exemple ci dessus, les tuiles adjacentes a la tuile A sont les tuiles B, C, D, E, F et G. Pour decouvrir cette couleur du vent, on retourne une tuile vent que l'on place sur la tuile *terrain*.
 
-Le joueur decide alors de deplacer sa Horde sur l'une des tuiles adjacentes (sur la tuile C par exemple) et il decouvre alors la force du vent. Pour ce faire (@TODO encore une tuile? un lance de d6?)
+Le joueur decide alors de deplacer sa Horde sur l'une des tuiles adjacentes (sur la tuile C par exemple) et il decouvre alors la force du vent en piochant un jeton vent dans un sac.
 
 Il n'y a pas de vent sur les villages abrites, les villes ou certains lieux speciaux.
 
@@ -189,7 +179,7 @@ On se retrouve dans le meme cas de vent de force 3 avec 2 couleurs.
 ### Exemple de reussite
 Vous rencontrez un vent de force 3 avec 2 couleurs. 
 * Le vent fait le jet suivant pour ses des colores: 1 et 5, et pour ses des incolores: 3, 3, 4, 6.
-* La Horde fait le jet suivant avec ses des (tous incolores @TODO pour l'instant): 1, 2, 3, 5, 6, 6.
+* La Horde fait le jet suivant avec ses des: 1, 2, 3, 5, 6, 6.
 * En appairant les d6 du joueur avec ceux du vent, on voit que les 2 couleurs sont respectees car la Horde a obtenu un 5 et un 1. La Horde a egalement obtenu un 3 et un 6 qui correspondent au d6 incolores du vent.
 Le vent etant de force 3, il exige que 3 d6 soient identiques a son jet. Nous avons respecte cette contrainte car 4 de nos d6 sont identiques. Le vent ayant 2 couleurs, nous devons d'abord reussir a remplir cette contrainte ce qui est fait avec le 5 et le 1. Finalement, les valeurs restantes sont 3 et 4 pour le vent et 3 et 6 pour la Horde. La somme des d6 du vent fait 3+4=7 ; la somme des d6 restant de la Horde est de 3+6=9. Le resultat de la Horde est >= au resultat du vent. Nous pouvons donc progresser.
 
@@ -245,17 +235,18 @@ Sur le plateau de jeu apparait egalement une echelle qui represente le moral de 
 
 ## Le Recrutement (@TODO a retravailler)
 Les grandes villes proposent un grand nombre de personnages qui peuvent etre recruter.
-Les villages abrites quant a eux, n'ont qu'un choix restreint de personnages.
-Pour chaque village, proposez 2 cartes personnage de la couleur du village pour chacun d'eux.
+Les villages, quant a eux, n'ont qu'un choix restreint de personnages.
+Pour chaque village, proposez 2 cartes personnages de la couleur du village.
 Pour chaque ville, proposez 2 cartes personnages de chaque couleur.
 
-Le joueur peut recruter dans sa horde autant de personnage qu'il le souhaite tant qu'il respecte les conditions de son plateau Horde. Le joueur peut egalement decider de se separer de certains de ses Hordiers au benefices d'autres plus adequates pour la mission suivante.
+Le joueur peut recruter dans sa horde autant de personnage qu'il le souhaite tant qu'il respecte les conditions de son plateau Horde. Le joueur peut egalement decider de se separer de certains de ses Hordiers au benefices d'autres plus adequates pour la suite de la mission.
 
 # Chapitres
 Ce jeu peut se joueur chapitre apres chapitre. Il est recommande pour la prise en main de pouvoir recommencer avec une equipe toute neuve apres chaque chapitre.
 Vous pourrez ensuite passer en mode campagne et garder votre equipe et son moral d'un chapitre a l'autre. Le mode campagne est donc bien plus difficile que le mode normal. Au debut de chaque chapitre, votre horde regagnera un point de moral afin d'entamer son periple dans de meilleures conditions.
 
 ## Chapitre 1
+[chapitre1]
 - **Depart**: Aberlaas
 - **Arrivee**: Port-Choon
 - **Distance**: 6 cases
@@ -344,6 +335,7 @@ https://squib.readthedocs.io/
 - [] @TODO: (mettre a jour les chapitres avec les photos)
 - [] @TODO: faire un petit fascicule avec une histoire a lire. 
 
+[chapitre1]: src/resources/readme/chapter1.md
 [Aberlaas]: src/resources/readme/aberlaas.png
 [village]: src/resources/readme/village.png
 [portedhurle]: src/resources/readme/portedhurle.png
