@@ -33,9 +33,9 @@ chapter 4,land,0,1,2,1,,swamp.png,G,I,I,T,,,,-1,-1
 chapter 4,land,1,0,2,1,,swamp.png,R,I,I,T,,,,-1,-1
 chapter 4,land,0,0,3,1,,swamp.png,I,I,I,T,,,,-1,-1
 chapter 4,land,1,1,1,1,,swamp.png,R,G,I,T,,,,-1,-1
-gliders,place,,,,,Cites Volantes,gliders/citesvolantes.png,I,I,I,T,,,,,-1,10
-gliders,place,,,,,Le Rocher,gliders/lerocher.png,I,I,I,T,,,,,-1,10
-gliders,place,,,,,Maison,gliders/maison.png,R,G,I,T,,,,,,10
-gliders,place,,,,,Nid d'Aigle,gliders/nidaigle.png,I,I,I,T,T,T,,,-2,10
-gliders,place,,,,,Rotonde,gliders/rotonde.png,I,I,I,,,,,,,10
-gliders,place,,,,,Syphon,gliders/syphon.png,T,T,T,T,,,,,-3,10
+gliders,place,,,,,Cites Volantes,gliders/citesvolantes.png,I,I,I,T,,,,,-1
+gliders,place,,,,,Le Rocher,gliders/lerocher.png,I,I,I,T,,,,,-1
+gliders,place,,,,,Maison,gliders/maison.png,R,G,I,T,,,,,
+gliders,place,,,,,Nid d'Aigle,gliders/nidaigle.png,I,I,I,T,T,T,,,-2
+gliders,place,,,,,Rotonde,gliders/rotonde.png,I,I,I,,,,,,
+gliders,place,,,,,Syphon,gliders/syphon.png,T,T,T,T,,,,,-3
