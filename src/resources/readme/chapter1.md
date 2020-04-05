@@ -1,5 +1,6 @@
-# Mise en place
-# Chapitre 1
+# Story mode
+
+## Chapitre 1
 > Tout commenca dans la cite d'Aberlaas. Une steche battait les maisons et les fenetres qui bordaient les grandes avenues presques vides. Ca sentait le sable et le sel. C'etait rapeux et sale. Un temps de chien et d'ailleurs personne ne s'y etait trompe. C'etait pourtant ce jour la que le doyen missionna un messager pour venir me chercher.
 
 
@@ -49,7 +50,7 @@ Ensuite, regardez les symboles des vents sur les 3 bords de la tuile en face de 
 Si les symboles correspondent sur la tuile adjacente, prenez un d6 jaune, sinon prenez un d6 blanc.
 
 Vous devez avoir 6d6 qui correspondent aux d6 du vent.
-![chapitre1 step1]
+![chapitre1 step1.1]
 
 Dans l'exemple ci-dessus, Ryage choisi de se rendre sur la tuile de steppe avec 1d6 rouge, 1d6 vert et 1d6 blanc. La tuile de foret ayant le meme symbole que la tuile ou se rend Ryage, le vent participera d'1d6 jaune. Les deux autres tuiles adjacentes correspondant a la montagne en face et a la steppe a droite participent d'1d6 blanc chacun.
 
@@ -57,13 +58,56 @@ Le vent a bien 6d6: 1 rouge, 1 vert, 1 jaune et 3 blancs.
 
 > Je decidais donc de passer a travers les steppes verdoyantes de la bande de contre. Nous aurions ainsi de quoi nous poser et nous ravitailler sans trop de soucis. 
 
-Lancez les d6 de votre vent et determinez sa force. Pour ce faire, piochez un jeton vent dans le sac et deposez le sur la tuile.
+> Le premier vent que nous rencontrames fut un slamino. Malgre ses variations qui pouvaient le rendre fortement desagreable, ce premier mois de contre se passa dans des conditions plus que correctes.
 
-Prenez ensuite les 6d6 de votre equipe et lancez-les.
+Lancez les d6 de votre vent et determinez sa force. Pour suivre le scenario, vous pouvez decider qu'elle sera de force 2. Dans le cas contraire, piochez un jeton vent dans le sac et deposez le sur la tuile.
 
+Prenez ensuite les 6d6 de votre equipe et lancez-les. A l'aide des capacites de vos personnages, vous devrez battre le vent. Pour battre un vent, il faut que la somme de vos d6 soit au moins egale a la somme des d6 du vent. La force du vent exige que un nombre de d6 de la Horde identiques a ceux du vent.
+Un vent de force 2 exige 2d6 identiques.
 
+Ainsi, pour passer, il vous faut au moins egaler la force du vent:
+* Apairez les d6 identiques aux d6 du vent en commencant par les d6 colores.
+* Si les conditions de contre sont respectees, il reste alors a faire au moins autant que le vent, c'est a dire que la somme des d6 de la Horde doit etre superieure ou egale a la somme des d6 du vent.
+* Si les conditions de contre ne sont pas respectees, il faudra user et combiner les capacites des personnages afin de passer cette epreuve ou reculer ou user des capacites du moral.
 
-[chapitre1 step1]: scenario1-step1.png
+Dans l'exemple ci-dessus, le vent fait "2,5,6" pour ses d6 colores et "2,3,4" pour ses d6 blancs.
+Ryage fait "2,2,4,1,6,6", on peut apairer le 2 rouge, le 6 jaune et les "2" et "4" blancs avec nos d6. 
+![chapitre1 step1.2]
+
+Les exigences du vent sont que 2d6 soient identiques en commencant par les d6 colores et ce contrat est rempli. La derniere exigence est que l'on doit au moins egaler les valeurs du vent.
+
+Le vent a un total de 8 sur les d6 non apaires (les autres sont egaux et donc peuvent etre ignores) et le total de nos d6 est de 7. Il nous manque 1 pour pouvoir avancer.
+
+Nous pouvons donc utiliser le pouvoir de Blanchette (*τ:Faites +/-1 autant de fois que la force du vent*) on peut donc rajouter 2 a notre "1". la somme de nos d6 vaut donc 9 ("6"+"3") et nous pouvons passer.
+
+Retournez Blanchette, son pouvoir ne pourra plus etre utilise jusqu'a ce que le groupe rejoingne une ville, un village ou monte un camps.
+
+> Les montagnes de Thomme etaient devant nous. Ses falaises pourpres et ses cimes escarpees etaient generalement propices a des vents doux.
+Nous avancames donc droit afin d'atteindre notre premier village dans de bonnes conditions.
+
+Avancez jusqu'a la tuile dessus. Preparez vos d6. Dans l'exemple ci-dessus, la tuile propose 3d6 rouges, 2d6 jaunes et 1d6 blanc.
+![chapitre1 step2.1]
+
+> En effet, c'est sous une douce zefirine que nous progressames paisiblement et que nous pumes ainsi rejoindre sans encombres le village rouge.
+
+Dans l'exemple ci-dessus, le vent fait "1,2,4,5,5" pour ses d6 colores et "3" pour ses d6 blancs.
+Ryage fait "1,5,4,6,6,2", on peut apairer les d6 rouges avec nos d6. 
+![chapitre1 step2.2]
+
+Le vent est une zefirine (vent de force 1). Avec le jet precedent, toutes les conditions sont reunies pour pouvoir progresser (en exigences et en en valeur).
+
+> L'arrivee au village rouge fut la bienvenue. Nous avions trace droit et vite pour pouvoir gagner autant de temps que possible tant que les conditions etaient bonnes. 
+
+> Nous nous dirigeames donc vers la maison le Thomassin qui nous accueilla avec bonhommie et gentillesse. Nous pumes ainsi manger et nous baigner et nous reposer. Et nous repartimes ensemble vers le prochain village.
+
+Vous etes arrives dans le premier village. Votre equipe se repose, vous pouvez donc re-activer tous les personnages utilises jusque la.
+
+Recrutez Thomassin de Gaude ou sortez 2 cartes fer et choisissez en un. Integrez ce personnage dans votre equipe.
+
+[chapitre1 step1.1]: scenario1-step1.1.png
+[chapitre1 step1.2]: scenario1-step1.2.png
+[chapitre1 step2.1]: scenario1-step2.1.png
+[chapitre1 step2.2]: scenario1-step2.2.png
 [Ryage]: card_Ryage.png
 [Torantor]: card_Torantor.png
 [Blanchette]: card_Blanchette.png
