@@ -33,6 +33,7 @@ Vous pouvez sinon drafter votre equipe en suivant les regles suivantes:
 Placez ces personnages sur votre plateau de jeu: le traceur et le membre du FER sur la partie haute du plateau, les deux membres du pack sur la partie basse du plateau.
 Mettez ensuite votre jauge de moral a 9 (le maximum).
 
+### Une premiere etape
 > J'allais certainement passer par plusieurs villages en chemin ou je pourrai me ravitailler, transmettre le message de la capitale au responsable local et ajuster mon equipe si besoin.
 
 Installez maintenant vos tuiles terrain.
@@ -104,10 +105,38 @@ Vous etes arrives dans le premier village. Votre equipe se repose, vous pouvez d
 
 Recrutez Thomassin de Gaude ou sortez 2 cartes fer et choisissez en un. Integrez ce personnage dans votre equipe.
 
+### Vers le village bleu
+Repetez l'operation d'installation du plateau en installant 2 tuiles au hasard au dessus du village rouge et placez au dessus le village bleu.
+![chapitre1 step3.1]
+
+> Le terrain devenait plus boise. Ca et la nous pouvions croiser et chasser quelques biches ou faisants qui se reposaient dans ces bois presque vierges de tout homme. Marcher a contre-vent dans de telles conditions relevait presque de la balade. Mais cette meteo clemente ne devait pas durer eternellement.
+
+> Lorsque nous fimes halte dans une clairiere, Bepphon nous alerta. Les nuages commencaient a s'etirer et former des stratus menacants. Un vent puissant s'appretait a arriver.La stèche s'abattit sur nous avec une rare violence. Nous etions encore en train de remballer notre equipement.
+
+Un vent de force 5 vous fait face. Il y en a peu dans ce premier scenario. Si vous suivez ce scenario, sortez 2d6 verts, 2d6 jaunes et 2d6 blancs.
+
+> Le vent etait tellement puissant que nous nous rendimes compte qu'il etait inutile de s'epuiser a le contrer. Nous pliames donc sous la force du vent et nous decidames de reculer vers une zone plus abritee.
+
+Le vent de force 5 pousse dans l'axe des triangles. Vous reculez donc vers la seconde zone boisee sur votre droite et vous perdez un point de moral. 
+
+***Note:*** *Chaque fois que vous deciderez de reculer face au vent, perdez un point de moral et reculez dans le sens du vent. Il est parfois plus judicieux de reculer vers une tuile encore inconnue en connaissant le vent que l'on fuit plutot que de s'epuiser a passer. Vous reculerez toujours vers le symbole du vent.*
+
+> La steche se calma bientot et nous pumes enfin nous reposer. Etablir un nouveau camps et repartir vers le village bleu. La foret se prolongeait plus loin par une steppe peu vallonnee. Cette foret subissait regulierement des averses abondantes et des vents rafalants typiques des choons.
+
+Pour sortir de la foret vous devrez contrer un choon (vent de force 3). Lancez vos d6 et ceux du vent. Le vent sera compose de 3d6 verts, 1d6 jaune et 2d6 blancs. En effet, la ou il n'y a pas de symboles correspondants, le vent sera forcement blanc.
+
+> La steppe etait balayee regulierement par un slamino un peu chaud qui nous sechait les vetements trempes par le choon des jours precedents. Nous progressames ainsi rapidement jusqu'a la prochaine foret et derriere, le village bleu.
+
+Traversez la steppe avec un vent de force 2.
+Le vent est compose de 1d6 rouge, 2d6 blancs pour le terrain, ainsi que de 3d6 blancs.
+
+Ensuite, si vous passez ce vent, vous ferez face a un autre vent de 3d6 verts et 3d6 blancs.
+
 [chapitre1 step1.1]: scenario1-step1.1.png
 [chapitre1 step1.2]: scenario1-step1.2.png
 [chapitre1 step2.1]: scenario1-step2.1.png
 [chapitre1 step2.2]: scenario1-step2.2.png
+[chapitre1 step3.1]: scenario1-step3.1.png
 [Ryage]: card_Ryage.png
 [Torantor]: card_Torantor.png
 [Blanchette]: card_Blanchette.png
