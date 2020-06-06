@@ -16,17 +16,10 @@ def drawCards(deck,dirname)
 
   fill_color = Hash.new
   fill_color["Denree"] = "#AAAAFF"
-<<<<<<< HEAD
   fill_color["Consommable"] = "#FFFFFF"
   fill_color["Equipement"] = "#FFAAAA"
   fill_color["Capitaine"] = "#DD8888"
   fill_color["Mission"] = "#AA88AA"
-=======
-  fill_color["Consommable"] = "#AAFFAA"
-  fill_color["Equipement"] = "#FFAAAA"
-  fill_color["Capitaine"] = "#DD8888"
-  fill_color[""] = "#FFFFFF"
->>>>>>> dd984fa... First printable version of cards for Gliders -> testing soon
 
   rect layout: :inside, fill_color:  deck['Fonction'].map{|c| fill_color[c]}
 
@@ -39,7 +32,6 @@ def drawCards(deck,dirname)
     text str: deck[key], layout: key
   end
 
-<<<<<<< HEAD
   png layout: deck["Tier"].map{ |tier|
     if (tier)
       tier+'Icon'
@@ -59,13 +51,6 @@ def drawCards(deck,dirname)
   }, layout: "ExtensionIcon"
 
   save_png prefix: deck["Fonction"].zip(deck["Nom"]), dir: dirname#dir: '_cards'
-=======
-#  png layout: deck["Tier"].map{ |tier|
-#    tier+'Icon'
-#  }
-
-  save_png prefix: deck["Nom"], dir: dirname#dir: '_cards'
->>>>>>> dd984fa... First printable version of cards for Gliders -> testing soon
 
 end
 
