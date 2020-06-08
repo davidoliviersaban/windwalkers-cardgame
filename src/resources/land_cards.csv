@@ -1,7 +1,7 @@
 Chapter,Type,Red,Green,Incolor,Trick,Description,Image,RGI1,RGI2,RGI3,T1,T2,T3,T4,Moral,Abandon
-chapter,village,,,,,village_vert,village/green.png,,,,,,,,,
-chapter,village,,,,,village_bleu,village/blue.png,,,,,,,,,
-chapter,village,,,,,village_rouge,village/red.png,,,,,,,,,
+chapter,village,,,,,Village Vert,village/green.png,,,,,,,,,
+chapter,village,,,,,Village Bleu,village/blue.png,,,,,,,,,
+chapter,village,,,,,Village Rouge,village/red.png,,,,,,,,,
 chapter,city,,,,,Aberlaas,city/aberlaas.png,,,,,,,,,
 chapter,city,,,,,Port-Choon,city/portchoon.png,,,,,,,,,
 chapter,place,,,,1,Tour Fontaine,place/tourfontaine.png,T,,,,,,,,
