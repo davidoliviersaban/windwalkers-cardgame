@@ -1,6 +1,6 @@
 bleed:
-    x: 3.1cm
-    y: 2.7cm
+    x: 3.4cm
+    y: 2.95cm
     n: 6
 #    radius: 1.40in
     radius: 3cm
@@ -33,9 +33,9 @@ place:
 
 Image:
     extends: outline
-    x: -=3.1cm
-    y: -=2.7cm
-    width: 6.2cm
+    x: -=3.4cm
+    y: -=2.95cm
+    width: 6.8cm
     height: scale
 
 Description:
