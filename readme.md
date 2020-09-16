@@ -97,11 +97,13 @@ Vous rencontrez un vent de force 3 avec 2 couleurs.
 Le vent etant de force 3, il exige que 3 d6 soient identiques a son jet. Nous avons respecte cette contrainte car 4 de nos d6 sont identiques. Le vent ayant 2 couleurs, nous devons d'abord reussir a remplir cette contrainte ce qui est fait avec le 5 et le 1. Finalement, les valeurs restantes sont 3 et 4 pour le vent et 3 et 6 pour la Horde. La somme des d6 du vent fait 3+4=7 ; la somme des d6 restant de la Horde est de 3+6=9. Le resultat de la Horde est >= au resultat du vent. Nous pouvons donc progresser.
 
 ### Exemple d'echec
-Vous rencontrez un vent de force 2 avec 3 couleurs. 
+Vous rencontrez un vent de force 2 avec 3 couleurs.
 * Le vent fait le jet suivant pour ses des colores: 1, 1 et 5, et pour ses des incolores: 3, 3, 6.
 * La Horde fait le jet suivant avec ses des: 1, 2, 3, 3, 6, 6.
 * En appairant les d6 du joueur avec ceux du vent, on voit que les 3 couleurs ne sont respectees pas car la Horde a obtenu un 1. La Horde a egalement obtenu deux 3 et un 6 qui correspondent au d6 incolores du vent.
-Le vent etant de force 2, il exige que 2 d6 soient identiques a son jet. Nous avons respecte cette contrainte car 4 de nos d6 sont identiques. Le vent ayant 3 couleurs, nous devons d'abord reussir a remplir cette contrainte et ce n'est pas realise. Nous pouvons donc pas progresser et revenir en arriere a moins d'utiliser les pouvoirs de notre Horde.
+Le vent etant de force 2, il exige que 2 d6 soient identiques a son jet. Nous avons respecte cette contrainte car 4 de nos d6 sont identiques. Le vent ayant 3 couleurs, nous devons d'abord reussir a remplir cette contrainte et ce n'est pas realise. Nous pouvons donc pas progresser a moins d'utiliser les pouvoirs de notre Horde.
+
+
 
 ## Le Moral
 Le moral est crucial pour un groupe qui va traverser autant d'epreuves difficiles telles que vous vous appretez a vivre. Il faut donc le garder au plus haut. Cependant, on peut user de ce moral pour accomplir des actions heroiques qui permettront au groupe de progresser en situation de crise.
@@ -109,9 +111,14 @@ Le moral est crucial pour un groupe qui va traverser autant d'epreuves difficile
 Ainsi n'oubliez pas les actions suivantes qui 
 ### Ce qui fait baisser le moral
 * **Relancer tous les d6 de la Horde**: Un petit coup de poker qui peut payer. Ou pas.
-* **Se faire pousser par le vent**: Ne pas reussir a contrer est difficile pour le moral des troupes. Personne n'aime se faire balader par le vent, surtout quand son travail est de contrer. Il faut pourtant savoir parfois lacher prise et repartir dans de meilleures conditions.
 * **Changer la valeur +/-1 sur 1 d6 de la Horde**: L'action la plus souvent utilisee, vous pouvez influence l'un de vos d6 de +/- 1 par point de moral depense. Attention car meme si cette action parait anodine, c'est elle qui peut vous faire gagner ou perdre une partie.
-* **Monter un camp et passer son tour**: __Apres__ avoir combattu un vent, un groupe peut decider de monter un camps afin de recuperer des forces et restaurer le pouvoir de tous ses personnages. Il vous en coutera un tour de jeu et un point de moral.
+
+## La Honte
+Ne pas passer pouvoir progresser est un moment difficile qui peut impacter etre surmonte par un autre moyen que le moral: La Honte.
+
+La honte est illimitee et monte pour chaque epreuve echouee. Ce cas se produit dans les cas suivants:
+* **Se faire pousser par le vent**: Ne pas reussir a contrer est difficile pour le moral des troupes. Personne n'aime se faire balader par le vent, surtout quand son travail est de contrer. Il faut pourtant savoir parfois lacher prise et repartir dans de meilleures conditions.
+* **Monter un camp et passer son tour**: __Apres__ avoir combattu un vent, un groupe peut decider de monter un camps afin de recuperer des forces et restaurer le pouvoir de tous ses personnages. Il vous en coutera un tour de jeu et augmentera votre honte :).
 
 ## Le terrain
 Le terrain est compose de tuiles hexagonales. Il existe 3 types de tuiles: 
@@ -327,6 +334,11 @@ https://fr.fantasynamegenerators.com/
 
 ## Generateur de cartes: Squib
 https://squib.readthedocs.io/
+
+## Comment on evalue la puissance des Tier
+- Pouvoir utile et utilisable tout le temps = T1
+- Pouvoir moins utile ou utilisable sous condition = T2
+- Pouvoir utile mais trop rarement utilisable, ou peu utile et utilisable sous conditions = T3
 
 # Ma Todo list a faire ou pas :)
 - [] @TODO: Un vent peut avoir une variation de +/- 1 c'est le nombre de des en + ou en - qui doivent etre lances pour le vent.

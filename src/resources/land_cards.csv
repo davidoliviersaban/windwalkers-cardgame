@@ -1,14 +1,14 @@
 Chapter,Type,Red,Green,Incolor,Trick,Description,Image,RGI1,RGI2,RGI3,T1,T2,T3,T4,Moral,Abandon
-chapter,village,,,,,Village Vert,village/green.png,,,,,,,,,
-chapter,village,,,,,Village Bleu,village/blue.png,,,,,,,,,
-chapter,village,,,,,Village Rouge,village/red.png,,,,,,,,,
-chapter,city,,,,,Aberlaas,city/aberlaas.png,,,,,,,,,
-chapter,city,,,,,Port-Choon,city/portchoon.png,,,,,,,,,
-chapter,place,,,,1,Tour Fontaine,place/tourfontaine.png,T,,,,,,,,
-chapter,city,,,,,Chawondasee,city/chawondasee.png,,,,,,,,,
-chapter,city,,,,,Alticcio,city/alticcio.png,,,,,,,,,
+chapter,village,,,,,Village Vert,village/green.png,I,I,I,,,,,,
+chapter,village,,,,,Village Bleu,village/blue.png,I,I,I,,,,,,
+chapter,village,,,,,Village Rouge,village/red.png,I,I,I,,,,,,
+chapter,city,,,,,Aberlaas,city/aberlaas.png,I,I,I,,,,,,+1
+chapter,city,,,,,Port-Choon,city/portchoon.png,I,I,I,,,,,,+1
+chapter,place,,,,1,Tour Fontaine,place/tourfontaine.png,I,I,I,T,,,,,
+chapter,city,,,,,Chawondasee,city/chawondasee.png,I,I,I,,,,,,+1
+chapter,city,,,,,Alticcio,city/alticcio.png,I,I,I,,,,,,+1
 chapter,place,,,,6,Porte d'Hurle,place/portedhurle.png,T,T,T,T,T,T,,,
-chapter,city,,,,,Camp Boban,city/campboban.png,,,,,,,,,
+chapter,city,,,,,Camp Boban,city/campboban.png,I,I,I,,,,,,+1
 chapter 1,land,3,0,0,,,mountain.png,G,G,G,,,,,,
 chapter 1,land,1,2,0,,,forest.png,G,G,I,,,,,,
 chapter 1,land,1,2,0,,,forest.png,G,G,I,,,,,,
@@ -32,4 +32,4 @@ chapter 3,land,1,0,2,,,desert1.png,G,I,I,T,,,,-1,-2
 chapter 4,land,0,0,3,1,,swamp.png,I,I,I,T,,,,-1,-1
 chapter 4,land,0,1,2,1,,swamp.png,G,I,I,T,,,,-1,-1
 chapter 4,land,1,1,1,1,,swamp.png,G,G,I,T,,,,-1,-1
-chapter 4,land,1,1,1,1,,swamp.png,R,G,I,T,,,,-1,-1
+chapter 4,land,1,1,1,1,,swamp.png,G,G,I,T,,,,-1,-1
