@@ -5,9 +5,10 @@
 
 
 Installez la tuile Aberlaas au bord de table. Preparez pour ce scenario 20 tuiles terrains:
-* 8 tuiles steppe
-* 6 tuiles foret
-* 6 tuiles montagnes
+* 1 tuile refuge
+* 11 tuiles steppe
+* 4 tuiles foret
+* 4 tuiles montagnes
 
 Choisissez un traceur parmi les 5 disponibles. 
 Pour ce scenario, nous vous proposons de prendre **Ryage, le Joueur**.
