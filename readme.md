@@ -37,6 +37,7 @@ Personnellement, je joue avec:
   * 4 jetons vent F4
   * 4 jetons vent F5
   * 3 jetons vent F6
+- 1 pion representant votre equipe
 
 Si vous ne desirez pas lire l'integralite des regles maintenant, je vous propose de vous rendre au ![chapitre1] afin de decouvrir les regles dans un petit scenario.
 
