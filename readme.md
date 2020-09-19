@@ -30,8 +30,18 @@ Personnellement, je joue avec:
 - 6d6 noirs pour les epreuves
 - 54 cartes personnages a imprimer (`imagesToPrint/cards_v1`)
 - 58 tuiles (4x `imagesToPrint/terrain.0`, 1x`imagesToPrint/terrain.1`)
+- 20 jetons vent: 
+  * 2 jetons vent F1
+  * 3 jetons vent F2
+  * 4 jetons vent F3
+  * 4 jetons vent F4
+  * 4 jetons vent F5
+  * 3 jetons vent F6
 
 Si vous ne desirez pas lire l'integralite des regles maintenant, je vous propose de vous rendre au ![chapitre1] afin de decouvrir les regles dans un petit scenario.
+
+Si vous n'avez pas suffisamment de d6, vous pouvez utiliser une application sur votre telephone ou sur internet qui permettra d'afficher les d6. Par convention, les premiers d6 sont les d6 noirs puis les d6 verts enfin les d6 blancs. Les vents ne devraient pas exceder 9d6 a afficher sur votre ecran.
+Avec cette convention, vous pourrez vous limiter a 9d6 pour vous et 3d6 noirs pour les epreuves.
 
 # Presentation et Vocabulaire
 
@@ -265,7 +275,7 @@ Enfin, pour profiter pleinement du jeu, ne lancez que 5d6 pour votre Horde au li
 ## Chapitre 2
 - **Depart**: Port-Choon
 - **Arrivee**: Chawondasee
-- **Distance**: 3 cases
+- **Distance**: 4 cases
 - **Description**: L'objectif de ce niveau est de choisir entre la trace directe a travers les tuiles d'eau ou de faire le tour de la flaque de Lapsane. Le niveau se compose de 12 tuiles terrain d'eau, 12 tuiles terrain neutre, de 2 tuiles villages abrites et de la tuile **tour fontaine**.
 - **Repartition des tuiles**: Les tuiles de la flaque doivent etre entre le depart et l'arrivee. Il doit y avoir 3 tuiles entre chaque villages. Entre **Port-Choon** et le premier village ainsi qu'entre le dernier village et **Chawondasee**, il doit y avoir 3 tuiles. La **tour fontaine** doit avoir 3 tuiles de **Port-Choon** et 3 tuiles de **Chawondasee**. Entre **Chawondasee** et **Port-Choon** il doit y avoir au moins 3 tuiles.
 [] @TODO -> Photo exemple
