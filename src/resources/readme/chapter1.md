@@ -98,6 +98,11 @@ Ryage fait "1,5,4,6,6,2", on peut apairer les d6 verts avec nos d6.
 
 Le vent est une zefirine (vent de force 1). Avec le jet precedent, toutes les conditions sont reunies pour pouvoir progresser (en exigences et en en valeur).
 
+**TODO**
+> Pour rentrer dans le village il fallait affronter un dernier vent. 
+
+Tous les villages sont composes de 3d6 blancs. En ajoutant les 3d6 blancs du vent, vous lancerez donc 6d6 blancs.
+
 > L'arrivee au village rouge fut la bienvenue. Nous avions trace droit et vite pour pouvoir gagner autant de temps que possible tant que les conditions etaient bonnes. 
 
 > Nous nous dirigeames donc vers la maison le Thomassin qui nous accueilla avec bonhommie et gentillesse. Nous pumes ainsi manger et nous baigner et nous reposer. 
@@ -139,7 +144,7 @@ Pour sortir de la foret vous devrez contrer un choon (vent de force 3). Lancez v
 Traversez la steppe avec un vent de force 2.
 Le vent est compose de 1d6 vert, 2d6 blancs pour le terrain, ainsi que de 2d6 blancs du vent.
 
-Ensuite, si vous passez ce vent, vous ferez face a un autre vent de 3d6 verts et 3d6 blancs.
+Ensuite, si vous passez ce vent, vous ferez face a un autre vent de 3d6 verts et 2d6 blancs.
 
 [chapitre1 step1.1]: scenario1-step1.1.png
 [chapitre1 step1.2]: scenario1-step1.2.png
