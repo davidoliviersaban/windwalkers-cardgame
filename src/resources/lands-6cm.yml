@@ -155,6 +155,7 @@ Vent6Icone:
 
 MoralText:
     extends: Description
+    y: += 65
 MoralIcon:
     extends: MoralText
     file: src/resources/helpers/moral.png
@@ -164,8 +165,8 @@ MoralIcon:
     height: :scale
 
 AbandonText:
-    extends: MoralText
-    y: += 50
+    extends: Description
+#    y: += 50
 AbandonIcon:
     extends: AbandonText
     file: src/resources/helpers/abandon.png
