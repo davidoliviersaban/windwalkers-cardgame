@@ -40,6 +40,7 @@ Personnellement, je joue avec:
 
 Si vous ne desirez pas lire l'integralite des regles maintenant, je vous propose de vous rendre au ![chapitre1] afin de decouvrir les regles dans un petit scenario.
 
+## Alternatives 
 Si vous n'avez pas suffisamment de d6, vous pouvez utiliser une application sur votre telephone ou sur internet qui permettra d'afficher les d6. Par convention, les premiers d6 sont les d6 noirs puis les d6 verts enfin les d6 blancs. Les vents ne devraient pas exceder 9d6 a afficher sur votre ecran.
 Avec cette convention, vous pourrez vous limiter a 9d6 pour vous et 3d6 noirs pour les epreuves.
 
