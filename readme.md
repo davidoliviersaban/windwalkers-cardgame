@@ -25,12 +25,25 @@ Vous incarnez une horde, un groupe de personnages appeles Hordiers, qui devront 
 
 Pour joueur a ce jeu, il vous faudra au minimum: 6 d6 pour votre horde et 6 d6 pour le vent. Certains personnages ont des pouvoirs speciaux qui vous rajouteront des d6, il serait donc bon d'avoir au moins 12 d6 pour votre horde et 6 d6 pour le vent et 6 d6 noirs.
 Personnellement, je joue avec:
-- 9d6 roses pour ma horde
-- 6d6 blancs pour le vent
+- 9d6 pour ma horde (j'utilise des petits d6 ,tous de meme couleur)
+- 6d6 blancs et 3d6 verts pour le vent
 - 6d6 noirs pour les epreuves
-- 3d6 rouges et 3d6 verts et 3d6 jaunes.
 - 54 cartes personnages a imprimer (`imagesToPrint/cards_v1`)
-- 58 tuiles (2x `imagesToPrint/terrain.0`, 2x`imagesToPrint/terrain.1`, 1x `imagesToPrint/terrain.2`)
+- 58 tuiles (4x `imagesToPrint/terrain.0`, 1x`imagesToPrint/terrain.1`)
+- 20 jetons vent: 
+  * 2 jetons vent F1
+  * 3 jetons vent F2
+  * 4 jetons vent F3
+  * 4 jetons vent F4
+  * 4 jetons vent F5
+  * 3 jetons vent F6
+- 1 pion representant votre equipe
+
+Si vous ne desirez pas lire l'integralite des regles maintenant, je vous propose de vous rendre au ![chapitre1] afin de decouvrir les regles dans un petit scenario.
+
+## Alternatives 
+Si vous n'avez pas suffisamment de d6, vous pouvez utiliser une application sur votre telephone ou sur internet qui permettra d'afficher les d6. Par convention, les premiers d6 sont les d6 noirs puis les d6 verts enfin les d6 blancs. Les vents ne devraient pas exceder 9d6 a afficher sur votre ecran.
+Avec cette convention, vous pourrez vous limiter a 9d6 pour vous et 3d6 noirs pour les epreuves.
 
 # Presentation et Vocabulaire
 
@@ -90,38 +103,27 @@ Le joueur lance alors les d6 de sa Horde et du vent simultanement et resoud les 
 ### Exemple de reussite
 Vous rencontrez un vent de force 3 avec 2 couleurs. 
 * Le vent fait le jet suivant pour ses des colores: 1 et 5, et pour ses des incolores: 3, 3, 4, 6.
-* La Horde fait le jet suivant avec ses des (tous incolores @TODO pour l'instant): 1, 2, 3, 5, 6, 6.
+* La Horde fait le jet suivant avec ses des: 1, 2, 3, 5, 6, 6.
 * En appairant les d6 du joueur avec ceux du vent, on voit que les 2 couleurs sont respectees car la Horde a obtenu un 5 et un 1. La Horde a egalement obtenu un 3 et un 6 qui correspondent au d6 incolores du vent.
 Le vent etant de force 3, il exige que 3 d6 soient identiques a son jet. Nous avons respecte cette contrainte car 4 de nos d6 sont identiques. Le vent ayant 2 couleurs, nous devons d'abord reussir a remplir cette contrainte ce qui est fait avec le 5 et le 1. Finalement, les valeurs restantes sont 3 et 4 pour le vent et 3 et 6 pour la Horde. La somme des d6 du vent fait 3+4=7 ; la somme des d6 restant de la Horde est de 3+6=9. Le resultat de la Horde est >= au resultat du vent. Nous pouvons donc progresser.
 
 ### Exemple d'echec
-Vous rencontrez un vent de force 2 avec 3 couleurs. 
+Vous rencontrez un vent de force 2 avec 3 couleurs.
 * Le vent fait le jet suivant pour ses des colores: 1, 1 et 5, et pour ses des incolores: 3, 3, 6.
-* La Horde fait le jet suivant avec ses des (tous incolores @TODO pour l'instant): 1, 2, 3, 3, 6, 6.
+* La Horde fait le jet suivant avec ses des: 1, 2, 3, 3, 6, 6.
 * En appairant les d6 du joueur avec ceux du vent, on voit que les 3 couleurs ne sont respectees pas car la Horde a obtenu un 1. La Horde a egalement obtenu deux 3 et un 6 qui correspondent au d6 incolores du vent.
-Le vent etant de force 2, il exige que 2 d6 soient identiques a son jet. Nous avons respecte cette contrainte car 4 de nos d6 sont identiques. Le vent ayant 3 couleurs, nous devons d'abord reussir a remplir cette contrainte et ce n'est pas realise. Nous pouvons donc pas progresser et revenir en arriere a moins d'utiliser les pouvoirs de notre Horde.
+Le vent etant de force 2, il exige que 2 d6 soient identiques a son jet. Nous avons respecte cette contrainte car 4 de nos d6 sont identiques. Le vent ayant 3 couleurs, nous devons d'abord reussir a remplir cette contrainte et ce n'est pas realise. Nous pouvons donc pas progresser a moins d'utiliser les pouvoirs de notre Horde.
+
+
 
 ## Le Moral
 Le moral est crucial pour un groupe qui va traverser autant d'epreuves difficiles telles que vous vous appretez a vivre. Il faut donc le garder au plus haut. Cependant, on peut user de ce moral pour accomplir des actions heroiques qui permettront au groupe de progresser en situation de crise.
 
-Ainsi n'oubliez pas les actions suivantes qui 
+Ainsi n'oubliez pas les actions suivantes qui vous permettront d'avancer mais penaliseront le moral de votre equipe:
 ### Ce qui fait baisser le moral
 * **Relancer tous les d6 de la Horde**: Un petit coup de poker qui peut payer. Ou pas.
-* **Se faire pousser par le vent**: Ne pas reussir a contrer est difficile pour le moral des troupes. Personne n'aime se faire balader par le vent, surtout quand son travail est de contrer. Il faut pourtant savoir parfois lacher prise et repartir dans de meilleures conditions.
 * **Changer la valeur +/-1 sur 1 d6 de la Horde**: L'action la plus souvent utilisee, vous pouvez influence l'un de vos d6 de +/- 1 par point de moral depense. Attention car meme si cette action parait anodine, c'est elle qui peut vous faire gagner ou perdre une partie.
-* **Monter un camp et passer son tour**: __Apres__ avoir combattu un vent, un groupe peut decider de monter un camps afin de recuperer des forces et restaurer le pouvoir de tous ses personnages. Il vous en coutera un tour de jeu et un point de moral.
 
-## Regle additionnelle pour le Furevent (vent de force 6) -> A tester
-Les 6 sur les furevent font apparaitre des chrones qui ont des effets aleatoires. Ces effets peuvent aussi bien etre positifs que negatifs.
-Exemples d'effets:
-1. Regagner un point de moral
-1. Sacrifiez un personnage
-1. Le prochain vent est necessairement une zefirine (force 1)
-1. Echangez un personnage contre le premier de la pile
-1. Perdez un point de moral
-1. Retrouvez un hordier perdu
-
-Un seul effet par furevent. (@TODO: retravailler cette partie)
 
 ## Le terrain
 Le terrain est compose de tuiles hexagonales. Il existe 3 types de tuiles: 
@@ -131,7 +133,7 @@ Le terrain est compose de tuiles hexagonales. Il existe 3 types de tuiles:
 
 ![aberlaas]
 Les **Villes** sont les points de depart et d'arrivee de la Horde entre chacun des 4 chapitres que nous allons vous proposer. Le but de chaque chapitre est donc de progresser d'une ville, par exemple Aberlaas en Extreme-Aval du vent vers Port-Choon pour le premier chapitre. Dans ces villes, vous pourrez reposer votre Horde et la recomposer. Pour ce faire, une phase de recrutement est possible. [Voir section recrutement](). 
-La Horde peut egalement monter un camp pour se reposer. Ainsi, chaque personnage recupere son pouvoire et regagne un point de moral.
+La Horde peut egalement monter un camp pour se reposer. Ainsi, chaque personnage recupere son pouvoir et regagne un point de moral.
 
 ![village]
 Il est egalement possible de recruter dans les *villages abrites* avec moins de choix et de reposer son equipe. La Horde ne regagne pas de moral dans les *villages abrites*.
@@ -178,18 +180,18 @@ En debut de parties, les difficultes seront plutot faibles et plus vous progress
 En debut de chapitre, on dispose les tuiles comme indique par le scenario. Les tuiles indiquent le sens des vent ainsi que la topologie du terrain.
 Ensuite, lorsque l'on pose la horde sur la ville du depart. Dans l'exemple ci dessus, les tuiles adjacentes a la tuile A sont les tuiles B, C, D, E, F et G. Pour decouvrir cette couleur du vent, on retourne une tuile vent que l'on place sur la tuile *terrain*.
 
-Le joueur decide alors de deplacer sa Horde sur l'une des tuiles adjacentes (sur la tuile C par exemple) et il decouvre alors la force du vent. Pour ce faire (@TODO encore une tuile? un lance de d6?)
+Le joueur decide alors de deplacer sa Horde sur l'une des tuiles adjacentes (sur la tuile C par exemple) et il decouvre alors la force du vent en piochant un jeton vent dans un sac.
 
 Il n'y a pas de vent sur les villages abrites, les villes ou certains lieux speciaux.
 
 Le *terrain* possede 3 des colores et/ou incolores qui sont ajoutes aux d6 du vent. Le vent rajoute 3 d6 incolores aux d6 du terrain.
-Dans l'exemple ci-dessus, si la tuile A a 2 d6 rouge et 1 d6 incolore ; la Horde devra contrer 2 d6 rouges et 4 d6 incolores. On retourne la tuile vent sur la case A. C'est un vent de force 3, le vent a donc 3 d6 d'exigeance. On doit donc resoudre les 2d6 du terrain en premier (il faut tenir compte des couleurs en premier) puis n'importe lequel des d6 incolores du vent.
+Dans l'exemple ci-dessus, si la tuile A a 2 d6 bleus et 1 d6 incolore ; la Horde devra contrer 2 d6 bleus et 4 d6 incolores. On retourne la tuile vent sur la case A. C'est un vent de force 3, le vent a donc 3 d6 d'exigeance. On doit donc resoudre les 2d6 du terrain en premier (il faut tenir compte des couleurs en premier) puis n'importe lequel des d6 incolores du vent.
 On se retrouve dans le meme cas de vent de force 3 avec 2 couleurs.
 
 ### Exemple de reussite
 Vous rencontrez un vent de force 3 avec 2 couleurs. 
 * Le vent fait le jet suivant pour ses des colores: 1 et 5, et pour ses des incolores: 3, 3, 4, 6.
-* La Horde fait le jet suivant avec ses des (tous incolores @TODO pour l'instant): 1, 2, 3, 5, 6, 6.
+* La Horde fait le jet suivant avec ses des: 1, 2, 3, 5, 6, 6.
 * En appairant les d6 du joueur avec ceux du vent, on voit que les 2 couleurs sont respectees car la Horde a obtenu un 5 et un 1. La Horde a egalement obtenu un 3 et un 6 qui correspondent au d6 incolores du vent.
 Le vent etant de force 3, il exige que 3 d6 soient identiques a son jet. Nous avons respecte cette contrainte car 4 de nos d6 sont identiques. Le vent ayant 2 couleurs, nous devons d'abord reussir a remplir cette contrainte ce qui est fait avec le 5 et le 1. Finalement, les valeurs restantes sont 3 et 4 pour le vent et 3 et 6 pour la Horde. La somme des d6 du vent fait 3+4=7 ; la somme des d6 restant de la Horde est de 3+6=9. Le resultat de la Horde est >= au resultat du vent. Nous pouvons donc progresser.
 
@@ -205,6 +207,8 @@ Un joueur allant sur une case demandant un d6 noir devra donc lancer 7 d6 dont 1
 1. **Un d6 noir exigent une egalite parfaite.**
 1. Un d6 noir n'est pas colores. 
 1. Un d6 noir d'epreuve ne peut etre enleve ou echange ou ignore ou relance.
+1. Un d6 noir ne peut etre modifie que par le moral ou les pouvoirs des crocs
+1. Un d6 noir n'est pas un malus
 
 
 ## Regles speciales pour les lieux avec des d6 noirs
@@ -227,39 +231,61 @@ Vous ne pouvez pas vous reposer sur place.
 
 Certains symboles apparaissent en plus sur les tuiles. Une flamme![moral] ou un personnage qui pleure![abandon].
 Ces symbolisent le moral perdu.
-- ![moral] fait perdre immediatement les points de moral indiques a cote
+- ![moral] fait perdre/gagner les points de moral indiques a cote du symbole au moment ou l'on lance les d6 du joueur.
 - ![abandon] fait perdre les points de moral indiques seulement si on abandonne quelqu'un sur cette tuile. Ce symbole represente le fait que d'abandonner un croc ici (car ce sont les crocs que l'on abandonne generalement), le fera certainement mourir.
 
 ### Exemple
-![land3] fait perdre immediatement 1 point de moral lorsque l'on rentre sur cette tuile. et fait perdre 2 points de moral supplementaire par utilisation de pouvoirs de personnages ayant cette icone (typiquement les crocs que l'on abandonne).
+![land3] fait perdre 1 point de moral lorsque l'on rentre sur cette tuile et qu'on lance les d6 pour affronter ce vent. Et fait perdre 2 points de moral supplementaire par utilisation de pouvoirs de personnages ayant cette icone (typiquement les crocs que l'on abandonne).
 
-## Regle additionnelle de deplacement
-Afin d'augmenter l'impacte du vent sur le deplacement, chaque chiffre de la tuile terrain possede une forme ; ils indiquent les vents locaux en bord de tuile. Les 1 et 4 sont des cercles, les 2 et 5 sont des triangles et les 6 et 3 sont des carres. Lors de votre progression, et pour chacune des 3 tuiles adjacentes dans le sens de progression; si la forme presente sur le bord votre tuile actuelle correspond a la forme du bord de la tuile adjacente, le vent aura un d6 colore supplementaire; le cas contraire, le vent a 1 d6 incolore.
-Dans le pire des cas, le vent aura donc 3 d6 colores en plus, un pour chaque forme dans le sens de progression.
+## Regles du bord de carte
+Les bords de carte sont des zones plus faciles, le vent y sera plus clement et plus aise a contrer. Pour ce faire, lancez seulement 5d6 pour le vent.
+**En cas de furevent F6, le d6 manquant sera necessairement un 6** pour que votre furevent ait ses 6d6. De maniere plus generale, s'il manque un des d6 au vent, les d5 manquants auront la valeur de la force du vent.
 
-Dans l'exemple ci-dessus, la tuile A n'a qu'une seule couleur commune avec ses *tuiles de contre* (tuiles B, C, et D): la valeur 5 qui joint A et B. Une Horde sur la tuile A qui souhaite avancer fera donc face a un vent avec 2 d6 incolores et 1 d6 colore.
+En cas d'echec et si le vent vous pousse en dehors du plateau, restez sur la case d'ou vous partez, prenez un point de **honte** et vous perdrez un hordier.
+Par priorite, perdez d'abord un Crocs. Si vous n'en avez plus a perdre, perdez un hordier du Pack ; finalement un hordier du Fer.
+
+## Se surpasser
+Vous pouvez pousser votre horde a se surpasser en jouant plusieurs fois de suite dans le meme tour de jeu. Lors que vous tentez de vous surpasser, vous puisez dans les reserves de votre equipe. Vous jouerez donc avec 1d6 de moins par surpassement successif. 
+
+Ainsi, au premier tour de jeu, utilisez vos 6d6, au premier surpassement, jouez avec 5d6, au second surpassement 4d6 et ainsi de suite. Il n'y a pas de limite au surpassement.
+Chaque surpassement reussi vous fera regagner un point de moral. A l'inverse, un surpassement echoue vous fera perdre un point de moral.
+
+### Ce qui interrompt le surpassement
+Perdre un vent ou s'arreter dans un village mettra fin au surpassement.
+Rentrer dans une ville ne compte pas comme du surpassement car les villes n'ont pas de vent. Ceci met fin egalement au surpassement.
+
+# Regagner du moral
+Comme il a ete vu precedemment, le moral permet d'activer certains pouvoirs de personnages et de traverser egalement des tuiles plus difficile. Le moral vous permet egalement de manipuler vos d6. Vous allez donc regulierement utiliser votre moral pour dejouer les pieges du plateau.
+
+Egalement, comme il y existe plusieurs moyens de gagner du moral dans le jeu et il important de tous les connaitres.
+- tuiles villes: les villes vous rendront du moral en terminant votre chapitre.
+- tuiles speciales: certaines tuiles comme les cabanes, peuvent vous rendre un point de moral
+- pouvoirs de hordiers: vos personnages peuvent vous rendre sous certaines conditions du moral
+- le surpassement: a chaque surpassement reussi, vous pourrez recuperer un point de moral.
+
 
 ## Le plateau de jeu
 Une horde est composee de 8 membres d'equipe. 3 Fer dont le Traceur, 3 Pack et 2 Crocs.
 Sur le plateau de jeu apparait egalement une echelle qui represente le moral de la Horde. Vous commencez avec 9 points de moral (le maximum).
 
-## Le Recrutement (@TODO a retravailler)
+## Le Recrutement
 Les grandes villes proposent un grand nombre de personnages qui peuvent etre recruter.
-Les villages abrites quant a eux, n'ont qu'un choix restreint de personnages.
-Pour chaque village, proposez 2 cartes personnage de la couleur du village pour chacun d'eux.
+Les villages, quant a eux, n'ont qu'un choix restreint de personnages.
+Pour chaque village, proposez 2 cartes personnages de la couleur du village.
 Pour chaque ville, proposez 2 cartes personnages de chaque couleur.
 
-Le joueur peut recruter dans sa horde autant de personnage qu'il le souhaite tant qu'il respecte les conditions de son plateau Horde. Le joueur peut egalement decider de se separer de certains de ses Hordiers au benefices d'autres plus adequates pour la mission suivante.
+Le joueur peut recruter dans sa horde autant de personnage qu'il le souhaite tant qu'il respecte les conditions de son plateau Horde. Le joueur peut egalement decider de se separer de certains de ses Hordiers au benefices d'autres plus adequates pour la suite de la mission.
 
 # Chapitres
 Ce jeu peut se joueur chapitre apres chapitre. Il est recommande pour la prise en main de pouvoir recommencer avec une equipe toute neuve apres chaque chapitre.
 Vous pourrez ensuite passer en mode campagne et garder votre equipe et son moral d'un chapitre a l'autre. Le mode campagne est donc bien plus difficile que le mode normal. Au debut de chaque chapitre, votre horde regagnera un point de moral afin d'entamer son periple dans de meilleures conditions.
 
 ## Chapitre 1
+[chapitre1]
 - **Depart**: Aberlaas
 - **Arrivee**: Port-Choon
 - **Distance**: 6 cases
-- **Description**: L'objectif de ce niveau est de traverser une grande variete de paysages et aller depuis Aberlaas vert Port-Choon. Le niveau se compose de 20 tuiles terrain, de 3 tuiles villages abrites (un de chaque couleur).
+- **Description**: L'objectif de ce niveau est de traverser une grande variete de paysages et aller depuis Aberlaas vert Port-Choon. Le niveau se compose de 24 tuiles terrain, de 3 tuiles villages abrites (un de chaque couleur).
 - **Repartition des tuiles**: Installez entre chaque village 2 tuiles neutres. Ainsi qu'entre **Aberlaas** et le premier village et entre le dernier village et **Port-Choon**.
 [] @TODO -> Photo exemple
 
@@ -267,15 +293,15 @@ Vous pourrez ensuite passer en mode campagne et garder votre equipe et son moral
 - **Depart**: Port-Choon
 - **Arrivee**: Chawondasee
 - **Distance**: 4 cases
-- **Description**: L'objectif de ce niveau est de choisir entre la trace directe a travers les tuiles d'eau ou de faire le tour de la flaque de Lapsane. Le niveau se compose de 10 tuiles terrain d'eau, 10 tuiles terrain neutre, de 2 tuiles villages abrites.
-- **Repartition des tuiles**: Les tuiles de la flaque doivent etre entre le depart et l'arrivee. Il doit y avoir 3 tuiles entre chaque villages. Entre **Port-Choon** et le premier village ainsi qu'entre le dernier village et **Chawondasee**, il doit y avoir 3 tuiles. La tour fontaine doit avoir 3 tuiles de **Port-Choon** et 3 tuiles de **Chawondasee**. Entre **Chawondasee** et **Port-Choon** il doit y avoir au moins 3 tuiles.
+- **Description**: L'objectif de ce niveau est de choisir entre la trace directe a travers les tuiles d'eau ou de faire le tour de la flaque de Lapsane. Le niveau se compose de 12 tuiles terrain d'eau, 12 tuiles terrain neutre, de 2 tuiles villages abrites et de la tuile **tour fontaine**.
+- **Repartition des tuiles**: Les tuiles de la flaque doivent etre entre le depart et l'arrivee. Il doit y avoir 3 tuiles entre chaque villages. Entre **Port-Choon** et le premier village ainsi qu'entre le dernier village et **Chawondasee**, il doit y avoir 3 tuiles. La **tour fontaine** doit avoir 3 tuiles de **Port-Choon** et 3 tuiles de **Chawondasee**. Entre **Chawondasee** et **Port-Choon** il doit y avoir au moins 3 tuiles.
 [] @TODO -> Photo exemple
 
 ## Chapitre 3
 - **Depart**: Chawondasee
 - **Arrivee**: Alticcio
 - **Distance**: 5 cases
-- **Description**: L'objectif est de compose entre les tuiles neutres et les tuiles desertiques. Le niveau se compose de 10 tuiles terrain desert, 10 tuiles terrain neutre, de 2 tuiles villages abrites.
+- **Description**: L'objectif est de compose entre les tuiles neutres et les tuiles desertiques. Le niveau se compose de 8 tuiles terrain desert, 12 tuiles terrain neutre, de 2 tuiles villages abrites.
 - **Repartition des tuiles**: La majorite des tuiles desert doivent se trouver sur la trace directe. Les tuiles desert doivent toutes se toucher. Il doit y avoir 3 tuiles entre chaque villages. Entre **Chawondasee** et le premier village ainsi qu'entre le dernier village et **Alticcio**, il doit y avoir 3 tuiles. Entre **Chawondasee** et **Alticcio** il doit y avoir au moins 4 tuiles.
 [] @TODO -> Photo exemple
 
@@ -283,43 +309,66 @@ Vous pourrez ensuite passer en mode campagne et garder votre equipe et son moral
 - **Depart**: Alticcio
 - **Arrivee**: Camp Boban
 - **Distance**: 7 cases
-- **Description**: L'objectif de ce chapitre est de passer par la Porte d'Hurle. Le niveau se compose de 8 tuiles terrain marais, 20 tuiles terrain neutre et de 1 tuiles villages abrites.
-- **Repartition des tuiles**: Placez la tuile **Porte d'Hurle** juste apres **Alticcio**. Entre **Porte d'Hurle** et le seul village et **Camp Boban**, il doit y avoir 4 tuiles. Il doit y avoir 7 tuiles au total entre **Alticcio** et **Camp Boban**. Les 28 tuiles restantes peuvent etre disposees a votre discretion. 
-Ces tuiles ne peuvent pas toucher **Alticcio**.
+- **Description**: L'objectif de ce chapitre est de passer par la Porte d'Hurle. Le niveau se compose de 8 tuiles terrain marais, 4 tuiles d'eau, 20 tuiles terrain neutre et de 1 tuiles villages abrites.
+- **Repartition des tuiles**: Placez la tuile **Porte d'Hurle** juste apres **Alticcio**. Le village se trouve a 4 tuiles de la **Porte d'Hurle** et de **Camp Boban**. Il doit y avoir 7 tuiles au total entre **Alticcio** et **Camp Boban**. Les 32 tuiles restantes peuvent etre disposees a votre discretion.
+La **Porte d'Hurle** est la seule tuile pouvant toucher **Alticcio**. Aucune autre tuile ne peut toucher **Alticcio**.
 [] @TODO -> Photo exemple
 
 # Calcul du score
 Je vous propose de calculer le score de votre partie afin de pouvoir comparer vos strategies et aussi de pouvoir comparer la qualite des equipes que vous montez.
 Le calcul est le suivant et il s'effectue en mode Campagne:
-- 1pt / moral restant a la fin de chaque chapitre
+- 1 pt / moral restant a la fin de chaque chapitre
 - 1 pt / hordier qui atteint la derniere ville
-- 1 pt / Furvent (6) traverse
+- 3 pt / Furvent (6) traverse
 - 3 pts pour la Porte d'Hurle
 - 2 pts pour la Tour Fontaine
-- -1 pt par tuile entre vous et l'arrivee.
+- -1 pt par tuile entre vous et l'arrivee
+- -1 par pt de Honte
+- +1/3/6/10/15/21 par niveau de surpassement consecutifs reussi.
 
 Votre equipe ayant 9 points de moral, le maximum theorique est:
 9 points de moral x 4 chapitres + 8 Hordiers + 6 points de Furevent + 3 + 2 = 55 pts.
 
-Exemple de partie:
-J'ai lors de mes tests perdu a la derniere case du dernier chapitre.
-- Au chapitre 1, j'ai fini avec 9 points de moral et je n'ai rencontre aucun Furevent = 9pts
-- Au chapitre 2, j'ai fini avec 8 points de moral et j'ai rencontre 1 Furevent = 8 + 1 = 9 pts
-- Au chapitre 3, j'ai fini avec 3 points de moral et j'ai rencontre 2 Furevents F6 = 3 + 2 = 5 pts
-- Au chapitre 4, j'ai perdu contre un Furevent sur la derniere tuile apres avoir passe 1 Furevent et la porte d'Hurle = 1 + 3 - 1 (derniere tuile)= 3 pts
-- Au final: 9+9+5+3 = 26 pts
+Si vous arrivez a faire 2 surpassement consecutifs vous marquerez 3 pts supplementaires.
+
+## Exemple de partie sans surpassement:
+Lors de mes tests, j'ai perdu a la derniere case du dernier chapitre.
+- Au chapitre 1, j'ai fini avec 9 points de moral et je n'ai rencontre aucun Furevent = 9 pts
+- Au chapitre 2, j'ai fini avec 8 points de moral et j'ai passe 1 Furevent = 8 + 3 = 11 pts
+- Au chapitre 3, j'ai fini avec 3 points de moral et j'ai passe 2 Furevents = 3 + 2*3 = 9 pts
+- Au chapitre 4, j'ai perdu contre un Furevent sur la derniere tuile apres avoir passe 1 Furevent et la porte d'Hurle = 3 + 3 - 1 (derniere tuile)= 5 pts
+- Au final: 9+11+9+5 = 34 pts
+
+## Autre exemple de partie avec 5d6 tout le long du jeu:
+- Chapitre 1: fini avec 8 points de moral et 2 furevents: 8 + 2*3 = 14 pts
+- Chapitre 2: fini avec 8 points de moral et 1 furevent : 8 + 1*3 = 11 pts
+- Chapitre 3: fini avec 8 points de moral et 0 furevent : 8 + 2*3 =  8 pts
+- Chapitre 4: fini avec 5 points de moral et 1 furevent, la porte d'hurle et j'ai fini avec 6 hordiers : 5 + 3 + 3 + 6 = 17 pts
+- A final = 14 + 11 + 8 + 17 = 50 pts 
 
 Pour une evaluation de votre niveau, je dirais que :
-- 0 - 10 points, vous devez encore degrossir pas mal de regles, encore une ou 2 parties pour l'etape suivante.
-- 11 - 20 points, vous etes encore un jeune padawan
-- 21 - 30 points, vous y etes presque
-- 31 - 40 points, Bravo! vous avez fini le jeu en mode campagne et vous avez exploite les bons itineraires
-- 40 - 50 points: Vous etes un grand maitre
-- 51 - 55 points: Vous pourrez m'apprendre a jouer :)
+- 0 - 15 points, vous devez encore degrossir pas mal de regles, encore une ou 2 parties pour l'etape suivante.
+- 16 - 30 points, vous etes encore un jeune padawan
+- 31 - 35 points, vous y etes presque
+- 36 - 40 points, Bravo! vous avez fini le jeu en mode campagne et vous avez exploite les bons itineraires
+- 41 - 50 points: Vous etes un grand maitre
+- 51+ points: Racontez moi comment vous avez fait, ca m'interesse :)
 
 # Pour pouvoir jouer
 Je vous ai fourni un dossier qui se nomme `imagesToPrint` qui contient toutes les images a imprimer sur des feuilles A4.
 Il faudra imprimer 2 fois les fichiers `terrain.0.png` et `terrain.1.png` afin que vous ayez suffisamment de tuiles pour pouvoir jouer dans de bonnes conditions.
+
+# Quelques precisions
+Lorsqu'un personnage traverse une case, il peut choisir vers quelle autre case il se rendra. Pour cela, il met son personnage entre la case qu'il vient de traverser et sa prochaine case.
+
+En cas d'echec, le personnage se trouvera sur le bord entre 2 cases: la case qu'il a essaye de traverser et celle vers laquelle le vent l'a pousse. Il devra appliquer le pouvoir de la tuile qu'il tentera de franchir au moment ou il voudra la franchir. Il peut donc decider de retenter la meme case ou de traverser la case vers laquelle il a ete pousse.
+
+* **Augmentez la force  du vent**: Les vents F5(steche) peuvent devenir des furevents et compter comme tel dans le decompte des points au final. Un vent force 7 est considere comme infranchissable, peu importe le pouvoir mis en oeuvre.
+* **Baissez la force du vent**: Les vents F6(furevent) comptent toujours comme des furevents dans le decompte des points mais sont franchis comme des steches F5. Les vents F0 doivent quand meme etre battus avec une somme de d6 superieure ou egale a celle faite par la tuile, sans contrainte de d6.
+* **Retrouvez un hordier abandonne**: Les hordiers abandonnes, ou ceux qui ne sont pas recrutes, sont laisses a l'ecart du plateau. Ce pouvoir permet d'aller fouiller dans cette pile tous les hordiers qui auraient ete disponible.
+* **+/-1 sur la valeur d'un d6**: Les d6 peuvent etre augmentes et baisses d'un point. Un d6 de valeur 1 peut etre baisse mais vaudra toujours 1. Un d6 valant 6 pourra etre augmente mais vaudra toujours 6.
+* **+/-2 sur la valeur d'un d6**: Un meme d6 recevra 2 points supplementaires ou se verra retire 2 points. Ces 2 points ne peuvent pas etre repartis.
+* **retourner un d6**: mettre le d6 sur sa face opposee. Par exemple un 1 peut etre transforme en 6. De maniere generale 6 <-> 1, 2 <-> 5 et 3 <-> 4.
 
 # Bonus: 
 ## Une bande son est disponible sur deezer et sur youtube:
@@ -337,6 +386,11 @@ https://fr.fantasynamegenerators.com/
 ## Generateur de cartes: Squib
 https://squib.readthedocs.io/
 
+## Comment on evalue la puissance des Tier
+- Pouvoir utile et utilisable tout le temps = T1
+- Pouvoir moins utile ou utilisable sous condition = T2
+- Pouvoir utile mais trop rarement utilisable, ou peu utile et utilisable sous conditions = T3
+
 # Ma Todo list a faire ou pas :)
 - [] @TODO: Un vent peut avoir une variation de +/- 1 c'est le nombre de des en + ou en - qui doivent etre lances pour le vent.
 - [] @TODO: Pour battre un vent, le joueur lance autant de d6 qu'il a de hordiers.
@@ -344,6 +398,7 @@ https://squib.readthedocs.io/
 - [] @TODO: (mettre a jour les chapitres avec les photos)
 - [] @TODO: faire un petit fascicule avec une histoire a lire. 
 
+[chapitre1]: src/resources/readme/chapter1.md
 [Aberlaas]: src/resources/readme/aberlaas.png
 [village]: src/resources/readme/village.png
 [portedhurle]: src/resources/readme/portedhurle.png
@@ -357,3 +412,11 @@ https://squib.readthedocs.io/
 [fer]: src/resources/readme/card_fer.png
 [pack]: src/resources/readme/card_pack.png
 [croc]: src/resources/readme/card_croc.png
+
+# Regles abandonnees
+
+## Regle additionnelle de deplacement
+Afin d'augmenter l'impacte du vent sur le deplacement, chaque chiffre de la tuile terrain possede une forme ; ils indiquent les vents locaux en bord de tuile. Les 1 et 4 sont des cercles, les 2 et 5 sont des triangles et les 6 et 3 sont des carres. Lors de votre progression, et pour chacune des 3 tuiles adjacentes dans le sens de progression; si la forme presente sur le bord votre tuile actuelle correspond a la forme du bord de la tuile adjacente, le vent aura un d6 colore supplementaire; le cas contraire, le vent a 1 d6 incolore.
+Dans le pire des cas, le vent aura donc 3 d6 colores en plus, un pour chaque forme dans le sens de progression.
+
+Dans l'exemple ci-dessus, la tuile A n'a qu'une seule couleur commune avec ses *tuiles de contre* (tuiles B, C, et D): la valeur 5 qui joint A et B. Une Horde sur la tuile A qui souhaite avancer fera donc face a un vent avec 2 d6 incolores et 1 d6 colore.

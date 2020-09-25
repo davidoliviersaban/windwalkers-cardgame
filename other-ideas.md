@@ -1,5 +1,18 @@
 
 # Idees
+
+## Regle additionnelle pour le Furevent (vent de force 6) -> A tester
+Les 6 sur les furevent font apparaitre des chrones qui ont des effets aleatoires. Ces effets peuvent aussi bien etre positifs que negatifs.
+Exemples d'effets:
+1. Regagner un point de moral
+1. Sacrifiez un personnage
+1. Le prochain vent est necessairement une zefirine (force 1)
+1. Echangez un personnage contre le premier de la pile
+1. Perdez un point de moral
+1. Retrouvez un hordier perdu
+
+Un seul effet par furevent. (@TODO: retravailler cette partie)
+
 ## Jeu a plusieurs
 ### En symetrique
 * Chaque joueur joue une partie de la Horde et collaborent sur les d6 a lancer et les pouvoirs.

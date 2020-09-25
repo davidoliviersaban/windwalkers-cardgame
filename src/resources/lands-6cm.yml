@@ -1,0 +1,179 @@
+bleed:
+    x: 3.4cm
+    y: 2.95cm
+    n: 6
+#    radius: 1.40in
+    radius: 3cm
+    stroke_color: '#000000'
+    dash: '0.02in 0.02in'
+  
+cut:
+    extends: bleed
+#    radius: 1.25in
+    stroke_color: black
+    
+outline:
+    extends: cut
+#    radius: .85in
+    stroke_color: red
+    dash: ''
+
+land:
+    extends: outline
+    stroke_width: 0
+city:
+    extends: outline
+    stroke_width: 15
+    stroke_color: '#ffffffaa'
+village:
+    extends: city
+place:
+    extends: city
+    stroke_color: '#ffff66aa'
+
+Image:
+    extends: outline
+    x: -=3.4cm
+    y: -=2.95cm
+    width: 6.8cm
+    height: scale
+
+Description:
+    extends: outline
+    font: ChunkFive Roman,Bold 14
+    x: -= 250
+    y: += 80
+    width: 500
+    height: 300
+    align: center
+    color: white
+    stroke_color: black
+    stroke_width: 3
+
+Terrain:
+    extends: outline
+    font: ChunkFive Roman,Bold 14
+    width: 100
+    height: 100
+    radius: 0
+    x: -= 30
+    y: -= 80
+    valign: middle
+    fill_color: '#ffffff55'
+    stroke_color: white
+    stroke_width: 2
+
+TerrainRGI1:
+    extends: Terrain
+    align: center
+    color: red
+    x: -=50
+TerrainRGI2:
+    extends: Terrain
+    align: center
+    color: green
+    x: +=50
+TerrainRGI3:
+    extends: Terrain
+    align: center
+    color: yellow
+    y: -= 55
+TerrainT1:
+    extends: Terrain
+    align: center
+    color: black
+    y: += 65
+TerrainT2:
+    extends: TerrainT1
+    x: += 85
+TerrainT3:
+    extends: TerrainT1
+    x: -= 85
+                        
+
+Vent:
+    extends: outline
+    font: ChunkFive Roman,Bold 14
+    align: right
+    valign: bottom
+    width: 10
+    height: 2.5cm  # used to compute the distance to the center of the tile
+    # the trick is to write the text at the bottom of the text box and rotate the text box
+    radius: 30
+    fill_color: '#ffffff60'
+    stroke_color: white
+    stroke_width: 3
+
+VentIcone:
+    extends: Vent
+    radius: 40
+    stroke_width: += 2
+
+Vent1:
+    extends: Vent
+Vent1Icone:
+    extends: VentIcone
+    x: -= 0.05cm
+    y: += 2.2cm
+
+Vent2:
+    extends: Vent
+Vent2Icone:
+    extends: VentIcone
+    x: += 1.9cm
+    y: += 1.15cm
+    
+Vent3:
+    extends: Vent
+Vent3Icone:
+    extends: VentIcone
+    x: += 1.95cm
+    y: -= 1.1cm
+    
+Vent4:
+    extends: Vent1
+Vent4Icone:
+    extends: VentIcone
+    x: -= 0.0cm
+    y: -= 2.2cm
+
+
+Vent5:
+    extends: Vent3
+Vent5Icone:
+    extends: VentIcone
+    x: -= 1.9cm
+    y: -= 1.1cm
+    
+Vent6:
+    extends: Vent2
+Vent6Icone:
+    extends: VentIcone
+    x: -= 1.95cm
+    y: += 1.05cm
+
+
+MoralText:
+    extends: Description
+    y: += 65
+MoralIcon:
+    extends: MoralText
+    file: src/resources/helpers/moral.png
+    x: += 150
+    y: -= 10
+    width: 50
+    height: :scale
+
+AbandonText:
+    extends: Description
+#    y: += 50
+AbandonIcon:
+    extends: AbandonText
+    file: src/resources/helpers/abandon.png
+    x: += 150
+    width: 50
+    height: :scale
+
+Empty:
+    width: 1
+    height: 1

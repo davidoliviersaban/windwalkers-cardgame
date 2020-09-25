@@ -1,6 +1,7 @@
 require 'squib'
 
-deck1 = Squib.csv file: %w(src/resources/horde_cards.csv)
+deck1 = Squib.xlsx file: %w(src/resources/horde_cards.xlsx)
+#deck1 = Squib.csv file: %w(src/resources/horde_cards.csv)
 deck2 = Squib.csv file: %w(src/resources/horde2_cards.csv)
 deck_Vs = Squib.csv file: %w(src/resources/horde_vs_cards.csv)
 
@@ -56,7 +57,7 @@ def drawCards(deck,dirname)
     tier+'Icon'
   }
 
-  save_png prefix: deck["Position"].zip(deck["Nom"]), dir: dirname#dir: '_cards'
+  save_png prefix: deck["Id"].zip(deck["Position"],deck["Nom"]).map{|name| "%03d.%s.%s"%name}, dir: dirname#dir: '_cards'
 
 end
 
