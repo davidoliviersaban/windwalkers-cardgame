@@ -1,40 +1,3 @@
-<<<<<<< HEAD
-Chapter,Type,Red,Green,Incolor,Trick,Description,Image,RGI1,RGI2,RGI3,T1,T2,T3,T4,Moral,Abandon
-chapter,village,,,,,village_vert,village/green.png,,,,,,,,,
-chapter,village,,,,,village_bleu,village/blue.png,,,,,,,,,
-chapter,village,,,,,village_rouge,village/red.png,,,,,,,,,
-chapter,city,,,,,Aberlaas,city/aberlaas.png,,,,,,,,,
-chapter,city,,,,,Port-Choon,city/portchoon.png,,,,,,,,,
-chapter,place,,,,1,Tour Fontaine,place/tourfontaine.png,T,,,,,,,,
-chapter,city,,,,,Chawondasee,city/chawondasee.png,,,,,,,,,
-chapter,city,,,,,Alticcio,city/alticcio.png,,,,,,,,,
-chapter,place,,,,6,Porte d'Hurle,place/portedhurle.png,T,T,T,T,T,T,,,
-chapter,city,,,,,Camp Boban,city/campboban.png,,,,,,,,,
-chapter 1,land,3,0,0,,,mountain.png,R,R,R,,,,,,
-chapter 1,land,2,1,0,,,mountain.png,R,R,G,,,,,,
-chapter 1,land,2,0,1,,,mountain.png,R,R,I,,,,,,
-chapter 1,land,1,2,0,,,forest.png,R,G,G,,,,,,
-chapter 1,land,1,1,1,,,steppe.png,R,G,I,,,,,,
-chapter 1,land,1,0,2,,,steppe.png,R,I,I,,,,,,
-chapter 1,land,0,3,0,,,forest.png,G,G,G,,,,,,
-chapter 1,land,0,2,1,,,forest.png,G,G,I,,,,,,
-chapter 1,land,0,1,2,,,steppe.png,G,I,I,,,,,,
-chapter 1,land,0,0,3,,,steppe.png,I,I,I,,,,,,
-chapter 2,land,0,0,3,1,,water.png,I,I,I,T,,,,-1,
-chapter 2,land,0,1,2,1,,water.png,G,I,I,T,,,,-1,
-chapter 2,land,0,0,3,2,,water.png,I,I,I,T,T,,,-1,
-chapter 2,land,0,1,2,2,,water.png,G,I,I,T,T,,,-1,
-chapter 2,land,0,0,3,3,,water.png,I,I,I,T,T,T,,-1,
-chapter 3,land,0,0,3,,,desert1.png,I,I,I,T,,,,-1,-2
-chapter 3,land,1,0,2,,,desert2.png,R,I,I,,,,,-2,-1
-chapter 3,land,0,0,3,,,desert3.png,I,I,I,,,,,-3,-1
-chapter 3,land,0,0,3,,,desert1.png,I,I,I,T,,,,-1,-2
-chapter 3,land,1,0,2,,,desert1.png,R,I,I,T,,,,-1,-2
-chapter 4,land,0,1,2,1,,swamp.png,G,I,I,T,,,,-1,-1
-chapter 4,land,1,0,2,1,,swamp.png,R,I,I,T,,,,-1,-1
-chapter 4,land,0,0,3,1,,swamp.png,I,I,I,T,,,,-1,-1
-chapter 4,land,1,1,1,1,,swamp.png,R,G,I,T,,,,-1,-1
-=======
 Chapter,Type,Description,Image,RGI1,RGI2,RGI3,T1,T2,T3,T4,Moral,Abandon
 chapter,village,Village Vert,village/green.png,I,I,I,,,,,,
 chapter,village,Village Bleu,village/blue.png,I,I,I,,,,,,
@@ -58,4 +21,3 @@ chapter 3,land,,desert3.png,G,I,I,T,,,,-1,-2
 chapter 3,land,,desert3.png,I,I,I,,,,,-2,-2
 chapter 4,land,,swamp.png,G,I,I,T,,,,-1,-1
 chapter 4,land,,swamp.png,G,G,I,T,,,,-1,-1
->>>>>>> master
