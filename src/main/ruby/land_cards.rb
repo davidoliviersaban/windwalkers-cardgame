@@ -2,12 +2,8 @@ require 'squib'
 
 deck = Squib.csv file: %w(src/resources/land_cards.csv)
 
-Squib::Deck.new(cards: deck["Chapter"].size,
-                layout: %w(src/resources/lands-6cm.yml),
-#                layout: %w(src/resources/lands.yml),
-                width: "6.8cm", height: "5.9cm") do 
-#                width: "2.8in", height: "2.5in") do 
 
+def drawTile(deck, dirname) do
   png file: deck["Image"].map { |img| 
     if (img == nil) 
       "src/resources/terrain/city/_aberlaas.png" 
@@ -70,5 +66,32 @@ Squib::Deck.new(cards: deck["Chapter"].size,
 
   polygon layout: deck["Type"]
 
-  save_png prefix: deck["Chapter"].map{|str| str+"."}, dir: '_terrain'
+  save_png prefix: deck["Chapter"].map{|str| str+"."}, dir: dirname
+end
+
+
+def drawCutlines(deck, dirname) do  
+  polygon layout: :bleed
+  polygon layout: :cut
+#  polygon layout: :outline
+  save_png prefix: deck["Chapter"].map{|str| str+"."}, dir: dirname
+end
+
+
+Squib::Deck.new(cards: deck["Chapter"].size,
+                layout: %w(src/resources/lands-6cm.yml),
+#                layout: %w(src/resources/lands.yml),
+                width: "6.8cm", height: "5.9cm") do 
+#                width: "2.8in", height: "2.5in") do 
+
+  drawTile(deck, '_terrain')
+end
+
+Squib::Deck.new(cards: 12,
+                layout: %w(src/resources/lands-6cm.yml),
+#                layout: %w(src/resources/lands.yml),
+                width: "6.8cm", height: "5.9cm") do 
+#                width: "2.8in", height: "2.5in") do 
+
+drawCutlines(deck, '_terrain_cut')
 end
