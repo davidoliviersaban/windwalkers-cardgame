@@ -239,7 +239,7 @@ Ces symbolisent le moral perdu.
 
 ## Regles du bord de carte
 Les bords de carte sont des zones plus faciles, le vent y sera plus clement et plus aise a contrer. Pour ce faire, lancez seulement 5d6 pour le vent.
-**En cas de furevent F6, le d6 manquant sera necessairement un 6** pour que votre furevent ait ses 6d6. De maniere plus generale, s'il manque un des d6 au vent, les d5 manquants auront la valeur de la force du vent.
+**En cas de furevent F6, le d6 manquant sera necessairement un 6** pour que votre furevent ait ses 6d6. De maniere plus generale, s'il manque un des d6 au vent, les d6 manquants auront la valeur de la force du vent.
 
 En cas d'echec et si le vent vous pousse en dehors du plateau, restez sur la case d'ou vous partez, prenez un point de **honte** et vous perdrez un hordier.
 Par priorite, perdez d'abord un Crocs. Si vous n'en avez plus a perdre, perdez un hordier du Pack ; finalement un hordier du Fer.
@@ -250,6 +250,8 @@ Vous pouvez pousser votre horde a se surpasser en jouant plusieurs fois de suite
 Ainsi, au premier tour de jeu, utilisez vos 6d6, au premier surpassement, jouez avec 5d6, au second surpassement 4d6 et ainsi de suite. Il n'y a pas de limite au surpassement.
 Chaque surpassement reussi vous fera regagner un point de moral. A l'inverse, un surpassement echoue vous fera perdre un point de moral.
 
+Se surpasser permet de traverser le plateau plus vite et rapportera plus de points.
+
 ### Ce qui interrompt le surpassement
 Perdre un vent ou s'arreter dans un village mettra fin au surpassement.
 Rentrer dans une ville ne compte pas comme du surpassement car les villes n'ont pas de vent. Ceci met fin egalement au surpassement.
@@ -258,27 +260,31 @@ Rentrer dans une ville ne compte pas comme du surpassement car les villes n'ont 
 Comme il a ete vu precedemment, le moral permet d'activer certains pouvoirs de personnages et de traverser egalement des tuiles plus difficile. Le moral vous permet egalement de manipuler vos d6. Vous allez donc regulierement utiliser votre moral pour dejouer les pieges du plateau.
 
 Egalement, comme il y existe plusieurs moyens de gagner du moral dans le jeu et il important de tous les connaitres.
-- tuiles villes: les villes vous rendront du moral en terminant votre chapitre.
+- tuiles villes: les villes vous rendront du moral en terminant votre chapitre (1 point de moral)
 - tuiles speciales: certaines tuiles comme les cabanes, peuvent vous rendre un point de moral
 - pouvoirs de hordiers: vos personnages peuvent vous rendre sous certaines conditions du moral
-- le surpassement: a chaque surpassement reussi, vous pourrez recuperer un point de moral.
+- le surpassement: a chaque surpassement reussi, vous pourrez recuperer un point de moral
 
 
 ## Le plateau de jeu
-Une horde est composee de 8 membres d'equipe. 3 Fer dont le Traceur, 3 Pack et 2 Crocs.
+Une horde est composee de 8 membres d'equipe. 3 FERs dont le TRACEUR, 3 PACKs et 2 TRAINEs.
 Sur le plateau de jeu apparait egalement une echelle qui represente le moral de la Horde. Vous commencez avec 9 points de moral (le maximum).
 
 ## Le Recrutement
 Les grandes villes proposent un grand nombre de personnages qui peuvent etre recruter.
 Les villages, quant a eux, n'ont qu'un choix restreint de personnages.
-Pour chaque village, proposez 2 cartes personnages de la couleur du village.
-Pour chaque ville, proposez 2 cartes personnages de chaque couleur.
+En debut de chapitre, pour chaque village, proposez 2 cartes personnages de la couleur du village.
+En fin de chapitre, pour chaque ville, proposez 2 cartes personnages de chaque couleur.
 
-Le joueur peut recruter dans sa horde autant de personnage qu'il le souhaite tant qu'il respecte les conditions de son plateau Horde. Le joueur peut egalement decider de se separer de certains de ses Hordiers au benefices d'autres plus adequates pour la suite de la mission.
+Le joueur peut recruter dans sa horde autant de personnages qu'il le souhaite tant qu'il respecte les conditions de son plateau Horde. Le joueur peut egalement decider de se separer de certains de ses Hordiers au benefices d'autres plus adequates pour la suite de la mission.
+
+Il est possible d'utiliser le pouvoir d'un hordier lorsqu'on se repose dans un village. Il faut decider si l'on recupere le pouvoir de toute la horde avant ou apres l'utilisation de ces pouvoirs.
+
+Le recrutement se fait apres le repos. Une fois le recrutement fait, il n'est pas possible de reposer la horde une seconde fois.
 
 # Chapitres
 Ce jeu peut se joueur chapitre apres chapitre. Il est recommande pour la prise en main de pouvoir recommencer avec une equipe toute neuve apres chaque chapitre.
-Vous pourrez ensuite passer en mode campagne et garder votre equipe et son moral d'un chapitre a l'autre. Le mode campagne est donc bien plus difficile que le mode normal. Au debut de chaque chapitre, votre horde regagnera un point de moral afin d'entamer son periple dans de meilleures conditions.
+Vous pourrez ensuite passer en mode campagne et garder votre equipe et son moral d'un chapitre a l'autre. Le mode campagne est donc bien plus difficile que le mode normal.
 
 ## Chapitre 1
 [chapitre1]
@@ -324,10 +330,10 @@ Le calcul est le suivant et il s'effectue en mode Campagne:
 - 2 pts pour la Tour Fontaine
 - -1 pt par tuile entre vous et l'arrivee
 - -1 par pt de Honte
-- +1/3/6/10/15/21 par niveau de surpassement consecutifs reussi.
+- +1/3/6/10/15/21 par niveau de surpassement consecutif reussi. Ainsi, jouer avec 1 d6 de moins equivaut a 1 surpassement et vous rapportera 1 pt supplementaire. Le surpassement suivant vaudra 3 points et vous aurez ainsi joue une fois avec 5d6 puis 4d6.
 
 Votre equipe ayant 9 points de moral, le maximum theorique est:
-9 points de moral x 4 chapitres + 8 Hordiers + 6 points de Furevent + 3 + 2 = 55 pts.
+9 points de moral x 4 chapitres + 8 Hordiers + 6 points de Furevent + 3 + 2 = 55 pts hors surpassement.
 
 Si vous arrivez a faire 2 surpassement consecutifs vous marquerez 3 pts supplementaires.
 
@@ -339,7 +345,7 @@ Lors de mes tests, j'ai perdu a la derniere case du dernier chapitre.
 - Au chapitre 4, j'ai perdu contre un Furevent sur la derniere tuile apres avoir passe 1 Furevent et la porte d'Hurle = 3 + 3 - 1 (derniere tuile)= 5 pts
 - Au final: 9+11+9+5 = 34 pts
 
-## Autre exemple de partie avec 5d6 tout le long du jeu:
+## Autre exemple de partie avec 5d6 tout le long du jeu sans surpassement:
 - Chapitre 1: fini avec 8 points de moral et 2 furevents: 8 + 2*3 = 14 pts
 - Chapitre 2: fini avec 8 points de moral et 1 furevent : 8 + 1*3 = 11 pts
 - Chapitre 3: fini avec 8 points de moral et 0 furevent : 8 + 2*3 =  8 pts
@@ -364,11 +370,12 @@ Lorsqu'un personnage traverse une case, il peut choisir vers quelle autre case i
 En cas d'echec, le personnage se trouvera sur le bord entre 2 cases: la case qu'il a essaye de traverser et celle vers laquelle le vent l'a pousse. Il devra appliquer le pouvoir de la tuile qu'il tentera de franchir au moment ou il voudra la franchir. Il peut donc decider de retenter la meme case ou de traverser la case vers laquelle il a ete pousse.
 
 * **Augmentez la force  du vent**: Les vents F5(steche) peuvent devenir des furevents et compter comme tel dans le decompte des points au final. Un vent force 7 est considere comme infranchissable, peu importe le pouvoir mis en oeuvre.
-* **Baissez la force du vent**: Les vents F6(furevent) comptent toujours comme des furevents dans le decompte des points mais sont franchis comme des steches F5. Les vents F0 doivent quand meme etre battus avec une somme de d6 superieure ou egale a celle faite par la tuile, sans contrainte de d6.
+* **Baissez la force du vent**: Les vents F6(furevent) comptent toujours comme des furevents dans le decompte des points meme s'ils sont franchis comme des steches F5. Les vents F0 doivent quand meme etre battus avec une somme de d6 superieure ou egale a celle faite par la tuile, sans contrainte de d6.
 * **Retrouvez un hordier abandonne**: Les hordiers abandonnes, ou ceux qui ne sont pas recrutes, sont laisses a l'ecart du plateau. Ce pouvoir permet d'aller fouiller dans cette pile tous les hordiers qui auraient ete disponible.
 * **+/-1 sur la valeur d'un d6**: Les d6 peuvent etre augmentes et baisses d'un point. Un d6 de valeur 1 peut etre baisse mais vaudra toujours 1. Un d6 valant 6 pourra etre augmente mais vaudra toujours 6.
 * **+/-2 sur la valeur d'un d6**: Un meme d6 recevra 2 points supplementaires ou se verra retire 2 points. Ces 2 points ne peuvent pas etre repartis.
 * **retourner un d6**: mettre le d6 sur sa face opposee. Par exemple un 1 peut etre transforme en 6. De maniere generale 6 <-> 1, 2 <-> 5 et 3 <-> 4.
+* **Abandon**: Lorsqu'un pouvoir affiche le mot abandonnez, cela signifie que vous devez appliquer les malus d'abandon.
 
 # Bonus: 
 ## Une bande son est disponible sur deezer et sur youtube:
