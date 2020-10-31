@@ -21,9 +21,9 @@ chapter 3,land,,desert3.png,G,I,I,T,,,,-1,-2
 chapter 3,land,,desert3.png,I,I,I,,,,,-2,-2
 chapter 4,land,,swamp.png,G,I,I,T,,,,-1,-1
 chapter 4,land,,swamp.png,G,G,I,T,,,,-1,-1
-gliders,place,,,,,Cites Volantes,gliders/citesvolantes.png,I,I,I,T,,,,,-1
-gliders,place,,,,,Le Rocher,gliders/lerocher.png,I,I,I,T,,,,,-1
-gliders,place,,,,,Maison,gliders/maison.png,R,G,I,T,,,,,
-gliders,place,,,,,Nid d'Aigle,gliders/nidaigle.png,I,I,I,T,T,T,,,-2
-gliders,place,,,,,Rotonde,gliders/rotonde.png,I,I,I,,,,,,
-gliders,place,,,,,Syphon,gliders/syphon.png,T,T,T,T,,,,,-3
+gliders,place,Cites Volantes,gliders/citesvolantes.png,I,I,I,T,,,,,-1
+gliders,place,Le Rocher,gliders/lerocher.png,I,I,I,T,,,,,-1
+gliders,place,Maison,gliders/maison.png,R,G,I,T,,,,,
+gliders,place,Nid d'Aigle,gliders/nidaigle.png,I,I,I,T,T,T,,,-2
+gliders,place,Rotonde,gliders/rotonde.png,I,I,I,,,,,,
+gliders,place,Syphon,gliders/syphon.png,T,T,T,T,,,,,-3
