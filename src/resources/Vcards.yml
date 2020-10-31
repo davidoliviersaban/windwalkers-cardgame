@@ -68,6 +68,8 @@ FerIcon:
   extends: Empty
 PackIcon:
   extends: Empty
+ConsommableIcon:
+  extends: Empty
 
 TraceurIcon:
   extends: Position

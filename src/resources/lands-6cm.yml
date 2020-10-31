@@ -1,6 +1,6 @@
 bleed:
-    x: 3.1cm
-    y: 2.7cm
+    x: 3.4cm
+    y: 2.95cm
     n: 6
 #    radius: 1.40in
     radius: 3cm
@@ -33,16 +33,16 @@ place:
 
 Image:
     extends: outline
-    x: -=3.1cm
-    y: -=2.7cm
-    width: 6.2cm
+    x: -=3.4cm
+    y: -=2.95cm
+    width: 6.8cm
     height: scale
 
 Description:
     extends: outline
     font: ChunkFive Roman,Bold 14
     x: -= 250
-    y: += 130
+    y: += 80
     width: 500
     height: 300
     align: center
@@ -57,44 +57,32 @@ Terrain:
     height: 100
     radius: 0
     x: -= 30
-    y: -= 40
+    y: -= 80
     valign: middle
     fill_color: '#ffffff55'
     stroke_color: white
     stroke_width: 2
 
-TerrainRed:
+TerrainRGI1:
     extends: Terrain
     align: center
     color: red
     x: -=50
-
-TerrainGreen:
+TerrainRGI2:
     extends: Terrain
     align: center
     color: green
     x: +=50
-
-TerrainIncolor:
+TerrainRGI3:
     extends: Terrain
     align: center
     color: yellow
     y: -= 55
-
-TerrainTrick:
+TerrainT1:
     extends: Terrain
     align: center
     color: black
     y: += 65
-
-TerrainRGI1:
-    extends: TerrainRed
-TerrainRGI2:
-    extends: TerrainGreen
-TerrainRGI3:
-    extends: TerrainIncolor
-TerrainT1:
-    extends: TerrainTrick
 TerrainT2:
     extends: TerrainT1
     x: += 85
@@ -167,6 +155,7 @@ Vent6Icone:
 
 MoralText:
     extends: Description
+    y: += 65
 MoralIcon:
     extends: MoralText
     file: src/resources/helpers/moral.png
@@ -176,8 +165,8 @@ MoralIcon:
     height: :scale
 
 AbandonText:
-    extends: MoralText
-    y: += 50
+    extends: Description
+#    y: += 50
 AbandonIcon:
     extends: AbandonText
     file: src/resources/helpers/abandon.png
