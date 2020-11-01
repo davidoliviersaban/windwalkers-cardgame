@@ -57,6 +57,6 @@ end
 
 Squib::Deck.new(cards: deck["Nom"].size,#cards: deck["Name"].size, # cards: 1,#
                 layout: %w(src/resources/Vlayout.yml src/resources/Vcards.yml),
-                width: '2.5in', height: '3.5in') do
+                width: '2.75in', height: '3.75in') do
   drawCards(deck,'_cardsG1')
 end

@@ -3,7 +3,7 @@ require 'squib'
 deck = Squib.csv file: %w(src/resources/land_cards.csv)
 
 
-def drawTile(deck, dirname) do
+def drawTile(deck, dirname)
   png file: deck["Image"].map { |img| 
     if (img == nil) 
       "src/resources/terrain/city/_aberlaas.png" 
@@ -70,7 +70,7 @@ def drawTile(deck, dirname) do
 end
 
 
-def drawCutlines(deck, dirname) do  
+def drawCutlines(deck, dirname)  
   polygon layout: :bleed
   polygon layout: :cut
 #  polygon layout: :outline
@@ -80,18 +80,14 @@ end
 
 Squib::Deck.new(cards: deck["Chapter"].size,
                 layout: %w(src/resources/lands-6cm.yml),
-#                layout: %w(src/resources/lands.yml),
                 width: "6.8cm", height: "5.9cm") do 
-#                width: "2.8in", height: "2.5in") do 
 
   drawTile(deck, '_terrain')
 end
 
 Squib::Deck.new(cards: 12,
                 layout: %w(src/resources/lands-6cm.yml),
-#                layout: %w(src/resources/lands.yml),
                 width: "6.8cm", height: "5.9cm") do 
-#                width: "2.8in", height: "2.5in") do 
 
 drawCutlines(deck, '_terrain_cut')
 end

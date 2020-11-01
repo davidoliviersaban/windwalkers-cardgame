@@ -27,15 +27,15 @@ Pour ce faire, il faudra donc des lieux supplementaires, des tuiles terrain supp
 # Principes
 
 ## Le Vent et sa force
-Les Freoles ne sont pas impactes par les des du sol (peut etre les d6 rouges?) et ils ne font face qu'aux informations liees au vent sur les tuiles **terrain**.
+Les Freoles ne sont pas impactes par les des du sol et ils ne font face qu'aux informations liees au vent sur les tuiles **terrain**.
 Les Freoles regardent donc les symboles et les valeurs des chiffres sur le bord des tuiles.
 Lorsqu'un symbole correspond, le vent gagne 1 d6 par symbole. 
-Le vaisseau lancera toujours 6 d6, tout comme les hordiers mais le vent aura toujours moins de d6 que vent.
-Pour permettre aux Gliders d'avoir un vrai challenge, les valeurs de d6 manquant vaudront toujours la force du vent.
-Ainsi, pour un vent de force 6, meme sans d6 impose par le plateau, le vent fera sur chacun de ses d6 "6".
+Le vaisseau lancera toujours 6 d6, tout comme les hordiers mais le vent aura toujours moins de d6 que le vaisseau.
+Pour permettre aux Gliders d'avoir un vrai challenge, le vent exigera que tous ses d6 soient resolus en premier. Si le vent n'a pas autant de d6 que la force du vent, les valeurs de d6 manquant vaudront toujours la force du vent.
+Ainsi, pour un vent de force 4, meme sans d6 impose par le plateau, le vent fera sur chacun de ses 4d6 "4".
 
-Prenons l'exemple d'un navire en case A , un Choon(3) sur cette tuile aurait 1d6 a cause de la case F, + 1d6 de la case B + 1d6 de la case G soit 3d6.
-Ces d6 obeissent aux memes regles que celles de Windwalkers. Ce sont des d6 colores, le navire devra donc faire exactement la meme valeur que ces d6. Les 3 autres valeurs que fera le vent seront des 3.
+Prenons l'exemple d'un navire en case A, un Choon(3) sur cette tuile aurait 1d6 a cause de la case F, + 1d6 de la case B + 1d6 de la case G soit 3d6.
+Ces d6 obeissent aux memes regles que celles de Windwalkers. Ce sont des d6 colores, le navire devra donc faire exactement la meme valeur que ces d6.
 
 ```  
 sens du vent: de bas en haut
@@ -72,14 +72,12 @@ Plus bas, les exemples seront tous pris selon la case A et un navire se dirigean
 
 La direction du vent est capitale car elle influera sur la difficulte de naviguer. Cela sera represente par des bonus ou des penalites de deplacement.
 - **Bon Pre** reduira la difficulte du vent a affronte de 1 en force (il peut y avoir des vents ressentis de force 0)
-<<<<<<< HEAD
-- **Grand Largue** le vent a 1 d6 noir
-- **Vent Arriere** le vent a 2 d6 noir
-=======
-- **Grand Largue** n'a aucun effet 
-- **Vent Arriere** le vent a un d6 noir
->>>>>>> dd984fa... First printable version of cards for Gliders -> testing soon
+- **Grand Largue** le vent a 1 d6 noir || n'a aucun effet 
+- **Vent Arriere** le vent a 2 d6 noir || le vent a un d6 noir
 - **Vent Debout** le vent a +1 en force (il peut y avoir des vents ressentis de force 7)
+
+Pour identifier le sens du vent, placez le jeton du vent a l'emplacement de la valeur du vent sur la tuile. Le vent soufflera vers ce point.
+![position_du_vent]
 
 ## L'Exploration
 Au cours de la partie, votre navire va se deplacer sur le plateau afin d'accomplir certaines missions.
@@ -89,11 +87,8 @@ D'un point de vue "roleplay", vos voiles seront representees par les d6 que vous
 Un navire s'arrete quand il le desire ou quand il n'a plus de carburant. Si vous devez vous arreter pendant que vous affrontez un vent, vous perdrez une piece d'equipement ou une partie de votre cargaison.
 
 Lorsqu'un navire se pose, il recupere tout son carburant et passe son tour. Sinon, le navire avance et joue tant qu'il le peut/le veut.
-<<<<<<< HEAD
 
 Un vaisseau qui n'a pas la capacite de passer un vent puissant doit jeter un element en soute pour avoir le droit d'affronter le vent.
-=======
->>>>>>> dd984fa... First printable version of cards for Gliders -> testing soon
 
 # Capacites possible du Navire
 Un navire commence avec une certaine capacite de soute et de capacite deplacement.
@@ -140,3 +135,4 @@ Une fois accomplie votre mission, rajoutez une carte equipement en ville.
 En fin de chapitre, chaque mission remplie rapporte autant de points que son grade. Les missions grade 1 rapportent donc 1 point, les 2 rapportent 2 points et les 3 rapportent 3 points.
 
 
+[position_du_vent]: src/resources/readme/gliders_vent.png
