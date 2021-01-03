@@ -76,7 +76,7 @@ La direction du vent est capitale car elle influera sur la difficulte de navigue
 - **Vent Arriere** le vent a 2 d6 noir || le vent a un d6 noir
 - **Vent Debout** le vent a +1 en force (il peut y avoir des vents ressentis de force 7)
 
-Pour identifier le sens du vent, placez le jeton du vent a l'emplacement de la valeur du vent sur la tuile. Le vent soufflera vers ce point.
+Pour identifier le sens du vent, placez le jeton du vent a l'emplacement de la valeur du vent sur la tuile. Le vent soufflera vers ce point. Un vent de force 5 poussera vers le numero 5 indique sur la tuile.
 ![position_du_vent]
 
 ## L'Exploration
