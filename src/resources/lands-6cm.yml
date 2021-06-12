@@ -3,7 +3,7 @@ bleed:
     y: 2.95cm
     n: 6
 #    radius: 1.40in
-    radius: 3cm
+    radius: 3,1cm
     stroke_color: '#000000'
     dash: '0.02in 0.02in'
   
