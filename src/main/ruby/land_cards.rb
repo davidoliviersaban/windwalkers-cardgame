@@ -1,6 +1,6 @@
 require 'squib'
 
-deck = Squib.csv file: %w(src/resources/land_cards.csv)
+deck = Squib.csv file: 'src/resources/land_cards.csv'
 
 
 def drawTile(deck, dirname)

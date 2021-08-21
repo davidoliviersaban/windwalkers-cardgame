@@ -137,6 +137,9 @@ La Horde peut egalement monter un camp pour se reposer. Ainsi, chaque personnage
 
 ![village]
 Il est egalement possible de recruter dans les *villages abrites* avec moins de choix et de reposer son equipe. La Horde ne regagne pas de moral dans les *villages abrites*.
+S'arreter dans un village permet de reposer toute la horde. Ne pas s'arreter ne repose qu'un hordier.
+
+S'arreter en dehors d'un village ne repose qu'un seul hordier.
 
 Le vent s'ecoule toujours dans le meme sens sur le plateau: d'Ouest en Est.
 
@@ -182,10 +185,10 @@ Ensuite, lorsque l'on pose la horde sur la ville du depart. Dans l'exemple ci de
 
 Le joueur decide alors de deplacer sa Horde sur l'une des tuiles adjacentes (sur la tuile C par exemple) et il decouvre alors la force du vent en piochant un jeton vent dans un sac.
 
-Il n'y a pas de vent sur les villages abrites, les villes ou certains lieux speciaux.
+Il n'y a pas de vent dans les villes ou certains lieux speciaux.
 
 Le *terrain* possede 3 des colores et/ou incolores qui sont ajoutes aux d6 du vent. Le vent rajoute 3 d6 incolores aux d6 du terrain.
-Dans l'exemple ci-dessus, si la tuile A a 2 d6 bleus et 1 d6 incolore ; la Horde devra contrer 2 d6 bleus et 4 d6 incolores. On retourne la tuile vent sur la case A. C'est un vent de force 3, le vent a donc 3 d6 d'exigeance. On doit donc resoudre les 2d6 du terrain en premier (il faut tenir compte des couleurs en premier) puis n'importe lequel des d6 incolores du vent.
+Dans l'exemple ci-dessus, si la tuile A a 2 d6 colores et 1 d6 incolore ; la Horde devra contrer 2 d6 colores et 4 d6 incolores. On retourne la tuile vent sur la case A. C'est un vent de force 3, le vent a donc 3 d6 d'exigeance. On doit donc resoudre les 2d6 du terrain en premier (il faut tenir compte des couleurs en premier) puis n'importe lequel des d6 incolores du vent.
 On se retrouve dans le meme cas de vent de force 3 avec 2 couleurs.
 
 ### Exemple de reussite
@@ -207,7 +210,7 @@ Un joueur allant sur une case demandant un d6 noir devra donc lancer 7 d6 dont 1
 1. **Un d6 noir exigent une egalite parfaite.**
 1. Un d6 noir n'est pas colores. 
 1. Un d6 noir d'epreuve ne peut etre enleve ou echange ou ignore ou relance.
-1. Un d6 noir ne peut etre modifie que par le moral ou les pouvoirs des crocs
+1. Un d6 noir ne peut etre modifie que par le moral ou les pouvoirs des crocs (TRAINE)
 1. Un d6 noir n'est pas un malus
 
 
@@ -219,7 +222,7 @@ Certains lieux speciaux ont des d6 noirs dessus. C'est une epreuve qui doit etre
 ### La tour fontaine
 La tour fontaine est un lieu avec une epreuve.  C'est un lieu qui n'a donc pas de "vent".
 
-Lancez 1 d6 noir pour l'epreuve puis 1d6 noir pour vous. Si vous echouez l'epreuve, perdez un membre de votre horde. Vous pourrez vous reposer sur place.
+La horde peut se reposer a la tour fontaine et donc reposer un hordier ou reposer la horde entiere si l'equipe s'arrete sur cette tuile. Dans tous les cas, un hordier meurt sur cette tuile.
 
 ### La porte d'hurle
 La porte d'hurle est un lieu special avec 6 d6 noirs. C'est un lieu qui n'a donc pas de "vent". 
@@ -248,7 +251,6 @@ Par priorite, perdez d'abord un Crocs. Si vous n'en avez plus a perdre, perdez u
 Vous pouvez pousser votre horde a se surpasser en jouant plusieurs fois de suite dans le meme tour de jeu. Lors que vous tentez de vous surpasser, vous puisez dans les reserves de votre equipe. Vous jouerez donc avec 1d6 de moins par surpassement successif. 
 
 Ainsi, au premier tour de jeu, utilisez vos 6d6, au premier surpassement, jouez avec 5d6, au second surpassement 4d6 et ainsi de suite. Il n'y a pas de limite au surpassement.
-Chaque surpassement reussi vous fera regagner un point de moral. A l'inverse, un surpassement echoue vous fera perdre un point de moral.
 
 Se surpasser permet de traverser le plateau plus vite et rapportera plus de points.
 
@@ -263,8 +265,6 @@ Egalement, comme il y existe plusieurs moyens de gagner du moral dans le jeu et 
 - tuiles villes: les villes vous rendront du moral en terminant votre chapitre (1 point de moral)
 - tuiles speciales: certaines tuiles comme les cabanes, peuvent vous rendre un point de moral
 - pouvoirs de hordiers: vos personnages peuvent vous rendre sous certaines conditions du moral
-- le surpassement: a chaque surpassement reussi, vous pourrez recuperer un point de moral
-
 
 ## Le plateau de jeu
 Une horde est composee de 8 membres d'equipe. 3 FERs dont le TRACEUR, 3 PACKs et 2 TRAINEs.
@@ -280,7 +280,7 @@ Le joueur peut recruter dans sa horde autant de personnages qu'il le souhaite ta
 
 Il est possible d'utiliser le pouvoir d'un hordier lorsqu'on se repose dans un village. Il faut decider si l'on recupere le pouvoir de toute la horde avant ou apres l'utilisation de ces pouvoirs.
 
-Le recrutement se fait apres le repos. Une fois le recrutement fait, il n'est pas possible de reposer la horde une seconde fois.
+Le recrutement se fait apres le repos. Une fois le recrutement fait, il n'est pas possible de reposer la horde une seconde fois. Il n'est pas possible egalement d'abandonner un hordier de TRAINE apres avoir utilise son pouvoir.
 
 # Chapitres
 Ce jeu peut se joueur chapitre apres chapitre. Il est recommande pour la prise en main de pouvoir recommencer avec une equipe toute neuve apres chaque chapitre.
@@ -291,7 +291,7 @@ Vous pourrez ensuite passer en mode campagne et garder votre equipe et son moral
 - **Depart**: Aberlaas
 - **Arrivee**: Port-Choon
 - **Distance**: 6 cases
-- **Description**: L'objectif de ce niveau est de traverser une grande variete de paysages et aller depuis Aberlaas vert Port-Choon. Le niveau se compose de 24 tuiles terrain, de 3 tuiles villages abrites (un de chaque couleur).
+- **Description**: L'objectif de ce niveau est de traverser une grande variete de paysages et aller depuis Aberlaas vers Port-Choon. Le niveau se compose de 24 tuiles terrain, de 3 tuiles villages abrites (un de chaque couleur).
 - **Repartition des tuiles**: Installez entre chaque village 2 tuiles neutres. Ainsi qu'entre **Aberlaas** et le premier village et entre le dernier village et **Port-Choon**.
 [] @TODO -> Photo exemple
 
@@ -333,7 +333,9 @@ Le calcul est le suivant et il s'effectue en mode Campagne:
 - +1/3/6/10/15/21 par niveau de surpassement consecutif reussi. Ainsi, jouer avec 1 d6 de moins equivaut a 1 surpassement et vous rapportera 1 pt supplementaire. Le surpassement suivant vaudra 3 points et vous aurez ainsi joue une fois avec 5d6 puis 4d6.
 
 Votre equipe ayant 9 points de moral, le maximum theorique est:
-9 points de moral x 4 chapitres + 8 Hordiers + 6 points de Furevent + 3 + 2 = 55 pts hors surpassement.
+9 points de moral x 4 chapitres + 8 Hordiers + 24 points de Furevent + 3 + 2 = 91 pts hors surpassement.
+
+[] @TODO: Faire un part pour chaque chapitre -> mettre des penalites si on passe trop de temps, bonus si on le fait en moins.
 
 Si vous arrivez a faire 2 surpassement consecutifs vous marquerez 3 pts supplementaires.
 
@@ -359,6 +361,10 @@ Pour une evaluation de votre niveau, je dirais que :
 - 36 - 40 points, Bravo! vous avez fini le jeu en mode campagne et vous avez exploite les bons itineraires
 - 41 - 50 points: Vous etes un grand maitre
 - 51+ points: Racontez moi comment vous avez fait, ca m'interesse :)
+
+# Mode competitif
+Si un joueur arrive un jour avant l'autre joueur, il marque pour chaque tour d'avance autant de points supplementaires que de moral dont il dispose lorsqu'il passe la ligne d'arrivee.
+Ainsi, un joueur finissant avec 5 points de moral 2 jours avant son poursuivant marquera 5*2 = 10 points. 
 
 # Pour pouvoir jouer
 Je vous ai fourni un dossier qui se nomme `imagesToPrint` qui contient toutes les images a imprimer sur des feuilles A4.
@@ -404,6 +410,7 @@ https://squib.readthedocs.io/
 - [] @TODO: Renommer les lieux comme les personnages ont ete renommes.
 - [] @TODO: (mettre a jour les chapitres avec les photos)
 - [] @TODO: faire un petit fascicule avec une histoire a lire. 
+- [] @TODO: Faire la carte de course et faire des cartes
 
 [chapitre1]: src/resources/readme/chapter1.md
 [Aberlaas]: src/resources/readme/aberlaas.png

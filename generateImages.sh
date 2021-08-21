@@ -17,9 +17,9 @@ function install_rbenv_upgrade_ruby() {
     gem install squib
 }
 
-# install_rbenv_upgrade_ruby
-
-source ~/.bash_profile
+# install_rbenv_upgrade_ruby # to fix gem/ruby install issues
+# gem up squib # to only update squib
+# source ~/.bash_profile
 
 rm -rf _cards* _terrain*
 ruby src/main/ruby/land_cards.rb
