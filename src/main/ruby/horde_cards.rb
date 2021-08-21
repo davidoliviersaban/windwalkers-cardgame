@@ -1,31 +1,27 @@
 require 'squib'
 
-deck1 = Squib.xlsx file: %w(src/resources/horde_cards.xlsx)
+deck1 = Squib.xlsx file: 'src/resources/horde_cards.xlsx'
 #deck1 = Squib.csv file: %w(src/resources/horde_cards.csv)
 #deck2 = Squib.csv file: %w(src/resources/horde2_cards.csv)
 #deck_Vs = Squib.csv file: %w(src/resources/horde_vs_cards.csv)
 
-def drawCards(deck,dirname)
-#  rect layout: :bleed
-#  rect layout: 'cut', stroke_color: :black # cut line as defined by TheGameCrafter
-#  cut_zone radius: 0.0,  stroke_color: :black
-#  rect layout: :frame # safe zone as defined by TheGameCrafter
-#  rect layout: :frame, fill_color: :white
-#  rect layout: :inside
-#  safe_zone radius: 0.0, stroke_color: :red
+now = DateTime.now.to_s
+
+def drawCards(deck, dirname, now)
   rect layout: :bleed
-  rect layout: :cut
-  rect layout: :inside
+  rect layout: :cut, stroke_color: :black
+#  rect layout: :inside, stroke_color: "#000000"
 
   fill_color = Hash.new
   fill_color["Pack"] = "#AAAAFF"
   fill_color["Traine"] = "#AAFFAA"
+  fill_color["Croc"] = "#AAFFAA"
   fill_color["Fer"] = "#FFAAAA"
   fill_color["Traceur"] = "#DD8888"
   fill_color["Consommable"] = "#FFFFFF"
 
 
-  rect layout: :inside, fill_color:  deck['Position'].map{|c| fill_color[c]}
+  rect layout: :inside, fill_color:  deck['Position'].map{|c| fill_color[c]}, stroke_color: :black
 
   png file: deck["Image"].map{ |img| "src/resources/images/"+img}, layout: "Image"
 
@@ -48,21 +44,16 @@ def drawCards(deck,dirname)
     end
   }, layout: "ExtensionIcon"
 
+  text str: now, layout: :date
+  text str: deck["Id"], layout: :id_card
+  text str: deck["Retravailler"], layout: :date, x: 500
   save_png prefix: deck["Id"].zip(deck["Position"],deck["Nom"],deck["Tier"]).map{|name| "%03d.%s.%s.T%s."%name}, dir: dirname#dir: '_cards'
 
 end
 
 def drawCutlines(deck,dirname)
-  #  rect layout: :bleed
-  #  rect layout: 'cut', stroke_color: :black # cut line as defined by TheGameCrafter
-  #  cut_zone radius: 0.0,  stroke_color: :black
-  #  rect layout: :frame # safe zone as defined by TheGameCrafter
-  #  rect layout: :frame, fill_color: :white
-  #  rect layout: :inside
-  #  safe_zone radius: 0.0, stroke_color: :red
     rect layout: :bleed
     rect layout: :cut
-#    rect layout: :inside
     save_png prefix: deck["Id"].zip(deck["Position"],deck["Nom"],deck["Tier"]).map{|name| "%03d.%s.%s.T%s."%name}, dir: dirname#dir: '_cards'
   end
   
@@ -70,7 +61,7 @@ def drawCutlines(deck,dirname)
 Squib::Deck.new(cards: deck1["Nom"].size,
                 layout: %w(src/resources/Vlayout.yml src/resources/Vcards.yml),
                 width: '2.75in', height: '3.75in') do
-  drawCards(deck1,'_cards1')
+  drawCards(deck1,'_cards1', now)
 end
 
 

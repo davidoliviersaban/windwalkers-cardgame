@@ -11,7 +11,7 @@ cut:
   height: 3.5in
   color: white
   radius: 25
-  stroke_color: black
+  stroke_color: red
   fill_color: white
 
 frame:
@@ -27,3 +27,14 @@ inside:
   color: black
   width: 675
   height: 975
+
+date:
+  extends: inside
+  y: 1055
+  color: '#000000'
+  font: ChunkFive Roman,Plain 5
+
+id_card:
+  extends: date
+  y: -= 30
+  x: += 10
