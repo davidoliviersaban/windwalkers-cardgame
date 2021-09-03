@@ -1,29 +1,39 @@
 bleed:
-    x: 3.4cm
-    y: 2.95cm
+    x: 35mm
+    y: 30.3mm #sqrt(3)*radius/2
     n: 6
-#    radius: 1.40in
-    radius: 3,1cm
-    stroke_color: '#000000'
-    dash: '0.02in 0.02in'
-  
+    radius: 35mm
+#    stroke_color: '#000000'
+#    dash: '0.02in 0.02in'
+
 cut:
     extends: bleed
-#    radius: 1.25in
-    stroke_color: black
-    
-outline:
-    extends: cut
-#    radius: .85in
+    radius: 33mm
     stroke_color: red
     dash: ''
 
+#Used for lasercut pointer
+corner1:
+    x1: 1.7mm
+    y1: 1.7mm
+    x2: 11.7mm
+    y2: 1.7mm
+    stroke_color: '#000000'
+corner2:
+    extends: corner1
+    x2: 1.7mm
+    y2: 11.7mm
+    stroke_color: '#000000'
+
+frame:
+    extends: cut
+
 land:
-    extends: outline
+    extends: frame
     stroke_width: 0
 city:
-    extends: outline
-    stroke_width: 15
+    extends: frame
+    stroke_width: 30
     stroke_color: '#ffffffaa'
 village:
     extends: city
@@ -32,14 +42,11 @@ place:
     stroke_color: '#ffff66aa'
 
 Image:
-    extends: outline
-    x: -=3.4cm
-    y: -=2.95cm
-    width: 6.8cm
-    height: scale
+    width: 72mm
+    height: :scale
 
 Description:
-    extends: outline
+    extends: frame
     font: ChunkFive Roman,Bold 14
     x: -= 250
     y: += 80
@@ -51,7 +58,7 @@ Description:
     stroke_width: 3
 
 Terrain:
-    extends: outline
+    extends: frame
     font: ChunkFive Roman,Bold 14
     width: 100
     height: 100
@@ -92,12 +99,12 @@ TerrainT3:
                         
 
 Vent:
-    extends: outline
+    extends: frame
     font: ChunkFive Roman,Bold 14
     align: right
     valign: bottom
     width: 10
-    height: 2.5cm  # used to compute the distance to the center of the tile
+    height: 25mm  # used to compute the distance to the center of the tile
     # the trick is to write the text at the bottom of the text box and rotate the text box
     radius: 30
     fill_color: '#ffffff60'
@@ -113,44 +120,44 @@ Vent1:
     extends: Vent
 Vent1Icone:
     extends: VentIcone
-    x: -= 0.05cm
-    y: += 2.2cm
+    x: -= 0.5mm
+    y: += 22mm
 
 Vent2:
     extends: Vent
 Vent2Icone:
     extends: VentIcone
-    x: += 1.9cm
-    y: += 1.15cm
+    x: += 19mm
+    y: += 11.5mm
     
 Vent3:
     extends: Vent
 Vent3Icone:
     extends: VentIcone
-    x: += 1.95cm
-    y: -= 1.1cm
+    x: += 19.5mm
+    y: -= 11mm
     
 Vent4:
     extends: Vent1
 Vent4Icone:
     extends: VentIcone
-    x: -= 0.0cm
-    y: -= 2.2cm
+    x: -= 0mm
+    y: -= 22mm
 
 
 Vent5:
     extends: Vent3
 Vent5Icone:
     extends: VentIcone
-    x: -= 1.9cm
-    y: -= 1.1cm
+    x: -= 19mm
+    y: -= 11mm
     
 Vent6:
     extends: Vent2
 Vent6Icone:
     extends: VentIcone
-    x: -= 1.95cm
-    y: += 1.05cm
+    x: -= 19.5mm
+    y: += 10.5mm
 
 
 MoralText:

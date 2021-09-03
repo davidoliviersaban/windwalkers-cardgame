@@ -6,16 +6,9 @@ deck1 = Squib.xlsx file: 'src/resources/horde_cards.xlsx'
 #deck_Vs = Squib.csv file: %w(src/resources/horde_vs_cards.csv)
 
 def drawCards(deck,dirname)
-#  rect layout: :bleed
-#  rect layout: 'cut', stroke_color: :black # cut line as defined by TheGameCrafter
-#  cut_zone radius: 0.0,  stroke_color: :black
-#  rect layout: :frame # safe zone as defined by TheGameCrafter
-#  rect layout: :frame, fill_color: :white
-#  rect layout: :inside
-#  safe_zone radius: 0.0, stroke_color: :red
   rect layout: :bleed
-  rect layout: :cut
-  rect layout: :inside
+  rect layout: :cut, stroke_color: :black
+#  rect layout: :inside, stroke_color: "#000000"
 
   fill_color = Hash.new
   fill_color["Pack"] = "#AAAAFF"
@@ -25,7 +18,7 @@ def drawCards(deck,dirname)
   fill_color["Consommable"] = "#FFFFFF"
 
 
-  rect layout: :inside, fill_color:  deck['Position'].map{|c| fill_color[c]}
+  rect layout: :inside, fill_color:  deck['Position'].map{|c| fill_color[c]}, stroke_color: :black
 
   png file: deck["Image"].map{ |img| "src/resources/images/"+img}, layout: "Image"
 
@@ -53,16 +46,8 @@ def drawCards(deck,dirname)
 end
 
 def drawCutlines(deck,dirname)
-  #  rect layout: :bleed
-  #  rect layout: 'cut', stroke_color: :black # cut line as defined by TheGameCrafter
-  #  cut_zone radius: 0.0,  stroke_color: :black
-  #  rect layout: :frame # safe zone as defined by TheGameCrafter
-  #  rect layout: :frame, fill_color: :white
-  #  rect layout: :inside
-  #  safe_zone radius: 0.0, stroke_color: :red
     rect layout: :bleed
     rect layout: :cut
-#    rect layout: :inside
     save_png prefix: deck["Id"].zip(deck["Position"],deck["Nom"],deck["Tier"]).map{|name| "%03d.%s.%s.T%s."%name}, dir: dirname#dir: '_cards'
   end
   

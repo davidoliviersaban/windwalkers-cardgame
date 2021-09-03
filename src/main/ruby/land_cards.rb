@@ -10,11 +10,11 @@ def drawTile(deck, dirname)
     else 
       "src/resources/terrain/"+img
     end
-  }, layout: "Image", height: :scale
+  }, layout: "Image"
   
-  polygon layout: :bleed
-  polygon layout: :cut
-#  polygon layout: :outline
+  # Position of corner to lasercut the tiles
+  line layout: :corner1
+  line layout: :corner2
  
   %w(1 4).each do |key|
     polygon layout: "Vent"+key+"Icone", n: 20, angle: (key.to_i-1)*3.14159/3
@@ -65,33 +65,30 @@ def drawTile(deck, dirname)
   end
 
   polygon layout: deck["Type"]
+#  polygon layout: :cut
 
   save_png prefix: deck["Chapter"].map{|str| str+"."}, dir: dirname
 end
 
 
 def drawCutlines(deck, dirname)  
-  polygon layout: :bleed
-  polygon layout: :cut
-#  polygon layout: :outline
+  polygon layout: :cut, stroke_color: :red
+  line layout: :corner1
+  line layout: :corner2
   save_png prefix: deck["Chapter"].map{|str| str+"."}, dir: dirname
 end
 
 
 Squib::Deck.new(cards: deck["Chapter"].size,
                 layout: %w(src/resources/lands-6cm.yml),
-#                layout: %w(src/resources/lands.yml),
-                width: "6.8cm", height: "5.9cm") do 
-#                width: "2.8in", height: "2.5in") do 
+                width: "72mm", height: "62.3mm") do # height = width*sqrt(3)/2
 
   drawTile(deck, '_terrain')
 end
 
 Squib::Deck.new(cards: 12,
                 layout: %w(src/resources/lands-6cm.yml),
-#                layout: %w(src/resources/lands.yml),
-                width: "6.8cm", height: "5.9cm") do 
-#                width: "2.8in", height: "2.5in") do 
+                width: "72mm", height: "62.3mm") do # height = width*sqrt(3)/2
 
-drawCutlines(deck, '_terrain_cut')
+  drawCutlines(deck, '_terrain_cut')
 end
