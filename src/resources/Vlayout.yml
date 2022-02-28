@@ -27,3 +27,14 @@ inside:
   color: black
   width: 675
   height: 975
+
+date:
+  extends: inside
+  y: 1055
+  color: '#000000'
+  font: ChunkFive Roman,Plain 5
+
+id_card:
+  extends: date
+  y: -= 30
+  x: += 10

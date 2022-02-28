@@ -24,6 +24,7 @@ function install_rbenv_upgrade_ruby() {
 #gem update squib
 
 rm -rf _cards* _terrain*
+gem update --system
 ruby src/main/ruby/land_cards.rb
 ruby src/main/ruby/horde_cards.rb
 cd ../printableCardsAppender

@@ -5,14 +5,16 @@ deck1 = Squib.xlsx file: 'src/resources/horde_cards.xlsx'
 #deck2 = Squib.csv file: %w(src/resources/horde2_cards.csv)
 #deck_Vs = Squib.csv file: %w(src/resources/horde_vs_cards.csv)
 
-def drawCards(deck,dirname)
+now = DateTime.now.to_s
+
+def drawCards(deck, dirname, now)
   rect layout: :bleed
   rect layout: :cut, stroke_color: :black
 #  rect layout: :inside, stroke_color: "#000000"
 
   fill_color = Hash.new
   fill_color["Pack"] = "#AAAAFF"
-  fill_color["Traine"] = "#AAFFAA"
+  fill_color["Croc"] = "#AAFFAA"
   fill_color["Fer"] = "#FFAAAA"
   fill_color["Traceur"] = "#DD8888"
   fill_color["Consommable"] = "#FFFFFF"
@@ -41,6 +43,9 @@ def drawCards(deck,dirname)
     end
   }, layout: "ExtensionIcon"
 
+  text str: now, layout: :date
+  text str: deck["Id"], layout: :id_card
+  text str: deck["Retravailler"], layout: :date, x: 500
   save_png prefix: deck["Id"].zip(deck["Position"],deck["Nom"],deck["Tier"]).map{|name| "%03d.%s.%s.T%s."%name}, dir: dirname#dir: '_cards'
 
 end
@@ -55,7 +60,7 @@ def drawCutlines(deck,dirname)
 Squib::Deck.new(cards: deck1["Nom"].size,
                 layout: %w(src/resources/Vlayout.yml src/resources/Vcards.yml),
                 width: '2.75in', height: '3.75in') do
-  drawCards(deck1,'_cards1')
+  drawCards(deck1,'_cards1', now)
 end
 
 
