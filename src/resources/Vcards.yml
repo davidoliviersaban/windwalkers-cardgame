@@ -57,13 +57,15 @@ AbandonIcon:
   width: 50
   height: :scale
 
-CrocIcon:
+TraineIcon:
   extends: Position
   file: src/resources/helpers/abandon.png
   x: += 110
   y: += 40
   width: 50
   height: :scale
+CrocIcon:
+  extends: TraineIcon
 FerIcon:
   extends: Empty
 PackIcon:

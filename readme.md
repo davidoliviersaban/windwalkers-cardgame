@@ -17,15 +17,15 @@ Windwalkers est un jeu de survie et d'exploration dont le but est d'amener sa Ho
 Saurez-vous amener votre horde jusque la?
 
 # Rapide presentation du jeu
-Vous incarnez une horde, un groupe de personnages appeles Hordiers, qui devront progresser a travers un paysage en permanence balaye par les vents. Pour pouvoir progresser, il vous faudra composer une equipe qui sera capable de traverser les epreuves devant vous, definir un initeraire a travers la steppe, les montagnes ou le desert et enfin d'user de strategie pour maintenir le moral de votre horde.
+Vous incarnez une horde, un groupe de personnages appeles Hordiers, qui devront progresser a travers un paysage en permanence balaye par les vents. Pour pouvoir progresser, il vous faudra composer une equipe capable de traverser les epreuves devant vous, definir un initeraire a travers la steppe, les montagnes ou le desert et enfin d'user de strategie pour maintenir le moral de votre horde.
 
 **Note:** *Le Jeu est concu pour l'instant pour un seul joueur mais je travaille pour qu'il passe en multi.*
 
 # Le Materiel
 
-Pour joueur a ce jeu, il vous faudra au minimum: 6 d6 pour votre horde et 6 d6 pour le vent. Certains personnages ont des pouvoirs speciaux qui vous rajouteront des d6, il serait donc bon d'avoir au moins 12 d6 pour votre horde et 6 d6 pour le vent et 6 d6 noirs.
+Pour joueur a ce jeu, il vous faudra au minimum: 6 d6 pour votre horde et 6 d6 pour le vent. Certains personnages ont des pouvoirs speciaux qui vous rajouteront des d6, il serait donc bon d'avoir au moins 10 d6 pour votre horde et 6 d6 pour le vent et 6 d6 noirs.
 Personnellement, je joue avec:
-- 9d6 pour ma horde (j'utilise des petits d6 ,tous de meme couleur)
+- 10d6 pour ma horde (j'utilise des petits d6 ,tous de meme couleur)
 - 6d6 blancs et 3d6 verts pour le vent
 - 6d6 noirs pour les epreuves
 - 54 cartes personnages a imprimer (`imagesToPrint/cards_v1`)
@@ -43,20 +43,25 @@ Si vous ne desirez pas lire l'integralite des regles maintenant, je vous propose
 
 ## Alternatives 
 Si vous n'avez pas suffisamment de d6, vous pouvez utiliser une application sur votre telephone ou sur internet qui permettra d'afficher les d6. Par convention, les premiers d6 sont les d6 noirs puis les d6 verts enfin les d6 blancs. Les vents ne devraient pas exceder 9d6 a afficher sur votre ecran.
-Avec cette convention, vous pourrez vous limiter a 9d6 pour vous et 3d6 noirs pour les epreuves.
+Notez les resultats des d6 du vent puis lancez vos propres d6.
+
+Avec cette convention, vous pourrez vous limiter a 6d6.
 
 # Presentation et Vocabulaire
 
 ## La Horde
 Une horde est un groupe de personnages appeles Hordiers. Chaque personne de la Horde a une fonction particuliere et une position. Cette position est importante pour permettre a la Horde de progresser.
 
-Une Horde est composee par:
-* ![fer]le **Fer** qui fend le flux du vent grâce à sa formation en pointe, ils influence grandement les effets du vents sur le reste du groupe.
-* ![pack]le **Pack**, constitué de rangs compacts, forme le corps de la Horde; ils ont plus souvent des roles de support ou des action plus ponctuelles sur la horde ou le vent.
-* ![croc]la **Traine**, enfin, rassemble les *crocs* chargés de tracter le matériel de la Horde (vêtements, vaisselle, outils, nourriture, paillasses). Ils ne feront partie integrante de la horde qu'un fois qu'ils auront prouve leur valeur.
+Une Horde est composee 8 hordiers qui ont les positions suivantes:
+* ![fer]le **Fer** qui fend le flux du vent grâce à sa formation en pointe, ils influence grandement les effets du vents sur le reste du groupe. Ils sont 3 dans la horde: 2 membres et le traceur.
+* ![pack]le **Pack**, constitué de rangs compacts, forme le corps de la Horde; ils ont plus souvent des roles de support ou des action plus ponctuelles sur la horde ou le vent. Ils sont 3 dans la horde.
+* ![croc]la **Traine**, enfin, rassemble les *crocs* chargés de tracter le matériel de la Horde (vêtements, vaisselle, outils, nourriture, paillasses). Ils ne feront partie integrante de la horde qu'un fois qu'ils auront prouve leur valeur. Ils sont 2 dans la horde.
 
 ![traceur]
 Le **Traceur** est un membre particulier du Fer car c'est lui qui trace la route. C'est le leader charismatique qui dirige sa horde afin de passer les epreuves les plus difficiles. Une horde peut progresser sans traceur mais il est generalement celui qui dirige la composition generale du groupe.
+
+### Les Hordiers
+Chaque Hordier a un pouvoir unique. Lors de l'utilisation de son pouvoir, le hordier sera fatigue et son pouvoir deviendra inactif. Ceci sera represente en retournant la carte du hordier.
 
 ## Les vents
 Alain Damasio invente tout un vocabulaire pour decrire le vent et une terminologie pour contrer ce vent. Il decrit egalement comment les scribes notent le vent:
@@ -89,15 +94,19 @@ Lors de la progression de votre Horde sur le terrain, il vous sera possible de c
 ## Contrer le vent
 Pour effectuer sa Trace, la Horde doit contrer le vent. Contrer est l'action d'avancer a contre vent pour rejoindre les villes intermediaires et enfin rejoindre Camp Boban.
 
-Chaque vent possede un nombre de couleurs et une force. La couleur donne le nombre de des colores que l'on doit lancer pour le vent.
-Un vent est toujours compose de 6 d6.
+Un vent a contrer possede une composante liee au terrain et une liee au vent lui-meme. Ainsi, chaque vent possede un nombre de couleurs et une force. 
+
+La couleur donne le nombre de des colores que l'on doit lancer pour le vent. Ce chiffre sera indique par la tuile terrain sur laquelle on souhaite evoluer.
+Un vent est toujours compose de 6 d6. On complete donc les couleurs imposees par le terrain par des d6 incolores.
 
 La force du vent impose a la Horde le nombre de d6 qui doivent etre identiques au vent. Les couleurs doivent etre egalees avant les d6 incolores du vent.
 
 Le joueur lance alors les d6 de sa Horde et du vent simultanement et resoud les actions comme suit:
 * Apairez les d6 identiques aux d6 du vent en commencant par les d6 colores.
-* Si les conditions de contre sont respectees, il reste alors a faire au moins autant que le vent, c'est a dire que la somme des d6 de la Horde doit etre superieure ou egale a la somme des d6 du vent.
+* Si les conditions de contre sont respectees, c'est a dire que le nombre de d6 identiques sont egaux a la force du vent ; il reste alors a faire au moins autant que le vent, c'est a dire que la somme des d6 de la Horde doit etre superieure ou egale a la somme des d6 du vent.
 * Si les conditions de contre ne sont pas respectees, il faudra user et combiner les capacites des personnages afin de passer cette epreuve ou reculer ou user des capacites du moral.
+
+Comme dit precedemment, les hordiers ont des pouvoirs uniques. L'utilisation de ces pouvoirs vous permettront de passer. Une fois ce pouvoir utilise, retournez la carte et ce pouvoir n'est plus utilisable jusqu'a ce que le personnage soit repose.
 
 
 ### Exemple de reussite
@@ -126,16 +135,20 @@ Ainsi n'oubliez pas les actions suivantes qui vous permettront d'avancer mais pe
 
 
 ## Le terrain
-Le terrain est compose de tuiles hexagonales. Il existe 3 types de tuiles: 
-* les **Villes** et **Villages** abrites 
-* les **Terrains** ![Terrain][land1]
+Le terrain est compose de tuiles hexagonales. Il existe 3 types de tuiles:
+* les **Villes** et **Villages** abrites
+* les **Terrains**
 * les difficultes de vent
 
-![aberlaas]
+### Villes
+![Aberlaas]
+
 Les **Villes** sont les points de depart et d'arrivee de la Horde entre chacun des 4 chapitres que nous allons vous proposer. Le but de chaque chapitre est donc de progresser d'une ville, par exemple Aberlaas en Extreme-Aval du vent vers Port-Choon pour le premier chapitre. Dans ces villes, vous pourrez reposer votre Horde et la recomposer. Pour ce faire, une phase de recrutement est possible. [Voir section recrutement](). 
 La Horde peut egalement monter un camp pour se reposer. Ainsi, chaque personnage recupere son pouvoir et regagne un point de moral.
 
+### Villages
 ![village]
+
 Il est egalement possible de recruter dans les *villages abrites* avec moins de choix et de reposer son equipe. La Horde ne regagne pas de moral dans les *villages abrites*.
 S'arreter dans un village permet de reposer toute la horde. Ne pas s'arreter ne repose qu'un hordier.
 
@@ -143,52 +156,31 @@ S'arreter en dehors d'un village ne repose qu'un seul hordier.
 
 Le vent s'ecoule toujours dans le meme sens sur le plateau: d'Ouest en Est.
 
-![land1] Le **Terrain** represente le sol et indique dans quel sens coule le vent. Il est compose de prairies, deserts, montagnes, steppes et lacs. Parfois, quelques forets et bosquets.
-Sur ce plateau, on viendra d'abord poser la couleur du vent puis sa force.
+### Terrain
+![land1] 
+![land2]
 
-Les chiffres indiques sur chaque tuile montrent dans quel sens le vent pousse la Horde. 
-Dans l'exemple ci-dessous, ma Horde arrive sur la tuile A. Le Vent soufle d'Ouest en Est, il remonte donc. Si ma Horde echoue a progresser, les vents de force 1 et 4 la feront reculer en F, les vents de force 2 et 5 vers E et les vents de force 3 et 6 en G.
-Si ma horde reussi a passer le vent, elle pourra progresser ou elle le souhaite.
-Toujours dans l'exemple ci dessous, si ma Horde arrive sur la tuile C, elle reculera vers A pour les vents de force 3 et 6, vers B pour les vents de force 5 et 2 et vers la tuile D pour les vents de force 1 et 4.
+Le **terrain** represente le sol et indique dans quel sens coule le vent. Il est compose de prairies, deserts, montagnes, steppes et lacs. Parfois, quelques forets et bosquets.
+Le terrain impose 3d6 au vent: les nombre de couleurs du vent (d6 verts)et le nombre de d6 incolores.
+Le terrain peut egalement posseder des informations supplementaires comme: 
+* les d6 noirs qui seront ajoutes au vent (voir les regles de d6 noirs). 
+* les bonus/malus de moral.
+* les malus lies a l'abandon de membres de l'equipe. 
 
-On nomme tuile adjacentes les tuiles qui entourent une autre tuile. Ici, les tuiles B,C,D,E,F et G sont adjacentes a la tuile A. La plupart du temps, nous nous interesserons aux tuiles adjacentes, dans le sens du contre, c'est a dire les tuiles B, C et D. On les nommera **tuiles de contre**.
-```  
-sens du vent: de bas en haut
-  E
-N ^ S
-  O
-                     _____
-        \\    F    //  5  \
-        5\\5     3//4     6\
-     G    \\__4__//    E     \
-          //  1  \\         /
-        6//6     2\\3     1/
-   __1__//    A    \\__2__/
-  /  4  \\         //  2  \
- /3     5\\5     3//1     3\
-/    B    \\__4__//    D    \
-\         //  6  \\         /
- \2     6//5     1\\6     4/
-  \__1__//    C    \\__5__/
-         \         /
-          \4     2/
-           \__3__/
-
-```
-
-Les **Difficulte de Vent** sont egalement des tuiles que l'on place sur le plateau de jeu, sur les tuiles terrain. Elle ne sont retournees que lorsqu'on deplace sa Horde dessus. Elles ont des valeurs comprises entre 1 et 6.
-En debut de parties, les difficultes seront plutot faibles et plus vous progresserez dans les chapitres, plus ces valeurs seront elevees.
+Toutes ces indications sont a prendre en compte lorsque la Horde tente de passer au travers de cette tuile a l'exception du bonus/malus en moral qui ne s'appliquera qu'une fois l'epreuve reussie et que la horde aura progresse sur cette tuile terrain.
 
 ## L'Exploration
 En debut de chapitre, on dispose les tuiles comme indique par le scenario. Les tuiles indiquent le sens des vent ainsi que la topologie du terrain.
-Ensuite, lorsque l'on pose la horde sur la ville du depart. Dans l'exemple ci dessus, les tuiles adjacentes a la tuile A sont les tuiles B, C, D, E, F et G. Pour decouvrir cette couleur du vent, on retourne une tuile vent que l'on place sur la tuile *terrain*.
 
-Le joueur decide alors de deplacer sa Horde sur l'une des tuiles adjacentes (sur la tuile C par exemple) et il decouvre alors la force du vent en piochant un jeton vent dans un sac.
+Ensuite, on pose le pion de la horde sur la ville du depart. 
 
-Il n'y a pas de vent dans les villes ou certains lieux speciaux.
+Le traceur decide alors de deplacer sa Horde sur l'une des tuiles adjacentes. Il decouvre alors la force du vent en piochant un jeton vent dans un sac et pose ce *jeton de vent* sur la tuile *terrain* selectionnee.
 
-Le *terrain* possede 3 des colores et/ou incolores qui sont ajoutes aux d6 du vent. Le vent rajoute 3 d6 incolores aux d6 du terrain.
-Dans l'exemple ci-dessus, si la tuile A a 2 d6 colores et 1 d6 incolore ; la Horde devra contrer 2 d6 colores et 4 d6 incolores. On retourne la tuile vent sur la case A. C'est un vent de force 3, le vent a donc 3 d6 d'exigeance. On doit donc resoudre les 2d6 du terrain en premier (il faut tenir compte des couleurs en premier) puis n'importe lequel des d6 incolores du vent.
+Il n'y a pas de vent dans les villes ou certains lieux speciaux (tour fontaine et porte d'Hurle).
+
+Le *terrain* possede 3 des colores et/ou incolores, on lui ajoute les d6 du vent. Le vent rajoute generalement 3 d6 incolores aux d6 du terrain.
+
+Par exemple, si la tuile selectionnee a 2d6 colores et 1d6 incolore, la Horde devra contrer 2 d6 colores et 4d6 incolores (1d6 du terrain + 3d6 du vent). On pioche le jeton vent que l'on place sur la tuile terrain. C'est un vent de force 3, le vent a 3 d6 d'exigeance. On doit donc resoudre les 2d6 colores du terrain en premier (il faut tenir compte des couleurs en premier) puis n'importe lequel des d6 incolores du vent.
 On se retrouve dans le meme cas de vent de force 3 avec 2 couleurs.
 
 ### Exemple de reussite
@@ -207,11 +199,14 @@ Certains lieux ou terrains possedent des d6 noirs.
 Ces d6 noirs sont des d6 supplementaires qui devront etre a la fois lances pour le terrain et lances par le joueur.
 Un joueur allant sur une case demandant un d6 noir devra donc lancer 7 d6 dont 1 noir pour le vent. Puis 7 d6 dont un noir pour lui-meme.
 
+Les regles particulieres des d6 noirs sont les suivantes:
 1. **Un d6 noir exigent une egalite parfaite.**
 1. Un d6 noir n'est pas colores. 
 1. Un d6 noir d'epreuve ne peut etre enleve ou echange ou ignore ou relance.
-1. Un d6 noir ne peut etre modifie que par le moral ou les pouvoirs des crocs (TRAINE)
+1. Un d6 noir ne peut etre modifie que par le moral ou les pouvoirs des crocs (TRAINE) ou du traceur.
 1. Un d6 noir n'est pas un malus
+
+**Note: en aucun cas, les Hordiers de FER ou de PACK peuvent aider a modifier ou ignorer 1d6 noir. Les Hordiers permettant d'ignorer les d'6 du vent n'ignorent donc pas les d6 noirs!**
 
 
 ## Regles speciales pour les lieux avec des d6 noirs
@@ -234,17 +229,19 @@ Vous ne pouvez pas vous reposer sur place.
 
 Certains symboles apparaissent en plus sur les tuiles. Une flamme![moral] ou un personnage qui pleure![abandon].
 Ces symbolisent le moral perdu.
-- ![moral] fait perdre/gagner les points de moral indiques a cote du symbole au moment ou l'on lance les d6 du joueur.
+- ![moral] fait perdre/gagner les points de moral indiques a cote du symbole au moment ou l'on reussi a passer sur ce terrain.
 - ![abandon] fait perdre les points de moral indiques seulement si on abandonne quelqu'un sur cette tuile. Ce symbole represente le fait que d'abandonner un croc ici (car ce sont les crocs que l'on abandonne generalement), le fera certainement mourir.
 
 ### Exemple
-![land3] fait perdre 1 point de moral lorsque l'on rentre sur cette tuile et qu'on lance les d6 pour affronter ce vent. Et fait perdre 2 points de moral supplementaire par utilisation de pouvoirs de personnages ayant cette icone (typiquement les crocs que l'on abandonne).
+![land3] 
+
+Ce terrain fait perdre 1 point de moral lorsque l'on passe cette tuile et qu'on lance les d6 pour affronter ce vent. Et fait perdre 2 points de moral supplementaire par utilisation de pouvoirs de personnages ayant cette icone (typiquement les crocs que l'on abandonne).
 
 ## Regles du bord de carte
 Les bords de carte sont des zones plus faciles, le vent y sera plus clement et plus aise a contrer. Pour ce faire, lancez seulement 5d6 pour le vent.
 **En cas de furevent F6, le d6 manquant sera necessairement un 6** pour que votre furevent ait ses 6d6. De maniere plus generale, s'il manque un des d6 au vent, les d6 manquants auront la valeur de la force du vent.
 
-En cas d'echec et si le vent vous pousse en dehors du plateau, restez sur la case d'ou vous partez, prenez un point de **honte** et vous perdrez un hordier.
+En cas d'echec, restez sur la case d'ou vous partez et perdez un hordier.
 Par priorite, perdez d'abord un Crocs. Si vous n'en avez plus a perdre, perdez un hordier du Pack ; finalement un hordier du Fer.
 
 ## Se surpasser
@@ -255,7 +252,7 @@ Ainsi, au premier tour de jeu, utilisez vos 6d6, au premier surpassement, jouez 
 Se surpasser permet de traverser le plateau plus vite et rapportera plus de points.
 
 ### Ce qui interrompt le surpassement
-Perdre un vent ou s'arreter dans un village mettra fin au surpassement.
+Echouer a contrer un vent ou s'arreter sur n'importe quelle tuile mettra fin au surpassement.
 Rentrer dans une ville ne compte pas comme du surpassement car les villes n'ont pas de vent. Ceci met fin egalement au surpassement.
 
 # Regagner du moral
@@ -280,7 +277,15 @@ Le joueur peut recruter dans sa horde autant de personnages qu'il le souhaite ta
 
 Il est possible d'utiliser le pouvoir d'un hordier lorsqu'on se repose dans un village. Il faut decider si l'on recupere le pouvoir de toute la horde avant ou apres l'utilisation de ces pouvoirs.
 
-Le recrutement se fait apres le repos. Une fois le recrutement fait, il n'est pas possible de reposer la horde une seconde fois. Il n'est pas possible egalement d'abandonner un hordier de TRAINE apres avoir utilise son pouvoir.
+Le recrutement se fait apres le repos. Une fois le recrutement fait, il n'est pas possible de reposer la horde une seconde fois. Il n'est pas possible egalement d'abandonner un hordier de TRAINE apres avoir utilise son pouvoir ni de le recruter de nouveau.
+
+## Reposer la horde
+Vos hordiers auront du mal a se reposer dans votre aventure car vous evolurez dans un monde aride et peu accueillant. Plus vous evoluerez, plus votre horde sera fatiguee et il vous faudra trouver un moyen de vous reposer.
+
+Le seul moyen pour recuperer le pouvoir de votre horde est d'arreter sa progression et de cesser le surpassement. A ce moment, vous pourrez recuperer le pouvoir d'un hordier.
+Si vous decidez de stopper votre surpassement et d'arreter vos hordiers dans un village, vous pourrez recuperer le pouvoir de tous vos hordiers.
+
+Ainsi, il est important de viser les villages afin de gerer l'effort de votre horde et de cadencer vos surpassements en vous arretant intelligemment dans les villages qui parsement le terrain.
 
 # Chapitres
 Ce jeu peut se joueur chapitre apres chapitre. Il est recommande pour la prise en main de pouvoir recommencer avec une equipe toute neuve apres chaque chapitre.
@@ -320,20 +325,24 @@ Vous pourrez ensuite passer en mode campagne et garder votre equipe et son moral
 La **Porte d'Hurle** est la seule tuile pouvant toucher **Alticcio**. Aucune autre tuile ne peut toucher **Alticcio**.
 [] @TODO -> Photo exemple
 
-# Calcul du score
+# Calcul du score et Carnet de contre
+Afin de comparer vos differentes parties, vous aurez a disposition un carnet de contre (sorte de journal de bord) qui vous permettra de noter 
+## Calcul du score
 Je vous propose de calculer le score de votre partie afin de pouvoir comparer vos strategies et aussi de pouvoir comparer la qualite des equipes que vous montez.
+
+
 Le calcul est le suivant et il s'effectue en mode Campagne:
+- 1 pt par tuile traversee
 - 1 pt / moral restant a la fin de chaque chapitre
 - 1 pt / hordier qui atteint la derniere ville
 - 3 pt / Furvent (6) traverse
-- 3 pts pour la Porte d'Hurle
-- 2 pts pour la Tour Fontaine
+- 5 pts pour la Porte d'Hurle
+- 3 pts pour la Tour Fontaine
 - -1 pt par tuile entre vous et l'arrivee
-- -1 par pt de Honte
 - +1/3/6/10/15/21 par niveau de surpassement consecutif reussi. Ainsi, jouer avec 1 d6 de moins equivaut a 1 surpassement et vous rapportera 1 pt supplementaire. Le surpassement suivant vaudra 3 points et vous aurez ainsi joue une fois avec 5d6 puis 4d6.
 
 Votre equipe ayant 9 points de moral, le maximum theorique est:
-9 points de moral x 4 chapitres + 8 Hordiers + 24 points de Furevent + 3 + 2 = 91 pts hors surpassement.
+9 points de moral x 4 chapitres + 8 Hordiers + 24 points de Furevent + 5 + 3 = 94 pts hors surpassement.
 
 [] @TODO: Faire un part pour chaque chapitre -> mettre des penalites si on passe trop de temps, bonus si on le fait en moins.
 
@@ -434,3 +443,34 @@ Afin d'augmenter l'impacte du vent sur le deplacement, chaque chiffre de la tuil
 Dans le pire des cas, le vent aura donc 3 d6 colores en plus, un pour chaque forme dans le sens de progression.
 
 Dans l'exemple ci-dessus, la tuile A n'a qu'une seule couleur commune avec ses *tuiles de contre* (tuiles B, C, et D): la valeur 5 qui joint A et B. Une Horde sur la tuile A qui souhaite avancer fera donc face a un vent avec 2 d6 incolores et 1 d6 colore.
+
+## Regles optionnelles sur le terrain:**
+Les chiffres indiques sur chaque tuile montrent dans quel sens le vent pousse la Horde. 
+Dans l'exemple ci-dessous, ma Horde arrive sur la tuile A. Le Vent soufle d'Ouest en Est, il remonte donc. Si ma Horde echoue a progresser, les vents de force 1 et 4 la feront reculer en F, les vents de force 2 et 5 vers E et les vents de force 3 et 6 en G.
+Si ma horde reussi a passer le vent, elle pourra progresser ou elle le souhaite.
+Toujours dans l'exemple ci dessous, si ma Horde arrive sur la tuile C, elle reculera vers A pour les vents de force 3 et 6, vers B pour les vents de force 5 et 2 et vers la tuile D pour les vents de force 1 et 4.
+
+On nomme tuile adjacentes les tuiles qui entourent une autre tuile. Ici, les tuiles B,C,D,E,F et G sont adjacentes a la tuile A. La plupart du temps, nous nous interesserons aux tuiles adjacentes, dans le sens du contre, c'est a dire les tuiles B, C et D. On les nommera **tuiles de contre**.
+```  
+sens du vent: de bas en haut
+  E
+N ^ S
+  O
+                     _____
+        \\    F    //  5  \
+        5\\5     3//4     6\
+     G    \\__4__//    E     \
+          //  1  \\         /
+        6//6     2\\3     1/
+   __1__//    A    \\__2__/
+  /  4  \\         //  2  \
+ /3     5\\5     3//1     3\
+/    B    \\__4__//    D    \
+\         //  6  \\         /
+ \2     6//5     1\\6     4/
+  \__1__//    C    \\__5__/
+         \         /
+          \4     2/
+           \__3__/
+
+```

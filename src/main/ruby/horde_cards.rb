@@ -14,6 +14,7 @@ def drawCards(deck, dirname, now)
 
   fill_color = Hash.new
   fill_color["Pack"] = "#AAAAFF"
+  fill_color["Traine"] = "#AAFFAA"
   fill_color["Croc"] = "#AAFFAA"
   fill_color["Fer"] = "#FFAAAA"
   fill_color["Traceur"] = "#DD8888"
