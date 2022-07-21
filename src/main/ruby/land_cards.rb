@@ -50,10 +50,21 @@ def drawTile(deck, dirname)
   end
 
   %w(Moral Abandon).each do |key|
-    text str: deck[key], layout: key+"Text"
+    text str: deck[key], layout: deck[key].map { |c| 
+      if (c == nil || c == 0)
+        "Empty"
+      elsif (c == "Special")
+        "AbandonTourFontaineText"
+      else
+        key+"Text"
+      end
+    }
+    
     png layout: deck[key].map { |c| 
       if (c == nil || c == 0)
         "Empty"
+      elsif (c == "Special")
+        "AbandonTourFontaineIcon"
       else
         key+"Icon"
       end

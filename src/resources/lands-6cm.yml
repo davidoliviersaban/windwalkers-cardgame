@@ -181,6 +181,17 @@ AbandonIcon:
     width: 50
     height: :scale
 
+AbandonTourFontaineText:
+    extends: MoralText
+    x: += 60
+    color: red
+AbandonTourFontaineIcon:
+    extends: AbandonTourFontaineText
+    file: src/resources/helpers/abandon.png
+    x: += 90
+    width: 50
+    height: :scale
+
 Empty:
     width: 1
     height: 1

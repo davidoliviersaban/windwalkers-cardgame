@@ -26,15 +26,15 @@ La partie se deroulera en 4 chapitres. Au debut de chaque chapitre, vous devrez 
 - 10d6 bleus pour la horde
 - 6d6 blancs et 3d6 verts pour le vent
 - 6d6 noirs pour les epreuves
-- 54 cartes personnages a imprimer (`imagesToPrint/cards_v1`)
-- 58 tuiles (4x `imagesToPrint/terrain.0`, 1x`imagesToPrint/terrain.1`)
-- 20 jetons vent: 
-  * 2 jetons vent F1
-  * 3 jetons vent F2
-  * 4 jetons vent F3
-  * 4 jetons vent F4
-  * 4 jetons vent F5
-  * 3 jetons vent F6
+- 54 + 32 cartes personnages a imprimer (`imagesToPrint/cards_v1`)
+- 60 tuiles (4x `imagesToPrint/terrain.0`, 1x`imagesToPrint/terrain.1`)
+- 30 jetons vent: 
+  * 3 jetons vent F1 (10%)
+  * 4 jetons vent F2 (13%)
+  * 6 jetons vent F3 (20%)
+  * 7 jetons vent F4 (23%)
+  * 6 jetons vent F5 (20%)
+  * 4 jetons vent F6 (13%)
 - 1 pion representant votre equipe
 - 1 carnet de contre
 
@@ -85,14 +85,14 @@ Vous pourrez ameliorer le hasard des d6 en votre faveur a l'aide du pouvoir des 
 - 6d6 blancs et 3d6 verts pour le vent
 - 6d6 noirs pour les epreuves
 - 54 cartes personnages a imprimer (`imagesToPrint/cards_v1`)
-- 58 tuiles (4x `imagesToPrint/terrain.0`, 1x`imagesToPrint/terrain.1`)
-- 20 jetons vent: 
-  * 2 jetons vent F1
-  * 3 jetons vent F2
-  * 4 jetons vent F3
-  * 4 jetons vent F4
-  * 4 jetons vent F5
-  * 3 jetons vent F6
+- 60 tuiles (4x `imagesToPrint/terrain.0`, 1x`imagesToPrint/terrain.1`)
+- 30 jetons vent: 
+  * 3 jetons vent F1 (10%)
+  * 4 jetons vent F2 (13%)
+  * 6 jetons vent F3 (20%)
+  * 7 jetons vent F4 (23%)
+  * 6 jetons vent F5 (20%)
+  * 4 jetons vent F6 (13%)
 - 1 pion representant votre equipe
 - 1 carnet de contre
 
@@ -239,6 +239,7 @@ Il est egalement possible de recruter dans les *villages abrites* avec moins de 
 S'arreter dans un village permet de reposer toute la horde. Ne pas s'arreter ne repose qu'un hordier.
 
 S'arreter en dehors d'un village ne repose qu'un seul hordier.
+Seuls les villages colores (rouge, vert et bleu) permettent de recruter.
 
 Le vent s'ecoule toujours dans le meme sens sur le plateau: d'Ouest en Est.
 
@@ -344,7 +345,7 @@ Sur le plateau de jeu apparait egalement une echelle qui represente le moral de 
 ## Le Recrutement
 Les grandes villes proposent un grand nombre de personnages qui peuvent etre recruter.
 Les villages, quant a eux, n'ont qu'un choix restreint de personnages.
-En debut de chapitre, pour chaque village, proposez 2 cartes personnages de la couleur du village.
+En debut de chapitre, pour chaque village colore, proposez 2 cartes personnages de la couleur du village.
 En fin de chapitre, pour chaque ville, proposez 2 cartes personnages de chaque couleur.
 
 Le joueur peut recruter dans sa horde autant de personnages qu'il le souhaite tant qu'il respecte les conditions de son plateau Horde. Le joueur peut egalement decider de se separer de certains de ses Hordiers au benefices d'autres plus adequates pour la suite de la mission.

@@ -186,6 +186,15 @@ AbandonIcon:
     width: 50
     height: :scale
 
+AbandonTourFontaineText:
+    extends: Description
+AbandonTourFontaineIcon:
+    extends: AbandonTourFontaineText
+    file: src/resources/helpers/abandon.png
+    x: += 150
+    width: 50
+    height: :scale
+
 Empty:
     width: 1
     height: 1
