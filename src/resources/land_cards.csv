@@ -4,7 +4,7 @@ chapter,village,Village Bleu,village/blue.png,I,I,I,,,,,,
 chapter,village,Village Rouge,village/red.png,I,I,I,,,,,,
 chapter,city,Aberlaas,city/aberlaas.png,,,,,,,,+1,
 chapter,city,Port-Choon,city/portchoon.png,,,,,,,,+1,
-chapter,place,Tour Fontaine,place/tourfontaine.png,I,I,I,,,,,,
+chapter,place,Tour Fontaine,place/tourfontaine.png,I,I,I,,,,,,special
 chapter,city,Chawondasee,city/chawondasee.png,,,,,,,,+1,
 chapter,city,Alticcio,city/alticcio.png,,,,,,,,+1,
 chapter,place,Porte d'Hurle,place/portedhurle.png,T,T,T,T,T,T,,,

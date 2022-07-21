@@ -11,3 +11,6 @@ _*/
 # My inspiration folder
 inspiration/
 ~$*.xlsx
+backup*/
+.vscode/
+.metals/

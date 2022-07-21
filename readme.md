@@ -1,8 +1,64 @@
+# A Contre-Vent
+>À l’origine fut la vitesse, le pur mouvement furtif, le « vent-foudre ». Puis le cosmos décéléra, prit consistance et forme, jusqu’aux lenteurs habitables, jusqu’au vivant, jusqu’à vous. Bienvenue à toi, lent homme lié, poussif tresseur des vitesses. 
+*Damasio, Alain. La Horde du Contrevent (Sc. Fiction) (French Edition) (Kindle Locations 84-86). La Volte. Kindle Edition.*
+
+# Introduction
+Windwalkers est un jeu de survie et d'exploration dont le but est d'amener sa Horde depuis la ville de Aberlaas en Extreme Aval du vent vers Camp Bòban, derniere ville en Amont.
+
+Saurez-vous amener votre horde jusque la?
+
+# Rapide presentation du jeu
+Vous incarnez une horde, un groupe de personnages appeles Hordiers, qui devront progresser a travers un paysage en permanence balaye par les vents. Pour pouvoir progresser, votre horde traversera des epreuves, definir un initeraire a travers la steppe, les montagnes ou le desert et enfin d'user de strategie pour maintenir le moral de votre horde.
+
+Le trajet sera parcouru sur un plateau de jeu compose de tuiles terrain. Les epreuves y seront indiquees. Pour passer ces epreuves, vous devrez affronter les vents dans des combats de des de plus en plus complexes.
+
+Vous pourrez ameliorer le hasard des d6 en votre faveur a l'aide du pouvoir des personnages de votre horde.
+
+La partie se deroulera en 4 chapitres. Au debut de chaque chapitre, vous devrez recomposer le terrain. 
+
+**Comment perdre?** Atteindre 0 de moral ou abandonner le dernier hordier.
+
+**Comment gagner?** Atteindre la ville de l'autre cote du plateau. Atteindre Camp Boban a la fin du 4e chapitre. Faire le plus de points section [Calcul du score](readme#calcul-du-score).
+
+
+# Le Materiel
+
+- 10d6 bleus pour la horde
+- 6d6 blancs et 3d6 verts pour le vent
+- 6d6 noirs pour les epreuves
+- 54 cartes personnages a imprimer (`imagesToPrint/cards_v1`)
+- 58 tuiles (4x `imagesToPrint/terrain.0`, 1x`imagesToPrint/terrain.1`)
+- 20 jetons vent: 
+  * 2 jetons vent F1
+  * 3 jetons vent F2
+  * 4 jetons vent F3
+  * 4 jetons vent F4
+  * 4 jetons vent F5
+  * 3 jetons vent F6
+- 1 pion representant votre equipe
+- 1 carnet de contre
+
+Si vous ne desirez pas lire l'integralite des regles maintenant, je vous propose de vous rendre au [chapitre1] afin de decouvrir les regles dans un petit scenario.
+
+## Le terrain
+Le terrain est compose de tuiles hexagonales. Il existe 3 types de tuiles:
+* les **Villes**, point de depart et d'arrivee de chaque chapitre
+* les **Villages** abrites
+* les **Terrains**
+
+# Installation
+**TODO:** Photo
+![plateau]
+
+![formation]
+
+-----------
+# Regles plus redigees
 # Avant Propos
 **! Attention**
 
-La plupart des resources ici sont soumises a droit d'auteur et je ne les ai pour l'instant pas contacte.
-Ni le jeu et son titre / ni les images et pdf ne sont de moi. Je ne fourni que l'idee originale du moteur du jeu.
+La plupart des resources ici sont soumises a droit d'auteur et je ne les ai pour l'instant pas contactes.
+Ni le jeu et son titre / ni les images et pdf ne sont de moi. Je ne fournis que l'idee originale du moteur du jeu.
 
 Afin de construire les images a imprimer, utilisez cet autre git repository: [printableCardsAppender](https://github.com/davidoliviersaban/printableCardsAppender)
 
@@ -19,13 +75,13 @@ Saurez-vous amener votre horde jusque la?
 # Rapide presentation du jeu
 Vous incarnez une horde, un groupe de personnages appeles Hordiers, qui devront progresser a travers un paysage en permanence balaye par les vents. Pour pouvoir progresser, il vous faudra composer une equipe capable de traverser les epreuves devant vous, definir un initeraire a travers la steppe, les montagnes ou le desert et enfin d'user de strategie pour maintenir le moral de votre horde.
 
-**Note:** *Le Jeu est concu pour l'instant pour un seul joueur mais je travaille pour qu'il passe en multi.*
+Le trajet sera parcouru sur un plateau de jeu compose de tuiles terrain. Les epreuves y seront indiquees. Pour passer ces epreuves, vous devrez affronter les vents dans des combats de des de plus en plus complexes.
+
+Vous pourrez ameliorer le hasard des d6 en votre faveur a l'aide du pouvoir des personnages de votre horde.
 
 # Le Materiel
 
-Pour joueur a ce jeu, il vous faudra au minimum: 6 d6 pour votre horde et 6 d6 pour le vent. Certains personnages ont des pouvoirs speciaux qui vous rajouteront des d6, il serait donc bon d'avoir au moins 10 d6 pour votre horde et 6 d6 pour le vent et 6 d6 noirs.
-Personnellement, je joue avec:
-- 10d6 pour ma horde (j'utilise des petits d6 ,tous de meme couleur)
+- 10d6 bleus pour la horde
 - 6d6 blancs et 3d6 verts pour le vent
 - 6d6 noirs pour les epreuves
 - 54 cartes personnages a imprimer (`imagesToPrint/cards_v1`)
@@ -38,8 +94,9 @@ Personnellement, je joue avec:
   * 4 jetons vent F5
   * 3 jetons vent F6
 - 1 pion representant votre equipe
+- 1 carnet de contre
 
-Si vous ne desirez pas lire l'integralite des regles maintenant, je vous propose de vous rendre au ![chapitre1] afin de decouvrir les regles dans un petit scenario.
+Si vous ne desirez pas lire l'integralite des regles maintenant, je vous propose de vous rendre au [chapitre1] afin de decouvrir les regles dans un petit scenario.
 
 ## Alternatives 
 Si vous n'avez pas suffisamment de d6, vous pouvez utiliser une application sur votre telephone ou sur internet qui permettra d'afficher les d6. Par convention, les premiers d6 sont les d6 noirs puis les d6 verts enfin les d6 blancs. Les vents ne devraient pas exceder 9d6 a afficher sur votre ecran.
@@ -50,18 +107,19 @@ Avec cette convention, vous pourrez vous limiter a 6d6.
 # Presentation et Vocabulaire
 
 ## La Horde
-Une horde est un groupe de personnages appeles Hordiers. Chaque personne de la Horde a une fonction particuliere et une position. Cette position est importante pour permettre a la Horde de progresser.
+Une horde est un groupe de 8 personnages appeles Hordiers. Chaque personne de la Horde a une fonction particuliere et une position. Cette position est importante pour permettre a la Horde de progresser.![formation]
 
 Une Horde est composee 8 hordiers qui ont les positions suivantes:
-* ![fer]le **Fer** qui fend le flux du vent grâce à sa formation en pointe, ils influence grandement les effets du vents sur le reste du groupe. Ils sont 3 dans la horde: 2 membres et le traceur.
-* ![pack]le **Pack**, constitué de rangs compacts, forme le corps de la Horde; ils ont plus souvent des roles de support ou des action plus ponctuelles sur la horde ou le vent. Ils sont 3 dans la horde.
-* ![croc]la **Traine**, enfin, rassemble les *crocs* chargés de tracter le matériel de la Horde (vêtements, vaisselle, outils, nourriture, paillasses). Ils ne feront partie integrante de la horde qu'un fois qu'ils auront prouve leur valeur. Ils sont 2 dans la horde.
+* ![fer]le **Fer** qui fend le flux du vent grâce à sa formation en pointe, ils influence grandement les effets du vents sur le reste du groupe. Le fer est compose de 3 hordiers: 2 membres et le traceur.
+* ![traceur]Le **Traceur** est un membre particulier du Fer car c'est lui qui trace la route. C'est le leader charismatique qui dirige sa horde afin de passer les epreuves les plus difficiles. Une horde peut progresser sans traceur mais il est generalement celui qui dirige la composition generale du groupe.
+* ![pack]le **Pack**, constitué de rangs compacts, forme le corps de la Horde; le pack fourni le plus souvent des roles de support ou des action plus ponctuelles sur la horde ou le vent. Le pack est compose de 3 hordiers.
+* ![croc]la **Traine**, enfin, rassemble les *crocs* chargés de tracter le matériel de la Horde (vêtements, vaisselle, outils, nourriture, paillasses). Les crocs ne feront partie integrante de la horde qu'une fois leur valeur prouvee. Ils sont 2 dans la horde.
 
-![traceur]
-Le **Traceur** est un membre particulier du Fer car c'est lui qui trace la route. C'est le leader charismatique qui dirige sa horde afin de passer les epreuves les plus difficiles. Une horde peut progresser sans traceur mais il est generalement celui qui dirige la composition generale du groupe.
 
 ### Les Hordiers
 Chaque Hordier a un pouvoir unique. Lors de l'utilisation de son pouvoir, le hordier sera fatigue et son pouvoir deviendra inactif. Ceci sera represente en retournant la carte du hordier.
+
+Une fois repose, le hordier pourra recuperer son pouvoir et vous pourrez donc retourner la carte. Pour plus de details voir [Reposer la horde](/readme#reposer-la-horde)
 
 ## Les vents
 Alain Damasio invente tout un vocabulaire pour decrire le vent et une terminologie pour contrer ce vent. Il decrit egalement comment les scribes notent le vent:
@@ -86,20 +144,48 @@ Il y a plusieurs valeurs de fluctuation/turbulence de vent:
 * Vortex
 
 Dans le jeu, les 6 formes de vent sont representees par un d6 qui definira les exigences du vent - sa difficulte. Les fluctuations du vent sont inscrites dans les valeurs que le vent peut prendre. Les vents sont generalement composes de 6 d6. La valeur que prend chacun de ces d6 est une fluctuation du vent.
-Le vent aura aussi une couleur qui reflete la nature du vent, ils sont representes dans le jeu comme des d6 colore.
-Un vent est donc une composition de d6 colores et de d6 incolores.
 
-Lors de la progression de votre Horde sur le terrain, il vous sera possible de connaitre a l'avance la couleur du vent mais pas sa difficulte.
+La nature du terrain pourra egalement influencer le vent et lui apporter des couleurs jusqu'a une hauteur de 3d. Plus de details sur les [terrains](/readme#le-terrain) dans la section dediee.
+
+Un vent est donc une composition de d6 colores et de d6 incolores pour un total de 6d6.
+
+Lors de la progression de votre Horde sur le terrain, il vous sera possible de connaitre a l'avance la composition du vent (d6 colores et incolores) mais pas sa difficulte.
+
+
+## Le terrain
+![land1] 
+![land2]
+
+Le **terrain** represente le sol et indique dans quel sens coule le vent. Il est compose de prairies, deserts, montagnes, steppes et lacs. Parfois, quelques forets et bosquets.
+Le terrain impose 3d6 au vent: les nombre de couleurs du vent (d6 verts)et le nombre de d6 incolores.
+
+![d6-incolore] d6 incolore
+
+![d6-colore] d6 colore
+
+Le terrain peut egalement posseder des informations supplementaires comme: 
+* les d6 noirs qui seront ajoutes au vent (voir les [regles de d6 noirs](/readme#regles-des-d6-noirs)). 
+* les bonus/malus de [moral](/readme#le-moral).
+* les malus lies a l'abandon de membres de l'equipe. 
+
+Toutes ces indications sont a prendre en compte lorsque la Horde tente de passer au travers de cette tuile a l'exception du bonus/malus en moral qui ne s'appliquera qu'une fois l'epreuve reussie et que la horde aura progresse sur cette tuile terrain.
 
 ## Contrer le vent
 Pour effectuer sa Trace, la Horde doit contrer le vent. Contrer est l'action d'avancer a contre vent pour rejoindre les villes intermediaires et enfin rejoindre Camp Boban.
 
-Un vent a contrer possede une composante liee au terrain et une liee au vent lui-meme. Ainsi, chaque vent possede un nombre de couleurs et une force. 
+Un vent a contrer possede une composante liee au terrain et une intrinseque au vent lui-meme ainsi qu'une force. 
 
-La couleur donne le nombre de des colores que l'on doit lancer pour le vent. Ce chiffre sera indique par la tuile terrain sur laquelle on souhaite evoluer.
-Un vent est toujours compose de 6 d6. On complete donc les couleurs imposees par le terrain par des d6 incolores.
+Le terrain imposee 3d6 au vent qui est une combinaison de d6 colores(verts) et de d6 incolores(blancs). Un vent est toujours compose de 6 d6, on complete par 3 d6 incolores.
 
-La force du vent impose a la Horde le nombre de d6 qui doivent etre identiques au vent. Les couleurs doivent etre egalees avant les d6 incolores du vent.
+
+![land0]
+
+*Exemple:
+Ainsi, sur cet exemple de de terrain on prend 1d6 vert et 2d6 incolores. Puis on complete avec 3d6 incolores pour un total de 1d6 colore(vert) et 5d6 incolores(blancs).*
+
+La force du vent impose a la Horde le nombre de d6 qui doivent etre identiques au vent. Les d6 colores doivent etre egalees avant les d6 incolores du vent. La force du vent est tiree au hasard en piochant un jeton force au hasard dans le sac contenant les jetons force de vent.
+
+Ainsi, sur un vent de force 2, le d6 vert devra etre egale et n'importe lequel des autres d6 incolores.
 
 Le joueur lance alors les d6 de sa Horde et du vent simultanement et resoud les actions comme suit:
 * Apairez les d6 identiques aux d6 du vent en commencant par les d6 colores.
@@ -136,9 +222,9 @@ Ainsi n'oubliez pas les actions suivantes qui vous permettront d'avancer mais pe
 
 ## Le terrain
 Le terrain est compose de tuiles hexagonales. Il existe 3 types de tuiles:
-* les **Villes** et **Villages** abrites
+* les **Villes**, point de depart et d'arrivee de chaque chapitre
+* les **Villages** abrites
 * les **Terrains**
-* les difficultes de vent
 
 ### Villes
 ![Aberlaas]
@@ -156,18 +242,6 @@ S'arreter en dehors d'un village ne repose qu'un seul hordier.
 
 Le vent s'ecoule toujours dans le meme sens sur le plateau: d'Ouest en Est.
 
-### Terrain
-![land1] 
-![land2]
-
-Le **terrain** represente le sol et indique dans quel sens coule le vent. Il est compose de prairies, deserts, montagnes, steppes et lacs. Parfois, quelques forets et bosquets.
-Le terrain impose 3d6 au vent: les nombre de couleurs du vent (d6 verts)et le nombre de d6 incolores.
-Le terrain peut egalement posseder des informations supplementaires comme: 
-* les d6 noirs qui seront ajoutes au vent (voir les regles de d6 noirs). 
-* les bonus/malus de moral.
-* les malus lies a l'abandon de membres de l'equipe. 
-
-Toutes ces indications sont a prendre en compte lorsque la Horde tente de passer au travers de cette tuile a l'exception du bonus/malus en moral qui ne s'appliquera qu'une fois l'epreuve reussie et que la horde aura progresse sur cette tuile terrain.
 
 ## L'Exploration
 En debut de chapitre, on dispose les tuiles comme indique par le scenario. Les tuiles indiquent le sens des vent ainsi que la topologie du terrain.
@@ -425,7 +499,8 @@ https://squib.readthedocs.io/
 [Aberlaas]: src/resources/readme/aberlaas.png
 [village]: src/resources/readme/village.png
 [portedhurle]: src/resources/readme/portedhurle.png
-[land1]: src/resources/readme/land.png
+[land0]: src/resources/readme/land0.png
+[land1]: src/resources/readme/land1.png
 [land2]: src/resources/readme/land2.png
 [land3]: src/resources/readme/land3.png
 [land4]: src/resources/readme/land4.png
@@ -435,7 +510,10 @@ https://squib.readthedocs.io/
 [fer]: src/resources/readme/card_fer.png
 [pack]: src/resources/readme/card_pack.png
 [croc]: src/resources/readme/card_croc.png
-
+[formation]: src/resources/readme/formation.png
+[d6-incolore]: src/resources/readme/d6-white.png
+[d6-colore]: src/resources/readme/d6-green.png
+[plateau]: src/resources/readme/plateau-ch1.png
 # Regles abandonnees
 
 ## Regle additionnelle de deplacement
