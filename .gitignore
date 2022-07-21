@@ -6,8 +6,12 @@ project/
 target/
 #Temporary files
 outputs/
-_*/
+.terrain*/
+.card*/
 
 # My inspiration folder
 inspiration/
 ~$*.xlsx
+backup*/
+.vscode/
+.metals/

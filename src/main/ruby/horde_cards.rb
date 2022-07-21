@@ -9,7 +9,8 @@ now = DateTime.now.to_s
 
 def drawCards(deck, dirname, now)
   rect layout: :bleed
-  rect layout: :cut, stroke_color: :black
+  rect layout: :cut, stroke_color: "#000000"
+#  rect layout: :cut, stroke_color: "#FAFAFA"
 #  rect layout: :inside, stroke_color: "#000000"
 
   fill_color = Hash.new
@@ -55,31 +56,44 @@ def drawCutlines(deck,dirname)
     rect layout: :bleed
     rect layout: :cut
     save_png prefix: deck["Id"].zip(deck["Position"],deck["Nom"],deck["Tier"]).map{|name| "%03d.%s.%s.T%s."%name}, dir: dirname#dir: '_cards'
-  end
-  
+end
+
+def drawBack(deck, dirname)
+    rect layout: :bleed
+    rect layout: :cut, stroke_color: :black
+    png file: deck["Position"].map{ |img| "src/resources/images/cover_"+img.downcase+".png"}, layout: :inside
+    save_png prefix: deck["Id"].zip(deck["Position"],deck["Nom"],deck["Tier"]).map{|name| "%03d.%s.%s.T%s."%name}, dir: dirname#dir: '_cards'
+end
 
 Squib::Deck.new(cards: deck1["Nom"].size,
                 layout: %w(src/resources/Vlayout.yml src/resources/Vcards.yml),
                 width: '2.75in', height: '3.75in') do
-  drawCards(deck1,'_cards1', now)
+  drawCards(deck1,'.cards1', now)
 end
 
 
 Squib::Deck.new(cards: 9,
                 layout: %w(src/resources/Vlayout.yml src/resources/Vcards.yml),
                 width: '2.75in', height: '3.75in') do
-  drawCutlines(deck1, '_cards_cut')
+  drawCutlines(deck1, '.cards_cut')
+end
+
+
+Squib::Deck.new(cards: deck1["Nom"].size,
+                layout: %w(src/resources/Vlayout.yml src/resources/Vcards.yml),
+                width: '2.75in', height: '3.75in') do
+  drawBack(deck1, '.cards_back')
 end
 
 
 # Squib::Deck.new(cards: deck2["Nom"].size,
 #                 layout: %w(src/resources/Vlayout.yml src/resources/Vcards.yml),
 #                 width: '2.5in', height: '3.5in') do
-#   drawCards(deck2,'_cards2')
+#   drawCards(deck2,'.cards2')
 # end
 
 # Squib::Deck.new(cards: deck_Vs["Nom"].size,
 #                 layout: %w(src/resources/Vlayout.yml src/resources/Vcards.yml),
 #                 width: '2.5in', height: '3.5in') do
-#   drawCards(deck_Vs,'_cards_vs')
+#   drawCards(deck_Vs,'.cards_vs')
 # end

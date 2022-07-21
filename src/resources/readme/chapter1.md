@@ -2,14 +2,14 @@
 
 # Chapitre 1
 ## Aberlaas
-> Tout commenca dans la cite d'Aberlaas. Une steche battait les maisons et les fenetres qui bordaient les grandes avenues presques vides. Ca sentait le sable et le sel. C'etait rapeux et sale. Un temps de chien et d'ailleurs personne ne s'y etait trompe. C'etait pourtant ce jour la que le doyen missionna un messager pour venir me chercher.
+> Tout commenca dans la cite d'Aberlaas. Une steche battait les maisons et les fenetres qui bordaient les grandes avenues presques vides. Ca sentait le sable et le sel. C'etait rapeux et sale. Un temps de chien. D'ailleurs personne ne s'y etait trompe. C'etait pourtant ce jour la que le doyen missionna un messager pour venir me chercher.
 
 
 Installez la tuile Aberlaas au bord de table. Preparez pour ce scenario 20 tuiles terrains:
 * 1 tuile refuge
-* 11 tuiles steppe
+* 8 tuiles steppe
 * 4 tuiles foret
-* 4 tuiles montagnes
+* 4 tuiles montagne
 
 Choisissez un traceur parmi les 5 disponibles. 
 Pour ce scenario, nous vous proposons de prendre **Ryage, le Joueur**.
@@ -17,16 +17,16 @@ Pour ce scenario, nous vous proposons de prendre **Ryage, le Joueur**.
 ![Ryage]
 
 > Ma mission etait claire, je devais rejoindre Port-Choon avec un message pour le Bourgmestre. Les stocks commencaient a baisser et il fallait absolument que les villes et villages alentours envoient plus de vivre a la capitale.
-Port-Choon se trouvait a plusieurs mois de marche d'Aberlaas. 
+Port-Choon se trouvait a plusieurs annees de marche d'Aberlaas. 
 
 > Comme il fallait faire vite, le Doyen m'offrit seulement quelques heures pour rassembler mon equipe et notre equipement et nous devions partir sur le champs.
 
 > Je decidais de partir avec 3 membres d'equipe: 1 Fer et 2 Packs.
 Je commencais donc par me rendre chez Blanchette de Gaude. Son experience et sa prestance imposait a tout le monde le respect. 
-Puis nous decidames de chercher les freres Torantor: Khypico et Bepphon. Leur force serait d'une grande aide pour affronter les vents hurlants devant nous.
+Puis nous decidames de chercher les freres Torantor: Xavio et Yavo. Leur force serait d'une grande aide pour affronter les vents hurlants devant nous.
 
 Vous pouvez soit suivre le scenario et prendre les personnages proposes. **Blanchette de Gaude** est un FER, elle se trouve donc dans le paquet de cartes rouges, et les freres **Torantor** font parti du PACK et donc dans le groupe de cartes bleues.
-![Blanchette] ![Torantor]
+![Blanchette] ![Xavio] ![Yavo]
 
 Vous pouvez sinon drafter votre equipe en suivant les regles suivantes:
 * Piocher 3 cartes FER (rouges) et en choisir 1 parmi celles-la.
@@ -44,7 +44,7 @@ Installez ensuite 3 tuiles de chaque cote de ce chemin afin de former une trace 
 
 Preparez-vous a affronter votre premier vent.
 
-> Nous etions fin prets a partir. En tant que traceur, il m'incombait de definir notre itineraire. Je decidais donc de rejoindre le premier village rouge. Il se situait seulement a 2 mois de marche et nous pouvions y retrouver Thomassin de Gaude, le fils de Blanchette.
+> Nous etions fin prets a partir. En tant que traceur, il m'incombait de definir notre itineraire. Je decidais donc de rejoindre le premier village rouge. Il se situait seulement a 1 an de marche et nous pouvions y retrouver Thomassin de Gaude, le fils de Blanchette.
 
 Installez le pion de votre traceur sur la ville d'Aberlaas et decidez de votre itineraire. Vous pourrez vous deplacer sur l'une des 3 tuiles qui vous sont adjacentes. Placez votre pion entre Aberlaas et la tuile qui vous interesse.
 
@@ -54,13 +54,13 @@ Ajoutez 3d6 blancs.
 Vous devez avoir 6d6 qui correspondent aux d6 du vent.
 ![chapitre1 step1.1]
 
-Dans l'exemple ci-dessus, Ryage choisi de se rendre sur la tuile de steppe avec 1d6 verts et 2d6 blanc. Il ajoute ensuite 3d6 blancs pour completer le vent.
+Dans l'exemple ci-dessus, Ryage choisi de se rendre sur la tuile de steppe avec 1d6 colore et 2d6 incolores. Il ajoute ensuite 3d6 incolores pour completer le vent.
 
-Le vent a bien 6d6: 1 vert et 5 blancs.
+Le vent a bien 6d6: 1 vert et 5 incolores.
 
 > Je decidais donc de passer a travers les steppes verdoyantes de la bande de contre. Nous aurions ainsi de quoi nous poser et nous ravitailler sans trop de soucis. 
 
-> Le premier vent que nous rencontrames fut un slamino. Malgre ses variations qui pouvaient le rendre fortement desagreable, ce premier mois de contre se passa dans des conditions plus que correctes.
+> Le premier vent que nous rencontrames fut un slamino. Malgre ses variations qui pouvaient le rendre fortement desagreable, ces premiers mois de contre se passerent dans des conditions plus que correctes.
 
 Lancez les d6 de votre vent et determinez sa force. Pour suivre le scenario, vous pouvez decider qu'il sera de force 2. Dans le cas contraire, piochez un jeton vent dans le sac et deposez le sur la tuile.
 
@@ -72,8 +72,8 @@ Ainsi, pour passer, il vous faut au moins egaler la force du vent:
 * Si les conditions de contre sont respectees, il reste alors a faire au moins autant que le vent, c'est a dire que la somme des d6 de la Horde doit etre superieure ou egale a la somme des d6 du vent.
 * Si les conditions de contre ne sont pas respectees, il faudra user et combiner les capacites des personnages afin de passer cette epreuve ou reculer ou user des capacites du moral.
 
-Dans l'exemple ci-dessus, le vent fait "2" pour ses d6 colores et "2,3,4,5,6" pour ses d6 blancs.
-Ryage fait "2,2,4,1,6,6", on peut apairer le "2" vert et les "2", "4" et "6" blancs avec nos d6. 
+Dans l'exemple ci-dessus, le vent fait "2" pour ses d6 colores et "2,3,4,5,6" pour ses d6 incolores.
+Ryage fait "2,2,4,1,6,6", on peut apairer le "2" vert et les "2", "4" et "6" incolores avec nos d6. 
 ![chapitre1 step1.2]
 
 Les exigences du vent sont que 2d6 soient identiques en commencant par les d6 colores et ce contrat est rempli. La derniere exigence est que l'on doit au moins egaler les valeurs du vent.
@@ -151,6 +151,7 @@ Ensuite, si vous passez ce vent, vous ferez face a un autre vent de 3d6 verts et
 [chapitre1 step2.1]: scenario1-step2.1.png
 [chapitre1 step2.2]: scenario1-step2.2.png
 [chapitre1 step3.1]: scenario1-step3.1.png
-[Ryage]: card_Ryage.png
-[Torantor]: card_Torantor.png
-[Blanchette]: card_Blanchette.png
+[Ryage]: 004.Traceur.Ryage%20le%20Joueur.T2.03.png
+[Blanchette]: 012.Fer.Blanchette%20de%20Gaude.T1.11.png
+[Xavio]: 023.Pack.Xavio%20Torantor.T1.22.png
+[Yavo]: 024.Pack.Yavo%20Torantor.T1.23.png
