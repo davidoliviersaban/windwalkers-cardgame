@@ -6,7 +6,8 @@ project/
 target/
 #Temporary files
 outputs/
-_*/
+.terrain*/
+.card*/
 
 # My inspiration folder
 inspiration/

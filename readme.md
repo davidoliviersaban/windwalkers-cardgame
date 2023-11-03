@@ -25,7 +25,7 @@ La partie se deroulera en 4 chapitres. Au debut de chaque chapitre, vous devrez 
 
 - 10d6 bleus pour la horde
 - 6d6 blancs et 3d6 verts pour le vent
-- 6d6 noirs pour les epreuves
+- 3d6 noirs et 3d6 violets pour les epreuves
 - 54 + 32 cartes personnages a imprimer (`imagesToPrint/cards_v1`)
 - 60 tuiles (4x `imagesToPrint/terrain.0`, 1x`imagesToPrint/terrain.1`)
 - 30 jetons vent: 
@@ -47,7 +47,6 @@ Le terrain est compose de tuiles hexagonales. Il existe 3 types de tuiles:
 * les **Terrains**
 
 # Installation
-**TODO:** Photo
 ![plateau]
 
 ![formation]
@@ -302,15 +301,14 @@ Vous ne pouvez pas vous reposer sur place.
 
 ## Symboles supplementaires sur les tuiles
 
-Certains symboles apparaissent en plus sur les tuiles. Une flamme![moral] ou un personnage qui pleure![abandon].
+Certains symboles apparaissent en plus sur les tuiles. Une flamme![moral].
 Ces symbolisent le moral perdu.
-- ![moral] fait perdre/gagner les points de moral indiques a cote du symbole au moment ou l'on reussi a passer sur ce terrain.
-- ![abandon] fait perdre les points de moral indiques seulement si on abandonne quelqu'un sur cette tuile. Ce symbole represente le fait que d'abandonner un croc ici (car ce sont les crocs que l'on abandonne generalement), le fera certainement mourir.
+- ![moral] fait perdre/gagner les points de moral indiques a cote du symbole au moment ou l'on reussi a passer sur ce terrain. Le fait d'abandonner un personnage sur cette tuile fait egalement perdre les points de moral indiques. Ainsi, les crocs abandonné ici (car ce sont les crocs que l'on abandonne generalement), les fera certainement mourir.
 
 ### Exemple
 ![land3] 
 
-Ce terrain fait perdre 1 point de moral lorsque l'on passe cette tuile et qu'on lance les d6 pour affronter ce vent. Et fait perdre 2 points de moral supplementaire par utilisation de pouvoirs de personnages ayant cette icone (typiquement les crocs que l'on abandonne).
+Ce terrain fait perdre 1 point de moral lorsque l'on passe cette tuile et qu'on lance les d6 pour affronter ce vent. Et fait perdre 1 point de moral supplementaire par utilisation de pouvoirs de personnages ayant cette icone (typiquement les crocs que l'on abandonne).
 
 ## Regles du bord de carte
 Les bords de carte sont des zones plus faciles, le vent y sera plus clement et plus aise a contrer. Pour ce faire, lancez seulement 5d6 pour le vent.
@@ -335,7 +333,7 @@ Comme il a ete vu precedemment, le moral permet d'activer certains pouvoirs de p
 
 Egalement, comme il y existe plusieurs moyens de gagner du moral dans le jeu et il important de tous les connaitres.
 - tuiles villes: les villes vous rendront du moral en terminant votre chapitre (1 point de moral)
-- tuiles speciales: certaines tuiles comme les cabanes, peuvent vous rendre un point de moral
+- tuiles speciales: certaines tuiles comme les abrits de fortune, peuvent vous rendre un point de moral
 - pouvoirs de hordiers: vos personnages peuvent vous rendre sous certaines conditions du moral
 
 ## Le plateau de jeu
@@ -435,20 +433,36 @@ Lors de mes tests, j'ai perdu a la derniere case du dernier chapitre.
 - Chapitre 1: fini avec 8 points de moral et 2 furevents: 8 + 2*3 = 14 pts
 - Chapitre 2: fini avec 8 points de moral et 1 furevent : 8 + 1*3 = 11 pts
 - Chapitre 3: fini avec 8 points de moral et 0 furevent : 8 + 2*3 =  8 pts
-- Chapitre 4: fini avec 5 points de moral et 1 furevent, la porte d'hurle et j'ai fini avec 6 hordiers : 5 + 3 + 3 + 6 = 17 pts
-- A final = 14 + 11 + 8 + 17 = 50 pts 
+- Chapitre 4: fini avec 5 points de moral et 1 furevent, la porte d'hurle et j'ai fini avec 6 hordiers : 5 + 3 + 3 + 6*2 = 23 pts
+- A final = 14 + 11 + 8 + 23 = 56 pts 
 
 Pour une evaluation de votre niveau, je dirais que :
-- 0 - 15 points, vous devez encore degrossir pas mal de regles, encore une ou 2 parties pour l'etape suivante.
-- 16 - 30 points, vous etes encore un jeune padawan
-- 31 - 35 points, vous y etes presque
-- 36 - 40 points, Bravo! vous avez fini le jeu en mode campagne et vous avez exploite les bons itineraires
-- 41 - 50 points: Vous etes un grand maitre
-- 51+ points: Racontez moi comment vous avez fait, ca m'interesse :)
+- 0 - 30 points, vous devez encore degrossir pas mal de regles, encore une ou 2 parties pour l'etape suivante.
+- 31 - 50 points, vous etes encore un jeune padawan, vous avez peut-etre fini votre premiere campagne mais vous avez encore beaucoup a apprendre.
+- 51 - 70 points, Bravo! vous avez fini le jeu en mode campagne et vous avez exploite les bons itineraires, vous maitrisez commencez a exploiter les surpassements.
+- 71 - 90 points: Vous etes un grand maitre, chapeau bas.
+- 91+ points: Racontez-moi comment vous avez fait, ca m'interesse : davidolivier.saban@gmail.com
+
+## Le carnet de contre
+C'est le carnet de bord ou vous noterez vos aventures. Il est compose de plusieurs colonnes:
+Une entete comportant:
+- **Date**: la date de votre partie
+- **Chapitre**: le chapitre que vous avez joue
+- **Horde intiale**: la composition de votre horde en debut de chapitre
+- **Horde finale**: la composition de votre horde en fin de chapitre
+- **Score**: le score que vous aurez fait en fin de chapitre
+
+Puis, pour chaque chapitre, vous aurez:
+- **Tour**: le tour de jeu
+- **Terrain**: le terrain sur lequel vous etes
+- **Vent**: le vent que vous avez affronte
+- **Moral**: le moral actuel de votre horde
+- **Score**: points faits ce tour ci
+- **Pouvoirs**: les pouvoirs utilises ce tour ci
 
 # Mode competitif
-Si un joueur arrive un jour avant l'autre joueur, il marque pour chaque tour d'avance autant de points supplementaires que de moral dont il dispose lorsqu'il passe la ligne d'arrivee.
-Ainsi, un joueur finissant avec 5 points de moral 2 jours avant son poursuivant marquera 5*2 = 10 points. 
+Si un joueur arrive un jour avant l'autre joueur, il marque pour chaque tour d'avance autant de points supplementaires que de hordiers dont il dispose lorsqu'il passe la ligne d'arrivee.
+Ainsi, un joueur finissant avec 5 points de moral 2 tours avant son poursuivant marquera 5*2 = 10 points. 
 
 # Pour pouvoir jouer
 Je vous ai fourni un dossier qui se nomme `imagesToPrint` qui contient toutes les images a imprimer sur des feuilles A4.
@@ -465,7 +479,7 @@ En cas d'echec, le personnage se trouvera sur le bord entre 2 cases: la case qu'
 * **+/-1 sur la valeur d'un d6**: Les d6 peuvent etre augmentes et baisses d'un point. Un d6 de valeur 1 peut etre baisse mais vaudra toujours 1. Un d6 valant 6 pourra etre augmente mais vaudra toujours 6.
 * **+/-2 sur la valeur d'un d6**: Un meme d6 recevra 2 points supplementaires ou se verra retire 2 points. Ces 2 points ne peuvent pas etre repartis.
 * **retourner un d6**: mettre le d6 sur sa face opposee. Par exemple un 1 peut etre transforme en 6. De maniere generale 6 <-> 1, 2 <-> 5 et 3 <-> 4.
-* **Abandon**: Lorsqu'un pouvoir affiche le mot abandonnez, cela signifie que vous devez appliquer les malus d'abandon.
+* **Abandon**: Lorsqu'un pouvoir affiche le mot abandonnez, cela signifie que vous devez appliquer les malus de perte de moral.
 
 # Bonus: 
 ## Une bande son est disponible sur deezer et sur youtube:
@@ -506,7 +520,6 @@ https://squib.readthedocs.io/
 [land3]: src/resources/readme/land3.png
 [land4]: src/resources/readme/land4.png
 [moral]: src/resources/readme/moral.png
-[abandon]: src/resources/readme/abandon.png
 [traceur]: src/resources/readme/card_traceur.png
 [fer]: src/resources/readme/card_fer.png
 [pack]: src/resources/readme/card_pack.png

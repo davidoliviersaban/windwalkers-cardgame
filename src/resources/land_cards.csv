@@ -4,7 +4,7 @@ chapter,village,Village Bleu,village/blue.png,I,I,I,,,,,,
 chapter,village,Village Rouge,village/red.png,I,I,I,,,,,,
 chapter,city,Aberlaas,city/aberlaas.png,,,,,,,,+1,
 chapter,city,Port-Choon,city/portchoon.png,,,,,,,,+1,
-chapter,place,Tour Fontaine,place/tourfontaine.png,I,I,I,,,,,,Special
+chapter,place,Tour Fontaine,place/tourfontaine.png,I,I,I,,,,,Special,
 chapter,city,Chawondasee,city/chawondasee.png,,,,,,,,+1,
 chapter,city,Alticcio,city/alticcio.png,,,,,,,,+1,
 chapter,place,Porte d'Hurle,place/portedhurle.png,T,T,T,T,T,T,,,
@@ -17,9 +17,9 @@ chapter 1,land,,steppe.png,G,I,I,,,,,,
 chapter 1,land,,steppe.png,I,I,I,,,,,,
 chapter 1,land,,refuge.png,I,I,I,,,,,+1,
 chapter 2,land,,water.png,G,I,I,T,,,,-2,
-chapter 2,land,,water.png,G,I,I,T,T,,,-1,
+chapter 2,land,,water.png,G,G,I,T,T,,,-1,
 chapter 2,land,,water.png,I,I,I,T,T,T,,,
-chapter 3,land,,desert3.png,G,I,I,T,,,,-1,-2
-chapter 3,land,,desert3.png,I,I,I,,,,,-2,-2
-chapter 4,land,,swamp.png,G,I,I,T,,,,-1,-1
-chapter 4,land,,swamp.png,G,G,I,T,,,,-1,-1
+chapter 3,land,,desert3.png,G,G,I,T,,,,-1,
+chapter 3,land,,desert3.png,I,I,I,,,,,-2,
+chapter 4,land,,swamp.png,G,I,I,T,,,,-1,
+chapter 4,land,,swamp.png,G,G,I,T,,,,-1,

@@ -94,12 +94,12 @@ Squib::Deck.new(cards: deck["Chapter"].size,
                 layout: %w(src/resources/lands-6cm.yml),
                 width: "72mm", height: "62.3mm") do # height = width*sqrt(3)/2
 
-  drawTile(deck, '_terrain')
+  drawTile(deck, '.terrain')
 end
 
 Squib::Deck.new(cards: 12,
                 layout: %w(src/resources/lands-6cm.yml),
                 width: "72mm", height: "62.3mm") do # height = width*sqrt(3)/2
 
-  drawCutlines(deck, '_terrain_cut')
+  drawCutlines(deck, '.terrain_cut')
 end
