@@ -55,8 +55,14 @@ def drawCutlines(deck,dirname)
     rect layout: :bleed
     rect layout: :cut
     save_png prefix: deck["Id"].zip(deck["Position"],deck["Nom"],deck["Tier"]).map{|name| "%03d.%s.%s.T%s."%name}, dir: dirname#dir: '_cards'
-  end
-  
+end
+
+def drawBack(deck, dirname)
+    rect layout: :bleed
+    rect layout: :cut, stroke_color: :black
+    png file: deck["Position"].map{ |img| "src/resources/images/cover_"+img.downcase+".png"}, layout: :inside
+    save_png prefix: deck["Id"].zip(deck["Position"],deck["Nom"],deck["Tier"]).map{|name| "%03d.%s.%s.T%s."%name}, dir: dirname#dir: '_cards'
+end
 
 Squib::Deck.new(cards: deck1["Nom"].size,
                 layout: %w(src/resources/Vlayout.yml src/resources/Vcards.yml),
@@ -69,6 +75,13 @@ Squib::Deck.new(cards: 9,
                 layout: %w(src/resources/Vlayout.yml src/resources/Vcards.yml),
                 width: '2.75in', height: '3.75in') do
   drawCutlines(deck1, '.cards_cut')
+end
+
+
+Squib::Deck.new(cards: deck1["Nom"].size,
+                layout: %w(src/resources/Vlayout.yml src/resources/Vcards.yml),
+                width: '2.75in', height: '3.75in') do
+  drawBack(deck1, '.cards_back')
 end
 
 

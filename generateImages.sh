@@ -43,3 +43,4 @@ cd ../printableCardsAppender
 ./gradlew appendCard --args="../windwalkers-cardgame/.terrain_cut ../windwalkers-cardgame/imagesToPrint/.terrain_cut   A4 true"
 ./gradlew appendCard --args="../windwalkers-cardgame/.cards1  ../windwalkers-cardgame/imagesToPrint/cards_v1_ A4 false"
 ./gradlew appendCard --args="../windwalkers-cardgame/.cards_cut  ../windwalkers-cardgame/imagesToPrint/cards_cut_ A4 false"
+./gradlew appendCard --args="../windwalkers-cardgame/.cards_back  ../windwalkers-cardgame/imagesToPrint/cards_back_ A4 false"
