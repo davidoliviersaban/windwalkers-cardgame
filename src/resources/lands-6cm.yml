@@ -34,9 +34,10 @@ land:
 city:
     extends: frame
     stroke_width: 30
-    stroke_color: '#ffffffaa'
+    stroke_color: '#ff6666aa'
 village:
     extends: city
+    stroke_color: '#ffffffaa'
 place:
     extends: city
     stroke_color: '#ffff66aa'
