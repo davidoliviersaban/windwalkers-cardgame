@@ -29,12 +29,11 @@ local_install_printableCardAppender() {
 }
 
 rbenv global $RUBY_VERSION
-
 gem list | grep pkg-config || gem install pkg-config && echo "pkg-config installed"
 gem list | grep squib || gem install squib && echo "squib installed" || local_install_squib
+gem update --system
 
 # rm -rf _cards* .terrain*
-gem update --system
 ruby src/main/ruby/land_cards.rb
 # ruby src/main/ruby/horde_cards.rb
 

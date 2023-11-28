@@ -566,3 +566,10 @@ N ^ S
            \__3__/
 
 ```
+
+## Comment utiliser ce programme
+Ce programme est ecrit en ruby. Il vous faudra donc installer ruby sur votre machine.
+Pour ce faire, je vous conseille d'utiliser rbenv qui vous permettra de gerer plusieurs versions de ruby sur votre machine.
+il y a un script `./generateImages.sh` qui vous permettra de generer toutes les images necessaires pour jouer.
+Il contient aussi les instructions pour installer rbenv, ruby et les gems necessaires a la generation des images.
+Le script a ete teste uniquement sur macOs.
