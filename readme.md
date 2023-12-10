@@ -376,14 +376,17 @@ Vous pourrez ensuite passer en mode campagne et garder votre equipe et son moral
 - **Depart**: Aberlaas
 - **Arrivee**: Port-Choon
 - **Distance**: 5 cases
+- **Par**: 4 ans
 - **Description**: L'objectif de ce niveau est de traverser une grande variete de paysages et aller depuis Aberlaas vers Port-Choon. Le niveau se compose de 24 tuiles terrain, de 3 tuiles villages abrites (un de chaque couleur).
 - **Repartition des tuiles**: Installez entre chaque village 1 tuiles neutres. Installez 2 tuiles neutres entre **Aberlaas** et le premier village et ainsi qu'entre le dernier village et **Port-Choon**.
+- **Note**: Ce chapitre est un chapitre d'introduction. Il est donc plus facile que les autres chapitres. Il est recommande de le jouer en premier afin de prendre en main les regles et de s'habituer aux regles de surpassement petit a petit. Il est possible de le jouer en mode campagne tous les chapitres mais il est fortement recommande de le jouer en mode normal chaque chapitre afin de connaitre les subtilites de chaque chapitre.
 
 ## Chapitre 2
 ![chapitre2]
 - **Depart**: Port-Choon
 - **Arrivee**: Chawondasee
 - **Distance**: 3 cases
+- **Par**: 3 ans
 - **Description**: L'objectif de ce niveau est de choisir entre la trace directe a travers les tuiles d'eau ou de faire le tour de la flaque de Lapsane. Le niveau se compose de 8 tuiles terrain d'eau, 7 tuiles terrain neutre, de 2 a 3 tuiles villages et de la tuile **tour fontaine**.
 - **Repartition des tuiles**: Les tuiles de la flaque doivent etre entre le depart et l'arrivee. Elles doivent toutes se toucher. Il doit y avoir 2 tuiles terrains neutres ou une tuile terrain d'eau entre chaque villages. Entre **Port-Choon** et le premier village ainsi qu'entre le dernier village et **Chawondasee**, il doit y avoir 2 tuiles. La **tour fontaine** doit avoir au moins tuiles d'eau de **Port-Choon** et au moins 1 tuiles d'eau de **Chawondasee**. Entre **Chawondasee** et **Port-Choon** il doit y avoir au moins 3 tuiles.
 
@@ -392,6 +395,7 @@ Vous pourrez ensuite passer en mode campagne et garder votre equipe et son moral
 - **Depart**: Chawondasee
 - **Arrivee**: Alticcio
 - **Distance**: 4 cases
+- **Par**: 2 ans
 - **Description**: L'objectif est de compose entre les tuiles neutres et les tuiles desertiques. Le niveau se compose de 8 tuiles terrain desert, 10 tuiles terrain neutre, de 2 tuiles villages abrites.
 - **Repartition des tuiles**: La majorite des tuiles desert doivent se trouver sur la trace directe. Les tuiles desert doivent toutes se toucher. Il doit y avoir 3 tuiles entre chaque villages. Entre **Chawondasee** et le premier village ainsi qu'entre le dernier village et **Alticcio**, il doit y avoir 3 tuiles. Entre **Chawondasee** et **Alticcio** il doit y avoir au moins 4 tuiles.
 
@@ -400,6 +404,7 @@ Vous pourrez ensuite passer en mode campagne et garder votre equipe et son moral
 - **Depart**: Alticcio
 - **Arrivee**: Camp Boban
 - **Distance**: 5 cases
+- **Par**: 3 ans
 - **Description**: L'objectif de ce chapitre est de passer par la Porte d'Hurle. Le niveau se compose de 8 tuiles terrain marais, 8 tuiles terrain neutre et de 1 tuiles villages abrites.
 - **Repartition des tuiles**: Placez la tuile **Porte d'Hurle** juste apres **Alticcio**. Le village se trouve a au moins 4 tuiles de la **Porte d'Hurle** et au moins 2 tuiles de **Camp Boban**. Il doit y avoir au moins 5 tuiles au total entre **Alticcio** et **Camp Boban**. 
 La **Porte d'Hurle** est la seule tuile pouvant toucher **Alticcio**. Aucune autre tuile ne peut toucher **Alticcio**. Les tuiles restantes peuvent etre disposees a votre discretion.
@@ -486,6 +491,7 @@ En cas d'echec, le personnage se trouvera sur le bord entre 2 cases: la case qu'
 * **+/-2 sur la valeur d'un d6**: Un meme d6 recevra 2 points supplementaires ou se verra retire 2 points. Ces 2 points ne peuvent pas etre repartis.
 * **retourner un d6**: mettre le d6 sur sa face opposee. Par exemple un 1 peut etre transforme en 6. De maniere generale 6 <-> 1, 2 <-> 5 et 3 <-> 4.
 * **Abandon**: Lorsqu'un pouvoir affiche le mot abandonnez, cela signifie que vous devez appliquer les malus de perte de moral.
+* **Echanger des tuiles**: Lorsqu'un pouvoir affiche le mot echanger, cela signifie que vous devez echanger les tuiles de place. Les tuiles echangent doivent etre adjacentes. Les pions sur ces tuiles restent a leur place, ainsi, on ne peut pas avancer en echangent 2 tuiles ou echanger le vent avec la tuile d'a cote. Les tuiles echangees peuvent etre mises dans n'importe quelle direction.
 
 # Bonus: 
 ## Une bande son est disponible sur deezer et sur youtube:
