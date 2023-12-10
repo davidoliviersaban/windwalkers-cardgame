@@ -54,7 +54,8 @@ def drawTile(deck, dirname)
       if (c == nil || c == 0)
         "Empty"
       elsif (c == "Special")
-        "AbandonTourFontaineText"
+        # "AbandonTourFontaineText"
+        "Empty"
       else
         key+"Text"
       end

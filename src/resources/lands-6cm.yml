@@ -188,8 +188,8 @@ AbandonTourFontaineText:
     color: red
 AbandonTourFontaineIcon:
     extends: AbandonTourFontaineText
-    file: src/resources/helpers/abandon.png
-    x: += 90
+    file: src/resources/helpers/abandon-inverted.png
+    x: += 150
     width: 50
     height: :scale
 

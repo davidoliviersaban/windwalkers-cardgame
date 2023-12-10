@@ -164,10 +164,13 @@ Le terrain impose 3d6 au vent: les nombre de couleurs du vent (d6 verts)et le no
 
 Le terrain peut egalement posseder des informations supplementaires comme: 
 * les d6 noirs qui seront ajoutes au vent (voir les [regles de d6 noirs](/readme#regles-des-d6-noirs)). 
-* les bonus/malus de [moral](/readme#le-moral).
-* les malus lies a l'abandon de membres de l'equipe. 
+* les bonus/malus de [moral](/readme#le-moral) et les malus lies a l'abandon de membres de l'equipe.
 
-Toutes ces indications sont a prendre en compte lorsque la Horde tente de passer au travers de cette tuile a l'exception du bonus/malus en moral qui ne s'appliquera qu'une fois l'epreuve reussie et que la horde aura progresse sur cette tuile terrain.
+Toutes ces indications sont a prendre en compte lorsque la Horde tente de passer au travers de cette tuile. 
+Une fois l'epreuve reussie, la horde pourra atteindre cette tuile terrain et appliquer le bonus/malus en moral. 
+
+**Attention!** si vous abandonnez un membre de votre horde sur une tuile avec un malus de moral, vous appliquerez le malus immediatement. Ainsi, abandonner un membre de votre horde sur une tuile avec un malus de moral vous fera perdre immediatement du moral et, une fois la tuile atteinte, vous devrez perdre des points de moral supplementaires. C'est la double peine!
+
 
 ## Contrer le vent
 Pour effectuer sa Trace, la Horde doit contrer le vent. Contrer est l'action d'avancer a contre vent pour rejoindre les villes intermediaires et enfin rejoindre Camp Boban.
@@ -184,7 +187,7 @@ Ainsi, sur cet exemple de de terrain on prend 1d6 vert et 2d6 incolores. Puis on
 
 La force du vent impose a la Horde le nombre de d6 qui doivent etre identiques au vent. Les d6 colores doivent etre egalees avant les d6 incolores du vent. La force du vent est tiree au hasard en piochant un jeton force au hasard dans le sac contenant les jetons force de vent.
 
-Ainsi, sur un vent de force 2, le d6 vert devra etre egale et n'importe lequel des autres d6 incolores.
+Ainsi, sur un vent de force 2, le d6 vert devra etre egale ainsi que n'importe lequel des autres d6 incolores.
 
 Le joueur lance alors les d6 de sa Horde et du vent simultanement et resoud les actions comme suit:
 * Apairez les d6 identiques aux d6 du vent en commencant par les d6 colores.
@@ -217,6 +220,7 @@ Ainsi n'oubliez pas les actions suivantes qui vous permettront d'avancer mais pe
 ### Ce qui fait baisser le moral
 * **Relancer tous les d6 de la Horde**: Un petit coup de poker qui peut payer. Ou pas.
 * **Changer la valeur +/-1 sur 1 d6 de la Horde**: L'action la plus souvent utilisee, vous pouvez influence l'un de vos d6 de +/- 1 par point de moral depense. Attention car meme si cette action parait anodine, c'est elle qui peut vous faire gagner ou perdre une partie.
+* Abandonner un hordier sur une case applicant un malus de moral.
 
 
 ## Le terrain
@@ -275,7 +279,7 @@ Un joueur allant sur une case demandant un d6 noir devra donc lancer 7 d6 dont 1
 
 Les regles particulieres des d6 noirs sont les suivantes:
 1. **Un d6 noir exigent une egalite parfaite.**
-1. Un d6 noir n'est pas colores. 
+1. Un d6 noir n'est pas colores ni incolores. 
 1. Un d6 noir d'epreuve ne peut etre enleve ou echange ou ignore ou relance.
 1. Un d6 noir ne peut etre modifie que par le moral ou les pouvoirs des crocs (TRAINE) ou du traceur.
 1. Un d6 noir n'est pas un malus
@@ -284,20 +288,21 @@ Les regles particulieres des d6 noirs sont les suivantes:
 
 
 ## Regles speciales pour les lieux avec des d6 noirs
-![portedhurle]
 
 Certains lieux speciaux ont des d6 noirs dessus. C'est une epreuve qui doit etre surmontee par l'equipe et qui aura des effets differents en fonction du lieu.
 
 ### La tour fontaine
+![tourfontaine]
 La tour fontaine est un lieu avec une epreuve.  C'est un lieu qui n'a donc pas de "vent".
 
-La horde peut se reposer a la tour fontaine et donc reposer un hordier ou reposer la horde entiere si l'equipe s'arrete sur cette tuile. Dans tous les cas, un hordier meurt sur cette tuile.
+La horde peut se reposer a la tour fontaine et donc reposer un hordier ou reposer la horde entiere si l'equipe s'arrete sur cette tuile. **Dans tous les cas, un hordier meurt sur cette tuile.**
 
 ### La porte d'hurle
+![portedhurle]
 La porte d'hurle est un lieu special avec 6 d6 noirs. C'est un lieu qui n'a donc pas de "vent". 
 Les 6 d6 noirs sont une epreuve qui va demander une difficulte equivalente a une epreuve de force 6.
 Si l'epreuve est echouee, perdez un membre de votre horde et recommenez.
-Vous ne pouvez pas vous reposer sur place.
+Vous ne pouvez pas vous reposer sur cette tuile.
 
 ## Symboles supplementaires sur les tuiles
 
@@ -308,12 +313,13 @@ Ces symbolisent le moral perdu.
 ### Exemple
 ![land3] 
 
-Ce terrain fait perdre 1 point de moral lorsque l'on passe cette tuile et qu'on lance les d6 pour affronter ce vent. Et fait perdre 1 point de moral supplementaire par utilisation de pouvoirs de personnages ayant cette icone (typiquement les crocs que l'on abandonne).
+Ce terrain fait perdre du moral lorsque l'on passe cette tuile et qu'on lance les d6 pour affronter ce vent. Et fait perdre 2 point de moral supplementaire par abandon de personnage (typiquement les crocs que l'on abandonne).
 
 ## Regles du bord de carte
 Les bords de carte sont des zones plus faciles, le vent y sera plus clement et plus aise a contrer. Pour ce faire, lancez seulement 5d6 pour le vent.
 **En cas de furevent F6, le d6 manquant sera necessairement un 6** pour que votre furevent ait ses 6d6. De maniere plus generale, s'il manque un des d6 au vent, les d6 manquants auront la valeur de la force du vent.
 
+## L'echec
 En cas d'echec, restez sur la case d'ou vous partez et perdez un hordier.
 Par priorite, perdez d'abord un Crocs. Si vous n'en avez plus a perdre, perdez un hordier du Pack ; finalement un hordier du Fer.
 
@@ -325,16 +331,17 @@ Ainsi, au premier tour de jeu, utilisez vos 6d6, au premier surpassement, jouez 
 Se surpasser permet de traverser le plateau plus vite et rapportera plus de points.
 
 ### Ce qui interrompt le surpassement
-Echouer a contrer un vent ou s'arreter sur n'importe quelle tuile mettra fin au surpassement.
-Rentrer dans une ville ne compte pas comme du surpassement car les villes n'ont pas de vent. Ceci met fin egalement au surpassement.
+- Echouer a contrer un vent.
+- S'arreter sur n'importe quelle tuile mettra fin au surpassement.
+- Rentrer dans une ville ne compte pas comme du surpassement car les villes n'ont pas de vent. Ceci met fin egalement au surpassement.
 
 # Regagner du moral
 Comme il a ete vu precedemment, le moral permet d'activer certains pouvoirs de personnages et de traverser egalement des tuiles plus difficile. Le moral vous permet egalement de manipuler vos d6. Vous allez donc regulierement utiliser votre moral pour dejouer les pieges du plateau.
 
 Egalement, comme il y existe plusieurs moyens de gagner du moral dans le jeu et il important de tous les connaitres.
 - tuiles villes: les villes vous rendront du moral en terminant votre chapitre (1 point de moral)
-- tuiles speciales: certaines tuiles comme les abrits de fortune, peuvent vous rendre un point de moral
-- pouvoirs de hordiers: vos personnages peuvent vous rendre sous certaines conditions du moral
+- tuiles speciales: certaines tuiles comme les refuges, peuvent vous rendre un point de moral
+- pouvoirs de hordiers: vos personnages peuvent vous rendre du moral sous certaines conditions du moral
 
 ## Le plateau de jeu
 Une horde est composee de 8 membres d'equipe. 3 FERs dont le TRACEUR, 3 PACKs et 2 TRAINEs.
@@ -355,7 +362,7 @@ Le recrutement se fait apres le repos. Une fois le recrutement fait, il n'est pa
 ## Reposer la horde
 Vos hordiers auront du mal a se reposer dans votre aventure car vous evolurez dans un monde aride et peu accueillant. Plus vous evoluerez, plus votre horde sera fatiguee et il vous faudra trouver un moyen de vous reposer.
 
-Le seul moyen pour recuperer le pouvoir de votre horde est d'arreter sa progression et de cesser le surpassement. A ce moment, vous pourrez recuperer le pouvoir d'un hordier.
+Le seul moyen pour recuperer le pouvoir de votre horde est d'arreter sa progression et de cesser le surpassement. A ce moment, vous pourrez recuperer le pouvoir d'un seul hordier.
 Si vous decidez de stopper votre surpassement et d'arreter vos hordiers dans un village, vous pourrez recuperer le pouvoir de tous vos hordiers.
 
 Ainsi, il est important de viser les villages afin de gerer l'effort de votre horde et de cadencer vos surpassements en vous arretant intelligemment dans les villages qui parsement le terrain.
@@ -364,39 +371,38 @@ Ainsi, il est important de viser les villages afin de gerer l'effort de votre ho
 Ce jeu peut se joueur chapitre apres chapitre. Il est recommande pour la prise en main de pouvoir recommencer avec une equipe toute neuve apres chaque chapitre.
 Vous pourrez ensuite passer en mode campagne et garder votre equipe et son moral d'un chapitre a l'autre. Le mode campagne est donc bien plus difficile que le mode normal.
 
-## Chapitre 1
-[chapitre1]
+## Chapitre 1 
+![chapitre1]
 - **Depart**: Aberlaas
 - **Arrivee**: Port-Choon
-- **Distance**: 6 cases
+- **Distance**: 5 cases
 - **Description**: L'objectif de ce niveau est de traverser une grande variete de paysages et aller depuis Aberlaas vers Port-Choon. Le niveau se compose de 24 tuiles terrain, de 3 tuiles villages abrites (un de chaque couleur).
-- **Repartition des tuiles**: Installez entre chaque village 2 tuiles neutres. Ainsi qu'entre **Aberlaas** et le premier village et entre le dernier village et **Port-Choon**.
-[] @TODO -> Photo exemple
+- **Repartition des tuiles**: Installez entre chaque village 1 tuiles neutres. Installez 2 tuiles neutres entre **Aberlaas** et le premier village et ainsi qu'entre le dernier village et **Port-Choon**.
 
 ## Chapitre 2
+![chapitre2]
 - **Depart**: Port-Choon
 - **Arrivee**: Chawondasee
-- **Distance**: 4 cases
-- **Description**: L'objectif de ce niveau est de choisir entre la trace directe a travers les tuiles d'eau ou de faire le tour de la flaque de Lapsane. Le niveau se compose de 12 tuiles terrain d'eau, 12 tuiles terrain neutre, de 2 tuiles villages abrites et de la tuile **tour fontaine**.
-- **Repartition des tuiles**: Les tuiles de la flaque doivent etre entre le depart et l'arrivee. Il doit y avoir 3 tuiles entre chaque villages. Entre **Port-Choon** et le premier village ainsi qu'entre le dernier village et **Chawondasee**, il doit y avoir 3 tuiles. La **tour fontaine** doit avoir 3 tuiles de **Port-Choon** et 3 tuiles de **Chawondasee**. Entre **Chawondasee** et **Port-Choon** il doit y avoir au moins 3 tuiles.
-[] @TODO -> Photo exemple
+- **Distance**: 3 cases
+- **Description**: L'objectif de ce niveau est de choisir entre la trace directe a travers les tuiles d'eau ou de faire le tour de la flaque de Lapsane. Le niveau se compose de 8 tuiles terrain d'eau, 7 tuiles terrain neutre, de 2 a 3 tuiles villages et de la tuile **tour fontaine**.
+- **Repartition des tuiles**: Les tuiles de la flaque doivent etre entre le depart et l'arrivee. Elles doivent toutes se toucher. Il doit y avoir 2 tuiles terrains neutres ou une tuile terrain d'eau entre chaque villages. Entre **Port-Choon** et le premier village ainsi qu'entre le dernier village et **Chawondasee**, il doit y avoir 2 tuiles. La **tour fontaine** doit avoir au moins tuiles d'eau de **Port-Choon** et au moins 1 tuiles d'eau de **Chawondasee**. Entre **Chawondasee** et **Port-Choon** il doit y avoir au moins 3 tuiles.
 
 ## Chapitre 3
+![chapitre3]
 - **Depart**: Chawondasee
 - **Arrivee**: Alticcio
-- **Distance**: 5 cases
-- **Description**: L'objectif est de compose entre les tuiles neutres et les tuiles desertiques. Le niveau se compose de 8 tuiles terrain desert, 12 tuiles terrain neutre, de 2 tuiles villages abrites.
+- **Distance**: 4 cases
+- **Description**: L'objectif est de compose entre les tuiles neutres et les tuiles desertiques. Le niveau se compose de 8 tuiles terrain desert, 10 tuiles terrain neutre, de 2 tuiles villages abrites.
 - **Repartition des tuiles**: La majorite des tuiles desert doivent se trouver sur la trace directe. Les tuiles desert doivent toutes se toucher. Il doit y avoir 3 tuiles entre chaque villages. Entre **Chawondasee** et le premier village ainsi qu'entre le dernier village et **Alticcio**, il doit y avoir 3 tuiles. Entre **Chawondasee** et **Alticcio** il doit y avoir au moins 4 tuiles.
-[] @TODO -> Photo exemple
 
 ## Chapitre 4
+![chapitre4]
 - **Depart**: Alticcio
 - **Arrivee**: Camp Boban
-- **Distance**: 7 cases
-- **Description**: L'objectif de ce chapitre est de passer par la Porte d'Hurle. Le niveau se compose de 8 tuiles terrain marais, 4 tuiles d'eau, 20 tuiles terrain neutre et de 1 tuiles villages abrites.
-- **Repartition des tuiles**: Placez la tuile **Porte d'Hurle** juste apres **Alticcio**. Le village se trouve a 4 tuiles de la **Porte d'Hurle** et de **Camp Boban**. Il doit y avoir 7 tuiles au total entre **Alticcio** et **Camp Boban**. Les 32 tuiles restantes peuvent etre disposees a votre discretion.
-La **Porte d'Hurle** est la seule tuile pouvant toucher **Alticcio**. Aucune autre tuile ne peut toucher **Alticcio**.
-[] @TODO -> Photo exemple
+- **Distance**: 5 cases
+- **Description**: L'objectif de ce chapitre est de passer par la Porte d'Hurle. Le niveau se compose de 8 tuiles terrain marais, 8 tuiles terrain neutre et de 1 tuiles villages abrites.
+- **Repartition des tuiles**: Placez la tuile **Porte d'Hurle** juste apres **Alticcio**. Le village se trouve a au moins 4 tuiles de la **Porte d'Hurle** et au moins 2 tuiles de **Camp Boban**. Il doit y avoir au moins 5 tuiles au total entre **Alticcio** et **Camp Boban**. 
+La **Porte d'Hurle** est la seule tuile pouvant toucher **Alticcio**. Aucune autre tuile ne peut toucher **Alticcio**. Les tuiles restantes peuvent etre disposees a votre discretion.
 
 # Calcul du score et Carnet de contre
 Afin de comparer vos differentes parties, vous aurez a disposition un carnet de contre (sorte de journal de bord) qui vous permettra de noter 
@@ -510,7 +516,7 @@ https://squib.readthedocs.io/
 - [] @TODO: faire un petit fascicule avec une histoire a lire. 
 - [] @TODO: Faire la carte de course et faire des cartes
 
-[chapitre1]: src/resources/readme/chapter1.md
+[scenario1]: src/resources/readme/chapter1.md
 [Aberlaas]: src/resources/readme/aberlaas.png
 [village]: src/resources/readme/village.png
 [portedhurle]: src/resources/readme/portedhurle.png
@@ -527,7 +533,12 @@ https://squib.readthedocs.io/
 [formation]: src/resources/readme/formation.png
 [d6-incolore]: src/resources/readme/d6-white.png
 [d6-colore]: src/resources/readme/d6-green.png
-[plateau]: src/resources/readme/plateau-ch1.png
+[plateau]: src/resources/readme/chapitre1.png
+[chapitre1]: src/resources/readme/chapitre1.png
+[chapitre2]: src/resources/readme/chapitre2.png
+[chapitre3]: src/resources/readme/chapitre3.png
+[chapitre4]: src/resources/readme/chapitre4.png
+[tourfontaine]: src/resources/readme/tourfontaine.png
 # Regles abandonnees
 
 ## Regle additionnelle de deplacement
