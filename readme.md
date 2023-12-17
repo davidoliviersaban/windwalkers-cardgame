@@ -532,10 +532,10 @@ https://squib.readthedocs.io/
 [land3]: src/resources/readme/land3.png
 [land4]: src/resources/readme/land4.png
 [moral]: src/resources/readme/moral.png
-[traceur]: src/resources/readme/card_traceur.png
-[fer]: src/resources/readme/card_fer.png
-[pack]: src/resources/readme/card_pack.png
-[croc]: src/resources/readme/card_croc.png
+[traceur]: src/resources/readme/004.Traceur.Ryage%20le%20Joueur.T2.03.png
+[fer]: src/resources/readme/012.Fer.Blanchette%20de%20Gaude.T1.11.png
+[pack]: src/resources/readme/022.Pack.Baramas.T2.21.png
+[croc]: src/resources/readme/050.Traine.Osuros.T3.49.png
 [formation]: src/resources/readme/formation.png
 [d6-incolore]: src/resources/readme/d6-white.png
 [d6-colore]: src/resources/readme/d6-green.png
