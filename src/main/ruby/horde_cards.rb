@@ -9,7 +9,8 @@ now = DateTime.now.to_s
 
 def drawCards(deck, dirname, now)
   rect layout: :bleed
-  rect layout: :cut, stroke_color: "#FAFAFA"
+  rect layout: :cut, stroke_color: "#000000"
+#  rect layout: :cut, stroke_color: "#FAFAFA"
 #  rect layout: :inside, stroke_color: "#000000"
 
   fill_color = Hash.new

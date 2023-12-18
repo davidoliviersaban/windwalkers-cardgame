@@ -30,7 +30,8 @@ frame:
 
 land:
     extends: frame
-    stroke_width: 0
+    stroke_width: 10
+    stroke_color: '#666666aa'
 city:
     extends: frame
     stroke_width: 30
@@ -57,6 +58,7 @@ Description:
     color: white
     stroke_color: black
     stroke_width: 3
+    fill_color: '#ffffff'
 
 Terrain:
     extends: frame
@@ -196,3 +198,6 @@ AbandonTourFontaineIcon:
 Empty:
     width: 1
     height: 1
+    stroke_width: 0
+    fill_color: '#00000000'
+    stroke_color: '#00000000'

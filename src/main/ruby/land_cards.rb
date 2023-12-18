@@ -15,19 +15,36 @@ def drawTile(deck, dirname)
   # Position of corner to lasercut the tiles
   line layout: :corner1
   line layout: :corner2
- 
+
   %w(1 4).each do |key|
-    polygon layout: "Vent"+key+"Icone", n: 20, angle: (key.to_i-1)*3.14159/3
+    polygon layout: deck["Vent"+key.to_s].map{ |c| 
+    if (c == nil)
+      "Empty"
+    else
+      "Vent"+c.to_s+"Icone"
+    end
+    } , n: 20, angle: (key.to_i-1)*3.14159/3
   end
   %w(2 5).each do |key|
-    polygon layout: "Vent"+key+"Icone", n: 3, angle: (key.to_i-1)*3.14159/3
+    polygon layout: deck["Vent"+key.to_s].map{ |c| 
+    if (c == nil)
+      "Empty"
+    else
+      "Vent"+c.to_s+"Icone"
+    end
+    } , n: 3, angle: (key.to_i-1)*3.14159/3
   end
   %w(3 6).each do |key|
-    polygon layout: "Vent"+key+"Icone", n: 4, angle: (key.to_i-1)*3.14159/3
+    polygon layout: deck["Vent"+key.to_s].map{ |c| 
+    if (c == nil)
+      "Empty"
+    else
+      "Vent"+c.to_s+"Icone"
+    end
+    } , n: 4, angle: (key.to_i-1)*3.14159/3
   end
-
   %w(1 2 3 4 5 6).each do |key|
-    text str: key, layout: "Vent"+key, angle: -(key.to_i-1)*3.14159/3
+    text str: deck["Vent"+key.to_s], layout: "Vent"+key.to_s, angle: -(key.to_i-1)*3.14159/3
   end
 
   %w(RGI1 RGI2 RGI3 T1 T2 T3).each do |key|
