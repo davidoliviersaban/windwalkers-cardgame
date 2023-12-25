@@ -16,32 +16,14 @@ def drawTile(deck, dirname)
   line layout: :corner1
   line layout: :corner2
 
-  %w(1 4).each do |key|
+  %w(1 2 3 4 5 6).each do |key|
     polygon layout: deck["Vent"+key.to_s].map{ |c| 
     if (c == nil)
       "Empty"
     else
       "Vent"+c.to_s+"Icone"
     end
-    } , n: 20, angle: (key.to_i-1)*3.14159/3
-  end
-  %w(2 5).each do |key|
-    polygon layout: deck["Vent"+key.to_s].map{ |c| 
-    if (c == nil)
-      "Empty"
-    else
-      "Vent"+c.to_s+"Icone"
-    end
-    } , n: 3, angle: (key.to_i-1)*3.14159/3
-  end
-  %w(3 6).each do |key|
-    polygon layout: deck["Vent"+key.to_s].map{ |c| 
-    if (c == nil)
-      "Empty"
-    else
-      "Vent"+c.to_s+"Icone"
-    end
-    } , n: 4, angle: (key.to_i-1)*3.14159/3
+    } , n: 24, angle: (key.to_i-1)*3.14159/3
   end
   %w(1 2 3 4 5 6).each do |key|
     text str: deck["Vent"+key.to_s], layout: "Vent"+key.to_s, angle: -(key.to_i-1)*3.14159/3
@@ -67,22 +49,21 @@ def drawTile(deck, dirname)
   end
 
   %w(Moral Abandon).each do |key|
-    text str: deck[key], layout: deck[key].map { |c| 
-      if (c == nil || c == 0)
-        "Empty"
-      elsif (c == "Special")
-        # "AbandonTourFontaineText"
-        "Empty"
-      else
-        key+"Text"
-      end
-    }
-    
     png layout: deck[key].map { |c| 
       if (c == nil || c == 0)
         "Empty"
       elsif (c == "Special")
         "AbandonTourFontaineIcon"
+      else
+        key+"Icon"
+      end
+    }
+  end
+
+  %w(MoralNegatif1 MoralNegatif2).each do |key|
+    png layout: deck[key].map { |c| 
+      if (c == nil || c == 0)
+        "Empty"
       else
         key+"Icon"
       end
