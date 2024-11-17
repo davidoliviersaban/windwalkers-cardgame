@@ -1,0 +1,43 @@
+bleed:
+    x: 10mm
+    y: 10mm 
+    radius: 20mm
+
+cut:
+    extends: bleed
+    radius: 19mm
+    stroke_color: red
+    dash: ''
+
+#Used for lasercut pointer
+corner1:
+    x1: 1.7mm
+    y1: 1.7mm
+    x2: 11.7mm
+    y2: 1.7mm
+    stroke_color: '#000000'
+corner2:
+    extends: corner1
+    x2: 1.7mm
+    y2: 11.7mm
+    stroke_color: '#000000'
+
+frame:
+    extends: cut
+
+Image:
+    width: 20mm
+    height: :scale
+
+Description:
+    extends: frame
+    font: ChunkFive Roman,Bold 17
+    x: -= 250
+    y: += 80
+    width: 500
+    height: 300
+    align: center
+    color: white
+    stroke_color: black
+    stroke_width: 3
+    fill_color: '#ffffff'

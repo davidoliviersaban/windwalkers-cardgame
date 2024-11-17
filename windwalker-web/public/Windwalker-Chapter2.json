@@ -1,0 +1,194 @@
+{
+  "title": "Windwalker-Chapter2",
+  "grid": [
+    {
+      "q": 3,
+      "r": 4,
+      "type": "building",
+      "name": "PortChoon",
+      "color": "#FF4500",
+      "img": "terrain/chapter.04.png"
+    },
+    {
+      "q": 3,
+      "r": 2,
+      "type": "building",
+      "name": "TourFontaine",
+      "color": "#004500",
+      "img": "terrain/chapter.05.png"
+    },
+    {
+      "q": 3,
+      "r": 1,
+      "type": "terrain",
+      "name": "water",
+      "color": "#4682B4",
+      "img": "terrain/chapter2.17.png"
+    },
+    {
+      "q": 2,
+      "r": 2,
+      "type": "terrain",
+      "name": "water",
+      "color": "#4682B4",
+      "img": "terrain/chapter2.17.png"
+    },
+    {
+      "q": 3,
+      "r": 3,
+      "type": "terrain",
+      "name": "water",
+      "color": "#4682B4",
+      "img": "terrain/chapter2.17.png"
+    },
+    {
+      "q": 2,
+      "r": 3,
+      "type": "terrain",
+      "name": "water",
+      "color": "#4682B4",
+      "img": "terrain/chapter2.17.png"
+    },
+    {
+      "q": 4,
+      "r": 2,
+      "type": "terrain",
+      "name": "water",
+      "color": "#4682B4",
+      "img": "terrain/chapter2.17.png"
+    },
+    {
+      "q": 4,
+      "r": 1,
+      "type": "terrain",
+      "name": "water",
+      "color": "#4682B4",
+      "img": "terrain/chapter2.17.png"
+    },
+    {
+      "q": 5,
+      "r": 2,
+      "type": "terrain",
+      "name": "water",
+      "color": "#4682B4",
+      "img": "terrain/chapter2.17.png"
+    },
+    {
+      "q": 6,
+      "r": 1,
+      "type": "terrain",
+      "name": "water",
+      "color": "#4682B4",
+      "img": "terrain/chapter2.17.png"
+    },
+    {
+      "q": 6,
+      "r": 0,
+      "type": "terrain",
+      "name": "water",
+      "color": "#4682B4",
+      "img": "terrain/chapter2.17.png"
+    },
+    {
+      "q": 5,
+      "r": 0,
+      "type": "terrain",
+      "name": "water",
+      "color": "#4682B4",
+      "img": "terrain/chapter2.17.png"
+    },
+    {
+      "q": 5,
+      "r": 1,
+      "type": "building",
+      "name": "GreenVillage",
+      "color": "#00D7FF",
+      "img": "terrain/chapter.00.png"
+    },
+    {
+      "q": 3,
+      "r": 0,
+      "type": "building",
+      "name": "Chawondasee",
+      "color": "#FF4500",
+      "img": "terrain/chapter.06.png"
+    },
+    {
+      "q": 7,
+      "r": 1,
+      "type": "building",
+      "name": "RedVillage",
+      "color": "#FFD700",
+      "img": "terrain/chapter.02.png"
+    },
+    {
+      "q": 6,
+      "r": -1,
+      "type": "building",
+      "name": "BlueVillage",
+      "color": "#DFFF00",
+      "img": "terrain/chapter.01.png"
+    },
+    {
+      "q": 4,
+      "r": 0,
+      "type": "terrain",
+      "name": "hut",
+      "color": "#FFD700",
+      "img": "terrain/chapter1.16.png"
+    },
+    {
+      "q": 6,
+      "r": 2,
+      "type": "terrain",
+      "name": "hut",
+      "color": "#FFD700",
+      "img": "terrain/chapter1.16.png"
+    },
+    {
+      "q": 5,
+      "r": -1,
+      "type": "terrain",
+      "name": "forest",
+      "color": "#228B22",
+      "img": "terrain/chapter1.13.png"
+    },
+    {
+      "q": 4,
+      "r": 3,
+      "type": "terrain",
+      "name": "forest",
+      "color": "#228B22",
+      "img": "terrain/chapter1.13.png"
+    },
+    {
+      "q": 5,
+      "r": 3,
+      "type": "terrain",
+      "name": "mountain",
+      "color": "#A0522D",
+      "img": "terrain/chapter1.12.png"
+    },
+    {
+      "q": 7,
+      "r": 0,
+      "type": "terrain",
+      "name": "mountain",
+      "color": "#A0522D",
+      "img": "terrain/chapter1.12.png"
+    },
+    {
+      "q": 7,
+      "r": -1,
+      "type": "terrain",
+      "name": "plain",
+      "icon": null,
+      "color": "#90EE90",
+      "img": "terrain/chapter1.14.png"
+    }
+  ],
+  "metadata": {
+    "createdAt": "2024-11-20T16:51:14.078Z",
+    "name": "Windwalker map"
+  }
+}
