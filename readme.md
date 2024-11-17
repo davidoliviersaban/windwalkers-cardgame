@@ -1,14 +1,21 @@
+---
+lang: fr-FR
+papersize: a4
+fontsize: 12pt
+title: Windwalkers
+geometry: margin=2.5cm
+---
 # A Contre-Vent
 >À l’origine fut la vitesse, le pur mouvement furtif, le « vent-foudre ». Puis le cosmos décéléra, prit consistance et forme, jusqu’aux lenteurs habitables, jusqu’au vivant, jusqu’à vous. Bienvenue à toi, lent homme lié, poussif tresseur des vitesses. 
 *Damasio, Alain. La Horde du Contrevent (Sc. Fiction) (French Edition) (Kindle Locations 84-86). La Volte. Kindle Edition.*
 
 # Introduction
-Windwalkers est un jeu de survie et d'exploration dont le but est d'amener sa Horde depuis la ville de Aberlaas en Extreme Aval du vent vers Camp Bòban, derniere ville en Amont.
+Windwalkers est un jeu de survie et d'exploration dont le but est d'amener sa Horde a l'autre bout du monde depuis la ville de Aberlaas en Extreme Aval du vent vers Camp Bòban, derniere ville en Amont.
 
 Saurez-vous amener votre horde jusque la?
 
 # Rapide presentation du jeu
-Vous incarnez une horde, un groupe de personnages appeles Hordiers, qui devront progresser a travers un paysage en permanence balaye par les vents. Pour pouvoir progresser, votre horde traversera des epreuves, definir un initeraire a travers la steppe, les montagnes ou le desert et enfin d'user de strategie pour maintenir le moral de votre horde.
+Vous incarnez une horde, un groupe de personnages appeles Hordiers, qui devront progresser a travers un paysage en permanence balaye par les vents. Pour pouvoir progresser, votre horde devra traverser des epreuves, definir un initeraire a travers la steppe, les montagnes ou le desert et enfin d'user de strategie pour maintenir le moral de votre horde.
 
 Le trajet sera parcouru sur un plateau de jeu compose de tuiles terrain. Les epreuves y seront indiquees. Pour passer ces epreuves, vous devrez affronter les vents dans des combats de des de plus en plus complexes.
 
@@ -36,7 +43,7 @@ La partie se deroulera en 4 chapitres. Au debut de chaque chapitre, vous devrez 
   * 6 jetons vent F5 (20%)
   * 4 jetons vent F6 (13%)
 - 1 pion representant votre equipe
-- 1 carnet de contre
+- 1 carnet de contre pour y noter votre progression
 
 Si vous ne desirez pas lire l'integralite des regles maintenant, je vous propose de vous rendre au [chapitre1] afin de decouvrir les regles dans un petit scenario.
 
@@ -57,7 +64,7 @@ Le terrain est compose de tuiles hexagonales. Il existe 3 types de tuiles:
 **! Attention**
 
 La plupart des resources ici sont soumises a droit d'auteur et je ne les ai pour l'instant pas contactes.
-Ni le jeu et son titre / ni les images et pdf ne sont de moi. Je ne fournis que l'idee originale du moteur du jeu.
+Ni le jeu et son titre. Je ne fournis que l'idee originale du moteur du jeu et les images generees par DallE et Midjourney.
 
 Afin de construire les images a imprimer, utilisez cet autre git repository: [printableCardsAppender](https://github.com/davidoliviersaban/printableCardsAppender)
 
@@ -146,9 +153,9 @@ Dans le jeu, les 6 formes de vent sont representees par un d6 qui definira les e
 
 La nature du terrain pourra egalement influencer le vent et lui apporter des couleurs jusqu'a une hauteur de 3d. Plus de details sur les [terrains](/readme#le-terrain) dans la section dediee.
 
-Un vent est donc une composition de d6 colores et de d6 incolores pour un total de 6d6.
+Un vent est donc une composition de d6 verts et de d6 blancs pour un total de 6d6.
 
-Lors de la progression de votre Horde sur le terrain, il vous sera possible de connaitre a l'avance la composition du vent (d6 colores et incolores) mais pas sa difficulte.
+Lors de la progression de votre Horde sur le terrain, il vous sera possible de connaitre a l'avance la composition du vent (d6 verts et blancs) mais pas sa difficulte.
 
 
 ## Le terrain
@@ -156,11 +163,11 @@ Lors de la progression de votre Horde sur le terrain, il vous sera possible de c
 ![land2]
 
 Le **terrain** represente le sol et indique dans quel sens coule le vent. Il est compose de prairies, deserts, montagnes, steppes et lacs. Parfois, quelques forets et bosquets.
-Le terrain impose 3d6 au vent: les nombre de couleurs du vent (d6 verts)et le nombre de d6 incolores.
+Le terrain impose 3d6 au vent: les nombre de couleurs du vent (d6 verts)et le nombre de d6 blancs.
 
-![d6-incolore] d6 incolore
+![d6-blanc] d6 blanc
 
-![d6-colore] d6 colore
+![d6-vert] d6 vert
 
 Le terrain peut egalement posseder des informations supplementaires comme: 
 * les d6 noirs qui seront ajoutes au vent (voir les [regles de d6 noirs](/readme#regles-des-d6-noirs)). 
@@ -177,20 +184,20 @@ Pour effectuer sa Trace, la Horde doit contrer le vent. Contrer est l'action d'a
 
 Un vent a contrer possede une composante liee au terrain et une intrinseque au vent lui-meme ainsi qu'une force. 
 
-Le terrain imposee 3d6 au vent qui est une combinaison de d6 colores(verts) et de d6 incolores(blancs). Un vent est toujours compose de 6 d6, on complete par 3 d6 incolores.
+Le terrain imposee 3d6 au vent qui est une combinaison de d6 verts(verts) et de d6 blancs(blancs). Un vent est toujours compose de 6 d6, on complete par 3 d6 blancs.
 
 
 ![land0]
 
 *Exemple:
-Ainsi, sur cet exemple de de terrain on prend 1d6 vert et 2d6 incolores. Puis on complete avec 3d6 incolores pour un total de 1d6 colore(vert) et 5d6 incolores(blancs).*
+Ainsi, sur cet exemple de de terrain on prend 1d6 vert et 2d6 blancs. Puis on complete avec 3d6 blancs pour un total de 1d6 vert(vert) et 5d6 blancs(blancs).*
 
-La force du vent impose a la Horde le nombre de d6 qui doivent etre identiques au vent. Les d6 colores doivent etre egalees avant les d6 incolores du vent. La force du vent est tiree au hasard en piochant un jeton force au hasard dans le sac contenant les jetons force de vent.
+La force du vent impose a la Horde le nombre de d6 qui doivent etre identiques au vent. Les d6 verts doivent etre egalees avant les d6 blancs du vent. La force du vent est tiree au hasard en piochant un jeton force au hasard dans le sac contenant les jetons force de vent.
 
-Ainsi, sur un vent de force 2, le d6 vert devra etre egale ainsi que n'importe lequel des autres d6 incolores.
+Ainsi, sur un vent de force 2, le d6 vert devra etre egale ainsi que n'importe lequel des autres d6 blancs.
 
 Le joueur lance alors les d6 de sa Horde et du vent simultanement et resoud les actions comme suit:
-* Apairez les d6 identiques aux d6 du vent en commencant par les d6 colores.
+* Apairez les d6 identiques aux d6 du vent en commencant par les d6 verts.
 * Si les conditions de contre sont respectees, c'est a dire que le nombre de d6 identiques sont egaux a la force du vent ; il reste alors a faire au moins autant que le vent, c'est a dire que la somme des d6 de la Horde doit etre superieure ou egale a la somme des d6 du vent.
 * Si les conditions de contre ne sont pas respectees, il faudra user et combiner les capacites des personnages afin de passer cette epreuve ou reculer ou user des capacites du moral.
 
@@ -199,16 +206,16 @@ Comme dit precedemment, les hordiers ont des pouvoirs uniques. L'utilisation de 
 
 ### Exemple de reussite
 Vous rencontrez un vent de force 3 avec 2 couleurs. 
-* Le vent fait le jet suivant pour ses des colores: 1 et 5, et pour ses des incolores: 3, 3, 4, 6.
+* Le vent fait le jet suivant pour ses des verts: 1 et 5, et pour ses des blancs: 3, 3, 4, 6.
 * La Horde fait le jet suivant avec ses des: 1, 2, 3, 5, 6, 6.
-* En appairant les d6 du joueur avec ceux du vent, on voit que les 2 couleurs sont respectees car la Horde a obtenu un 5 et un 1. La Horde a egalement obtenu un 3 et un 6 qui correspondent au d6 incolores du vent.
+* En appairant les d6 du joueur avec ceux du vent, on voit que les 2 couleurs sont respectees car la Horde a obtenu un 5 et un 1. La Horde a egalement obtenu un 3 et un 6 qui correspondent au d6 blancs du vent.
 Le vent etant de force 3, il exige que 3 d6 soient identiques a son jet. Nous avons respecte cette contrainte car 4 de nos d6 sont identiques. Le vent ayant 2 couleurs, nous devons d'abord reussir a remplir cette contrainte ce qui est fait avec le 5 et le 1. Finalement, les valeurs restantes sont 3 et 4 pour le vent et 3 et 6 pour la Horde. La somme des d6 du vent fait 3+4=7 ; la somme des d6 restant de la Horde est de 3+6=9. Le resultat de la Horde est >= au resultat du vent. Nous pouvons donc progresser.
 
 ### Exemple d'echec
 Vous rencontrez un vent de force 2 avec 3 couleurs.
-* Le vent fait le jet suivant pour ses des colores: 1, 1 et 5, et pour ses des incolores: 3, 3, 6.
+* Le vent fait le jet suivant pour ses des verts: 1, 1 et 5, et pour ses des blancs: 3, 3, 6.
 * La Horde fait le jet suivant avec ses des: 1, 2, 3, 3, 6, 6.
-* En appairant les d6 du joueur avec ceux du vent, on voit que les 3 couleurs ne sont respectees pas car la Horde a obtenu un 1. La Horde a egalement obtenu deux 3 et un 6 qui correspondent au d6 incolores du vent.
+* En appairant les d6 du joueur avec ceux du vent, on voit que les 3 couleurs ne sont respectees pas car la Horde a obtenu un 1. La Horde a egalement obtenu deux 3 et un 6 qui correspondent au d6 blancs du vent.
 Le vent etant de force 2, il exige que 2 d6 soient identiques a son jet. Nous avons respecte cette contrainte car 4 de nos d6 sont identiques. Le vent ayant 3 couleurs, nous devons d'abord reussir a remplir cette contrainte et ce n'est pas realise. Nous pouvons donc pas progresser a moins d'utiliser les pouvoirs de notre Horde.
 
 
@@ -242,7 +249,7 @@ Il est egalement possible de recruter dans les *villages abrites* avec moins de 
 S'arreter dans un village permet de reposer toute la horde. Ne pas s'arreter ne repose qu'un hordier.
 
 S'arreter en dehors d'un village ne repose qu'un seul hordier.
-Seuls les villages colores (rouge, vert et bleu) permettent de recruter.
+Seuls les villages verts (rouge, vert et bleu) permettent de recruter.
 
 Le vent s'ecoule toujours dans le meme sens sur le plateau: d'Ouest en Est.
 
@@ -256,16 +263,16 @@ Le traceur decide alors de deplacer sa Horde sur l'une des tuiles adjacentes. Il
 
 Il n'y a pas de vent dans les villes ou certains lieux speciaux (tour fontaine et porte d'Hurle).
 
-Le *terrain* possede 3 des colores et/ou incolores, on lui ajoute les d6 du vent. Le vent rajoute generalement 3 d6 incolores aux d6 du terrain.
+Le *terrain* possede 3 des verts et/ou blancs, on lui ajoute les d6 du vent. Le vent rajoute generalement 3 d6 blancs aux d6 du terrain.
 
-Par exemple, si la tuile selectionnee a 2d6 colores et 1d6 incolore, la Horde devra contrer 2 d6 colores et 4d6 incolores (1d6 du terrain + 3d6 du vent). On pioche le jeton vent que l'on place sur la tuile terrain. C'est un vent de force 3, le vent a 3 d6 d'exigeance. On doit donc resoudre les 2d6 colores du terrain en premier (il faut tenir compte des couleurs en premier) puis n'importe lequel des d6 incolores du vent.
+Par exemple, si la tuile selectionnee a 2d6 verts et 1d6 blanc, la Horde devra contrer 2 d6 verts et 4d6 blancs (1d6 du terrain + 3d6 du vent). On pioche le jeton vent que l'on place sur la tuile terrain. C'est un vent de force 3, le vent a 3 d6 d'exigeance. On doit donc resoudre les 2d6 verts du terrain en premier (il faut tenir compte des couleurs en premier) puis n'importe lequel des d6 blancs du vent.
 On se retrouve dans le meme cas de vent de force 3 avec 2 couleurs.
 
 ### Exemple de reussite
 Vous rencontrez un vent de force 3 avec 2 couleurs. 
-* Le vent fait le jet suivant pour ses des colores: 1 et 5, et pour ses des incolores: 3, 3, 4, 6.
+* Le vent fait le jet suivant pour ses des verts: 1 et 5, et pour ses des blancs: 3, 3, 4, 6.
 * La Horde fait le jet suivant avec ses des: 1, 2, 3, 5, 6, 6.
-* En appairant les d6 du joueur avec ceux du vent, on voit que les 2 couleurs sont respectees car la Horde a obtenu un 5 et un 1. La Horde a egalement obtenu un 3 et un 6 qui correspondent au d6 incolores du vent.
+* En appairant les d6 du joueur avec ceux du vent, on voit que les 2 couleurs sont respectees car la Horde a obtenu un 5 et un 1. La Horde a egalement obtenu un 3 et un 6 qui correspondent au d6 blancs du vent.
 Le vent etant de force 3, il exige que 3 d6 soient identiques a son jet. Nous avons respecte cette contrainte car 4 de nos d6 sont identiques. Le vent ayant 2 couleurs, nous devons d'abord reussir a remplir cette contrainte ce qui est fait avec le 5 et le 1. Finalement, les valeurs restantes sont 3 et 4 pour le vent et 3 et 6 pour la Horde. La somme des d6 du vent fait 3+4=7 ; la somme des d6 restant de la Horde est de 3+6=9. Le resultat de la Horde est >= au resultat du vent. Nous pouvons donc progresser.
 
 ## Regles des d6 noirs
@@ -279,7 +286,7 @@ Un joueur allant sur une case demandant un d6 noir devra donc lancer 7 d6 dont 1
 
 Les regles particulieres des d6 noirs sont les suivantes:
 1. **Un d6 noir exigent une egalite parfaite.**
-1. Un d6 noir n'est pas colores ni incolores. 
+1. Un d6 noir n'est pas verts ni blancs. 
 1. Un d6 noir d'epreuve ne peut etre enleve ou echange ou ignore ou relance.
 1. Un d6 noir ne peut etre modifie que par le moral ou les pouvoirs des crocs (TRAINE) ou du traceur.
 1. Un d6 noir n'est pas un malus
@@ -350,7 +357,7 @@ Sur le plateau de jeu apparait egalement une echelle qui represente le moral de 
 ## Le Recrutement
 Les grandes villes proposent un grand nombre de personnages qui peuvent etre recruter.
 Les villages, quant a eux, n'ont qu'un choix restreint de personnages.
-En debut de chapitre, pour chaque village colore, proposez 2 cartes personnages de la couleur du village.
+En debut de chapitre, pour chaque village vert, proposez 2 cartes personnages de la couleur du village.
 En fin de chapitre, pour chaque ville, proposez 2 cartes personnages de chaque couleur.
 
 Le joueur peut recruter dans sa horde autant de personnages qu'il le souhaite tant qu'il respecte les conditions de son plateau Horde. Le joueur peut egalement decider de se separer de certains de ses Hordiers au benefices d'autres plus adequates pour la suite de la mission.
@@ -418,7 +425,7 @@ Je vous propose de calculer le score de votre partie afin de pouvoir comparer vo
 Le calcul est le suivant et il s'effectue en mode Campagne:
 - 1 pt par tuile traversee
 - 1 pt / moral restant a la fin de chaque chapitre
-- 1 pt / hordier qui atteint la derniere ville
+- 2 pt / hordier qui atteint la derniere ville
 - 3 pt / Furvent (6) traverse
 - 5 pts pour la Porte d'Hurle
 - 3 pts pour la Tour Fontaine
@@ -431,6 +438,24 @@ Votre equipe ayant 9 points de moral, le maximum theorique est:
 [] @TODO: Faire un part pour chaque chapitre -> mettre des penalites si on passe trop de temps, bonus si on le fait en moins.
 
 Si vous arrivez a faire 2 surpassement consecutifs vous marquerez 3 pts supplementaires.
+
+### Accomplissements
+- Finir les 4 premiers chapitres
+- Visiter toutes les villes du chapitre 1
+- Visiter toutes les villes du chapitre 2
+- Visiter toutes les villes du chapitre 3 (epic)
+- Visiter toutes les villes du chapitre 4
+- Visiter toutes les villes en une campagne (legendaire)
+- Prendre la trace la plus courte sur le chapitre 1
+- Prendre la trace la plus courte sur le chapitre 2 (epic)
+- Prendre la trace la plus courte sur le chapitre 3 (legendaire)
+- Prendre la trace la plus courte sur le chapitre 4 (legendaire)
+- Ne se reposer dans aucune une ville au chapitre 1 (epic)
+- Ne se reposer dans aucune une ville au chapitre 2 (epic)
+- Ne se reposer dans aucune une ville au chapitre 3 (legendaire)
+- Ne se reposer dans aucune une ville au chapitre 4 (legendaire)
+- Finir un chapitre avec la famille Calsan au complet (legendaire)
+- Finir un chapitre avec la famille Torantor au complet (epic)
 
 ## Exemple de partie sans surpassement:
 Lors de mes tests, j'ai perdu a la derniere case du dernier chapitre.
@@ -518,9 +543,10 @@ https://squib.readthedocs.io/
 - [] @TODO: Un vent peut avoir une variation de +/- 1 c'est le nombre de des en + ou en - qui doivent etre lances pour le vent.
 - [] @TODO: Pour battre un vent, le joueur lance autant de d6 qu'il a de hordiers.
 - [] @TODO: Renommer les lieux comme les personnages ont ete renommes.
-- [] @TODO: (mettre a jour les chapitres avec les photos)
 - [] @TODO: faire un petit fascicule avec une histoire a lire. 
 - [] @TODO: Faire la carte de course et faire des cartes
+- [] @TODO: Faire un fichier word avec toutes les cartes pour de la revue QA des cartes et des erreurs
+- [] @TODO: Proposer un apprentissage en mode facile (BORD only) puis dire que l'on peut jouer en mode plus avance avrc
 
 [scenario1]: src/resources/readme/chapter1.md
 [Aberlaas]: src/resources/readme/aberlaas.png
@@ -537,21 +563,21 @@ https://squib.readthedocs.io/
 [pack]: src/resources/readme/022.Pack.Baramas.T2.21.png
 [croc]: src/resources/readme/050.Traine.Osuros.T3.49.png
 [formation]: src/resources/readme/formation.png
-[d6-incolore]: src/resources/readme/d6-white.png
-[d6-colore]: src/resources/readme/d6-green.png
+[d6-blanc]: src/resources/readme/d6-white.png
+[d6-vert]: src/resources/readme/d6-green.png
 [plateau]: src/resources/readme/chapitre1.png
-[chapitre1]: src/resources/readme/chapitre1.png
-[chapitre2]: src/resources/readme/chapitre2.png
-[chapitre3]: src/resources/readme/chapitre3.png
-[chapitre4]: src/resources/readme/chapitre4.png
+[chapitre1]: src/resources/readme/chapter1.webp
+[chapitre2]: src/resources/readme/chapter2.webp
+[chapitre3]: src/resources/readme/chapter3.webp
+[chapitre4]: src/resources/readme/chapter4.webp
 [tourfontaine]: src/resources/readme/tourfontaine.png
 # Regles abandonnees
 
 ## Regle additionnelle de deplacement
-Afin d'augmenter l'impacte du vent sur le deplacement, chaque chiffre de la tuile terrain possede une forme ; ils indiquent les vents locaux en bord de tuile. Les 1 et 4 sont des cercles, les 2 et 5 sont des triangles et les 6 et 3 sont des carres. Lors de votre progression, et pour chacune des 3 tuiles adjacentes dans le sens de progression; si la forme presente sur le bord votre tuile actuelle correspond a la forme du bord de la tuile adjacente, le vent aura un d6 colore supplementaire; le cas contraire, le vent a 1 d6 incolore.
-Dans le pire des cas, le vent aura donc 3 d6 colores en plus, un pour chaque forme dans le sens de progression.
+Afin d'augmenter l'impacte du vent sur le deplacement, chaque chiffre de la tuile terrain possede une forme ; ils indiquent les vents locaux en bord de tuile. Les 1 et 4 sont des cercles, les 2 et 5 sont des triangles et les 6 et 3 sont des carres. Lors de votre progression, et pour chacune des 3 tuiles adjacentes dans le sens de progression; si la forme presente sur le bord votre tuile actuelle correspond a la forme du bord de la tuile adjacente, le vent aura un d6 vert supplementaire; le cas contraire, le vent a 1 d6 blanc.
+Dans le pire des cas, le vent aura donc 3 d6 verts en plus, un pour chaque forme dans le sens de progression.
 
-Dans l'exemple ci-dessus, la tuile A n'a qu'une seule couleur commune avec ses *tuiles de contre* (tuiles B, C, et D): la valeur 5 qui joint A et B. Une Horde sur la tuile A qui souhaite avancer fera donc face a un vent avec 2 d6 incolores et 1 d6 colore.
+Dans l'exemple ci-dessus, la tuile A n'a qu'une seule couleur commune avec ses *tuiles de contre* (tuiles B, C, et D): la valeur 5 qui joint A et B. Une Horde sur la tuile A qui souhaite avancer fera donc face a un vent avec 2 d6 blancs et 1 d6 vert.
 
 ## Regles optionnelles sur le terrain:**
 Les chiffres indiques sur chaque tuile montrent dans quel sens le vent pousse la Horde. 
