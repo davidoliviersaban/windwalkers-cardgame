@@ -11,8 +11,9 @@ cut:
   height: 3.5in
   color: white
   radius: 25
-  stroke_color: red
+  stroke_color: "#00000000"
   fill_color: white
+  stroke_width: 0
 
 frame:
   extends: cut
@@ -21,6 +22,8 @@ frame:
   width: 2.25in
   height: 3.25in
   radius: 5
+  stroke_width: 0.5
+  stroke_color: black
 
 inside:
   extends: frame

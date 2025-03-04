@@ -1,0 +1,187 @@
+{
+  "title": "Windwalker - Chapter4",
+  "grid": [
+    {
+      "q": 10,
+      "r": 18,
+      "type": "building",
+      "name": "Alticcio",
+      "color": "#FF4500",
+      "img": "terrain/chapter.07.png"
+    },
+    {
+      "q": 9,
+      "r": 18,
+      "type": "building",
+      "name": "PorteDHurle",
+      "color": "#004500",
+      "img": "terrain/chapter.08.png"
+    },
+    {
+      "q": 8,
+      "r": 19,
+      "type": "terrain",
+      "name": "mountain",
+      "color": "#A0522D",
+      "img": "terrain/chapter1.12.png"
+    },
+    {
+      "q": 9,
+      "r": 17,
+      "type": "terrain",
+      "name": "mountain",
+      "color": "#A0522D",
+      "img": "terrain/chapter1.12.png"
+    },
+    {
+      "q": 10,
+      "r": 16,
+      "type": "terrain",
+      "name": "mountain",
+      "color": "#A0522D",
+      "img": "terrain/chapter1.12.png"
+    },
+    {
+      "q": 7,
+      "r": 19,
+      "type": "terrain",
+      "name": "swamp",
+      "icon": null,
+      "color": "#FFD700",
+      "img": "terrain/chapter4.21.png"
+    },
+    {
+      "q": 8,
+      "r": 18,
+      "type": "terrain",
+      "name": "swamp",
+      "icon": null,
+      "color": "#FFD700",
+      "img": "terrain/chapter4.21.png"
+    },
+    {
+      "q": 8,
+      "r": 17,
+      "type": "terrain",
+      "name": "swamp",
+      "icon": null,
+      "color": "#FFD700",
+      "img": "terrain/chapter4.21.png"
+    },
+    {
+      "q": 7,
+      "r": 17,
+      "type": "terrain",
+      "name": "swamp",
+      "icon": null,
+      "color": "#FFD700",
+      "img": "terrain/chapter4.21.png"
+    },
+    {
+      "q": 6,
+      "r": 18,
+      "type": "terrain",
+      "name": "swamp",
+      "icon": null,
+      "color": "#FFD700",
+      "img": "terrain/chapter4.21.png"
+    },
+    {
+      "q": 7,
+      "r": 16,
+      "type": "terrain",
+      "name": "swamp",
+      "icon": null,
+      "color": "#FFD700",
+      "img": "terrain/chapter4.21.png"
+    },
+    {
+      "q": 9,
+      "r": 16,
+      "type": "terrain",
+      "name": "swamp",
+      "icon": null,
+      "color": "#FFD700",
+      "img": "terrain/chapter4.21.png"
+    },
+    {
+      "q": 8,
+      "r": 16,
+      "type": "terrain",
+      "name": "forest",
+      "color": "#228B22",
+      "img": "terrain/chapter1.13.png"
+    },
+    {
+      "q": 6,
+      "r": 19,
+      "type": "terrain",
+      "name": "plain",
+      "icon": null,
+      "color": "#90EE90",
+      "img": "terrain/chapter1.14.png"
+    },
+    {
+      "q": 6,
+      "r": 17,
+      "type": "terrain",
+      "name": "plain",
+      "icon": null,
+      "color": "#90EE90",
+      "img": "terrain/chapter1.14.png"
+    },
+    {
+      "q": 10,
+      "r": 15,
+      "type": "terrain",
+      "name": "hut",
+      "color": "#FFD700",
+      "img": "terrain/chapter1.16.png"
+    },
+    {
+      "q": 5,
+      "r": 18,
+      "type": "building",
+      "name": "GreenVillage",
+      "color": "#00D7FF",
+      "img": "terrain/chapter.00.png"
+    },
+    {
+      "q": 6,
+      "r": 16,
+      "type": "terrain",
+      "name": "swamp",
+      "icon": null,
+      "color": "#FFD700",
+      "img": "terrain/chapter4.21.png"
+    },
+    {
+      "q": 6,
+      "r": 15,
+      "type": "building",
+      "name": "CampBoban",
+      "color": "#FF4500",
+      "img": "terrain/chapter.09.png"
+    },
+    {
+      "q": 8,
+      "r": 15,
+      "type": "terrain",
+      "name": "hut",
+      "color": "#FFD700",
+      "img": "terrain/chapter1.16.png"
+    },
+    {
+      "q": 7,
+      "r": 20,
+      "type": "terrain",
+      "name": "mountain",
+      "color": "#A0522D",
+      "img": "terrain/chapter1.12.png"
+    }
+  ],
+  "metadata": {
+    "createdAt": "2024-11-20T16:18:11.876Z",
+    "name": "Windwalker map"
+  }
+}

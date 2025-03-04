@@ -1,14 +1,14 @@
 bleed:
-    x: 35mm
-    y: 30.3mm #sqrt(3)*radius/2
+    x: 32mm
+    y: 29mm #sqrt(3)*radius/2
     n: 6
-    radius: 35mm
+    radius: 32mm
 #    stroke_color: '#000000'
 #    dash: '0.02in 0.02in'
 
 cut:
     extends: bleed
-    radius: 33mm
+    radius: 29mm
     stroke_color: red
     dash: ''
 
@@ -28,6 +28,11 @@ corner2:
 frame:
     extends: cut
 
+back:
+    extends: frame
+    stroke_width: 0
+    fill_color: '#00000000'
+    stroke_color: '#00000000'
 land:
     extends: frame
     stroke_width: 30
@@ -49,7 +54,7 @@ Image:
 
 Description:
     extends: frame
-    font: ChunkFive Roman,Bold 17
+    font: ChunkFive Roman,Bold 15
     x: -= 250
     y: += 80
     width: 500
@@ -60,107 +65,137 @@ Description:
     stroke_width: 3
     fill_color: '#ffffff'
 
-Terrain:
+LandText:
     extends: frame
     font: ChunkFive Roman,Bold 17
+    x: -= 90
+    y: -= 70
+    color: white
+    stroke_color: black
+    stroke_width: 3
+    fill_color: '#ffffff'
+Land:
+    extends: LandText
+    x: +=40
+    y: -=30
     width: 135
     height: :scale
     radius: 0
-    x: -= 60
-    y: -= 150
-    valign: middle
-    fill_color: '#ffffff55'
-    stroke_color: white
-    stroke_width: 2
+    # fill_color: '#ffffff55'
+    # stroke_color: white
+    # stroke_width: 2
 
-TerrainRGI1:
-    extends: Terrain
+LandBlack:
+    extends: Land
+    align: center
+    #color: green
+    y: -=140
+LandTextBlack:
+    extends: LandText
+    y: -=140
+LandWhite:
+    extends: Land
+    align: center
+    #color: green
+    y: -=70
+LandTextWhite:
+    extends: LandText
+    y: -=70
+LandGreen:
+    extends: Land
+    align: center
+    #color: green
+LandTextGreen:
+    extends: LandText
+
+LandRGI1:
+    extends: Land
     align: center
     color: red
     x: -=60
-TerrainRGI2:
-    extends: Terrain
+LandRGI2:
+    extends: Land
     align: center
     color: green
     x: +=75
-TerrainRGI3:
-    extends: Terrain
+LandRGI3:
+    extends: Land
     align: center
     color: yellow
     y: -= 80
-TerrainT1:
-    extends: Terrain
+LandT1:
+    extends: Land
     align: center
     color: black
     y: += 105
-TerrainT2:
-    extends: TerrainT1
+LandT2:
+    extends: LandT1
     x: += 125
-TerrainT3:
-    extends: TerrainT1
+LandT3:
+    extends: LandT1
     x: -= 120
                         
 
-Vent:
+Wind:
     extends: frame
     font: ChunkFive Roman,Bold 14
     align: right
     valign: bottom
     width: 10
-    height: 25mm  # used to compute the distance to the center of the tile
+    height: 22mm  # used to compute the distance to the center of the tile
     # the trick is to write the text at the bottom of the text box and rotate the text box
     radius: 30
     fill_color: '#ffffff60'
     stroke_color: white
     stroke_width: 3
 
-VentIcone:
-    extends: Vent
+WindIcon:
+    extends: Wind
     radius: 40
     stroke_width: += 2
 
-Vent1:
-    extends: Vent
-Vent1Icone:
-    extends: VentIcone
+Wind1:
+    extends: Wind
+Wind1Icon:
+    extends: WindIcon
     x: -= 0.5mm
-    y: += 22mm
+    y: += 19mm
 
-Vent2:
-    extends: Vent
-Vent2Icone:
-    extends: VentIcone
-    x: += 19mm
-    y: += 11.5mm
+Wind2:
+    extends: Wind
+Wind2Icon:
+    extends: WindIcon
+    x: += 16mm
+    y: += 9.5mm
     
-Vent3:
-    extends: Vent
-Vent3Icone:
-    extends: VentIcone
-    x: += 19.5mm
-    y: -= 11mm
+Wind3:
+    extends: Wind
+Wind3Icon:
+    extends: WindIcon
+    x: += 16.5mm
+    y: -= 9mm
     
-Vent4:
-    extends: Vent1
-Vent4Icone:
-    extends: VentIcone
+Wind4:
+    extends: Wind1
+Wind4Icon:
+    extends: WindIcon
     x: -= 0mm
-    y: -= 22mm
+    y: -= 19mm
 
 
-Vent5:
-    extends: Vent3
-Vent5Icone:
-    extends: VentIcone
-    x: -= 19mm
-    y: -= 11mm
+Wind5:
+    extends: Wind3
+Wind5Icon:
+    extends: WindIcon
+    x: -= 16.5mm
+    y: -= 10mm
     
-Vent6:
-    extends: Vent2
-Vent6Icone:
-    extends: VentIcone
-    x: -= 19.5mm
-    y: += 10.5mm
+Wind6:
+    extends: Wind2
+Wind6Icon:
+    extends: WindIcon
+    x: -= 17mm
+    y: += 9.5mm
 
 
 MoralText:
@@ -170,35 +205,51 @@ MoralIcon:
     extends: MoralText
     file: src/resources/helpers/moral.png
     x: += 225
-    y: -= 10
+    y: += 50
     width: 75
     height: :scale
 
-MoralNegatif1Icon:
+Sadness1Icon:
     extends: MoralIcon
     file: src/resources/helpers/moral-negatif.png
-MoralNegatif2Icon:
-    extends: MoralNegatif1Icon
+Sadness2Icon:
+    extends: Sadness1Icon
     x: += 100
-AbandonText:
-    extends: Description
-AbandonIcon:
-    extends: AbandonText
-    file: src/resources/helpers/abandon.png
-    x: += 150
-    width: 75
+
+HordersIcon:
+    extends: MoralIcon
+    x: += 100
+    y: -= 10
+    file: src/resources/helpers/rgb-card.png
+    width: 110
     height: :scale
 
-AbandonTourFontaineText:
-    extends: MoralText
-    x: += 60
-    color: red
-AbandonTourFontaineIcon:
-    extends: AbandonTourFontaineText
-    file: src/resources/helpers/abandon-inverted.png
-    x: += 150
-    width: 75
-    height: :scale
+RedHordersIcon:
+    extends: HordersIcon
+    file: src/resources/helpers/red-card.png
+    fill_color: '#ff0000'
+    stroke_color: '#ff0000'
+
+BlueHordersIcon:
+    extends: HordersIcon
+    file: src/resources/helpers/blue-card.png
+    fill_color: '#0000ff'
+    stroke_color: '#0000ff'
+
+GreenHordersIcon:
+    extends: HordersIcon
+    file: src/resources/helpers/green-card.png
+    fill_color: '#00ff00'
+    stroke_color: '#00ff00'
+
+DiscardHordersIcon:
+    extends: HordersIcon
+    file: src/resources/helpers/discard.png
+
+RestIcon:
+    extends: HordersIcon
+    file: src/resources/helpers/flip-card.png
+    x: -= 225
 
 Empty:
     width: 1

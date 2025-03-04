@@ -12,6 +12,12 @@ outputs/
 # My inspiration folder
 inspiration/
 ~$*.xlsx
+~$*.docx
 backup*/
 .vscode/
 .metals/
+
+# Too big files
+*.xcf
+src/resources/box/
+.gen_images/
