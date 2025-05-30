@@ -11,9 +11,9 @@ interface Asset {
 // this is a library of all the assets that can be placed on the grid
 
 const Assets: { [key: string]: Asset; empty: Asset } = {
-    empty: { type: '', name: 'empty', icon: null, color: '#eee', img: "" },
+    empty: { type: '', name: 'empty', icon: null, color: '#eee', img: '' },
     plain:  { type: 'terrain', name: 'plain', icon: null, color: '#90EE90',  img: 'terrain/chapter1.14.png' },
-    mountain:  { type: 'terrain', name: 'mountain', icon: IconComponents.Mountain ?? null, color: '#A0522D',  img: 'terrain/chapter1.12.png' },
+    mountain:  { type: 'terrain', name: 'mountain', icon: IconComponents.Mountain, color: '#A0522D',  img: 'terrain/chapter1.12.png' },
     forest:  { type: 'terrain', name: 'forest', icon: IconComponents.Tree, color: '#228B22',  img: 'terrain/chapter1.13.png' },
     water:  { type: 'terrain', name: 'water', icon: IconComponents.Water, color: '#4682B4',  img: 'terrain/chapter2.17.png' },
     hut: { type: 'terrain', name: 'hut', icon: IconComponents.Village, color: '#FFD700', img: 'terrain/chapter1.16.png' },
@@ -41,7 +41,7 @@ const Assets: { [key: string]: Asset; empty: Asset } = {
 
   const loadImageAssetsToSvg = (size: number) => {         
     return (<>
-      {Object.values(Assets).filter(asset => asset.img !== null).map(asset => (
+      {Object.values(Assets).filter(asset => asset.img !== "").map(asset => (
         <pattern 
           key={asset.name} 
           id={`pattern-image-${asset.name}`} 

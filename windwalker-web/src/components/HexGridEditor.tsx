@@ -8,9 +8,9 @@ import { Assets, loadImageAssetsToSvg } from '~/assets/assets';
 import type { Tile } from '~/models/Tile';
 import { createTile } from '~/models/Tile';
 import { useZoom } from '~/providers/ZoomProvider';
-import { Print } from './Print';
+import { Print}  from './Print';
 
-const HexGridEditor = () => {
+export default function HexGridEditor() {
   const { hexSize } = useZoom();
   const [dimensions] = useState({ width: 3000, height: 3000 });
     // const [viewportHexes, setViewportHexes] = useState([]);
@@ -74,7 +74,7 @@ const HexGridEditor = () => {
 
   const printMap = async () => {
     console.log('Printing:', title, grid);
-    await Print(title, grid);
+    await Print({ title, grid, selectedAsset });
   };
 
   const clearMap = () => {
@@ -158,4 +158,4 @@ const HexGridEditor = () => {
   );
 };
 
-export default HexGridEditor;
+// export default HexGridEditor;

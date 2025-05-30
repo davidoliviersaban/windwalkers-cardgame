@@ -1,6 +1,15 @@
 import { CanvasFromTiles } from "~/hex/CanvasFromTiles";
 import ImageFromCanvas from "~/assets/ImageFromCanvas";
 import { Tile } from "~/models/Tile";
+import type { Asset } from "~/assets/assets";
+
+interface PrintProps {
+  title: string;
+  grid: Tile[];
+  selectedAsset?: Asset;
+  width?: number;
+  height?: number;
+}
 
 const SIZE = 200;
 
@@ -21,32 +30,34 @@ const downloadImage = (blob: Blob, filename: string) => {
 /**
  * Exemple d'utilisation dans votre fonction Print
  */
-const Print = async (title: string, grid: Tile[]) => {
+const Print = async ({ title, grid, selectedAsset, width, height }: PrintProps) => {
   console.log('Printing:', title, grid);
   const printWindow = window.open('', '_blank');
   if (!printWindow) throw new Error('Cannot open print window');
 
-  const canvas = true;
-  let content = '';
-  if (canvas) {
-    const canvas = await CanvasFromTiles(grid, SIZE, title);
-    const image = ImageFromCanvas(canvas, 'image/webp', 1);
-    // retrieve blob from canvas
+  try {
+    const canvasElement = await CanvasFromTiles(grid, SIZE, title);
+    const image = ImageFromCanvas(canvasElement, 'image/webp', 1);
+    
     const blob = await new Promise<Blob>((resolve, reject) => {
-      canvas.toBlob((blob) => {
+      canvasElement.toBlob((blob) => {
         if (blob) resolve(blob);
         else reject(new Error('Canvas to Blob conversion failed'));
       }, 'image/webp', 1);
     });
+    
     downloadImage(blob, title + '.webp');
-    content = `<img src="${image}" />`;
+    const content = `<img src="${image}" />`;
+    printWindow.document.write(content);
+    printWindow.document.title = title;
+    printWindow.document.close();
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error during printing:', error);
+    printWindow.close();
+    throw error;
   }
-  printWindow.document.write(content, title);
-
-  printWindow.document.close();
-  printWindow.onload = () => {
-    // printWindow.print();
-  };
 };
 
 export { Print };

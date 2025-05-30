@@ -7,7 +7,7 @@ interface ToolBarProps {
   setSelectedAsset: (asset: Asset) => void;
 }
 
-const ToolBar: React.FC<ToolBarProps> = ({ selectedAsset, setSelectedAsset }) => {
+export const ToolBar: React.FC<ToolBarProps> = ({ selectedAsset, setSelectedAsset }) => {
       
   return (
     <div className="w-48 bg-gray-100 p-4 rounded">
@@ -71,4 +71,4 @@ const ToolBar: React.FC<ToolBarProps> = ({ selectedAsset, setSelectedAsset }) =>
   );
 };
 
-export { ToolBar };
+// export { ToolBar };

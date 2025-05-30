@@ -204,7 +204,7 @@ MoralText:
 MoralIcon:
     extends: MoralText
     file: src/resources/helpers/moral.png
-    x: += 225
+    x: += 220
     y: += 50
     width: 75
     height: :scale
@@ -218,38 +218,47 @@ Sadness2Icon:
 
 HordersIcon:
     extends: MoralIcon
-    x: += 100
+    x: -= 130
     y: -= 10
-    file: src/resources/helpers/rgb-card.png
+    file: src/resources/helpers/rgb-card2.png
     width: 110
     height: :scale
 
 RedHordersIcon:
     extends: HordersIcon
-    file: src/resources/helpers/red-card.png
+    file: src/resources/helpers/red-card2.png
     fill_color: '#ff0000'
     stroke_color: '#ff0000'
 
 BlueHordersIcon:
     extends: HordersIcon
-    file: src/resources/helpers/blue-card.png
+    file: src/resources/helpers/blue-card2.png
     fill_color: '#0000ff'
     stroke_color: '#0000ff'
 
 GreenHordersIcon:
     extends: HordersIcon
-    file: src/resources/helpers/green-card.png
+    file: src/resources/helpers/green-card2.png
     fill_color: '#00ff00'
     stroke_color: '#00ff00'
 
 DiscardHordersIcon:
     extends: HordersIcon
-    file: src/resources/helpers/discard.png
+    file: src/resources/helpers/tent-discard2.png
+    y: -= 40
+    width: 100
 
-RestIcon:
+RestAllIcon:
     extends: HordersIcon
-    file: src/resources/helpers/flip-card.png
-    x: -= 225
+    file: src/resources/helpers/tent-flip-all-cards2.png
+    x: += 200
+    y: -= 40
+    width: 100
+
+RestOneIcon:
+    extends: HordersIcon
+    file: src/resources/helpers/flip-card2.png
+    x: += 100
 
 Empty:
     width: 1

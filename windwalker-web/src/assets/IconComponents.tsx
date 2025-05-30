@@ -49,4 +49,4 @@ const IconComponents = {
     ),
   };
 
-  export {IconComponents};
+  export { IconComponents };

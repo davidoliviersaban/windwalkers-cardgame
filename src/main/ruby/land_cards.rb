@@ -61,7 +61,7 @@ def drawTile(deck, dirname)
     }
   end
 
-  %w(Rest Sadness1 Sadness2).each do |key|
+  %w(RestOne RestAll Sadness1 Sadness2).each do |key|
     png layout: deck[key].map { |c| 
       if (c == nil || c == 0)
         "Empty"

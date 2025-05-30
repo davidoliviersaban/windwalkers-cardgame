@@ -12,7 +12,7 @@ interface NavBarProps {
   onClear: () => void;
 }
 
-const NavBar = ({ title, onTitleChange, onSave, onLoad, onPrint, onClear } : NavBarProps) => {
+export const NavBar = ({ title, onTitleChange, onSave, onLoad, onPrint, onClear } : NavBarProps) => {
   const { zoomIn, zoomOut, zoomIndex, zoom } = useZoom();
 
   return (
@@ -49,4 +49,4 @@ const NavBar = ({ title, onTitleChange, onSave, onLoad, onPrint, onClear } : Nav
   );
 };
 
-export { NavBar };
+// export { NavBar };
