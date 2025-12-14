@@ -59,78 +59,160 @@ def drawTile(deck, dirname)
     text str: deck[key], layout: "LandText"+key.to_s
   end
 
-  # Affichage du Moral avec une seule icône et le nombre (+1)
-  %w(Moral).each do |key|
-    png layout: deck[key].map { |c| 
-      if (c == nil || c == 0)
-        "Empty"
-      else
-        key+"Icon"
-      end
-    }
-    # Affiche la valeur du moral (+1) à côté de l'icône
-    text str: deck[key].map { |c|
-      if (c == nil || c == 0)
-        ""
-      else
-        "+#{c}"
-      end
-    }, layout: "MoralValue"
-  end
-
-  # Affichage de la Tristesse avec une seule icône et le nombre (-1 ou -2)
-  # On combine Sadness1 et Sadness2 en une seule icône avec la valeur totale
-  sadness_values = deck["Sadness1"].zip(deck["Sadness2"]).map { |s1, s2|
-    total = (s1.to_i || 0) + (s2.to_i || 0)
-    total > 0 ? total : nil
-  }
-  
-  png layout: sadness_values.map { |c|
-    if (c == nil || c == 0)
+  # Affichage du Moral avec une seule icône et le nombre (+1 ou -2)
+  png layout: deck["Moral"].map { |c| 
+    if (c == nil || c.to_s.empty? || c.to_i == 0)
       "Empty"
     else
-      "Sadness1Icon"
+      "MoralIcon"
     end
   }
-  
-  text str: sadness_values.map { |c|
-    if (c == nil || c == 0)
+  # Affiche la valeur du moral avec son signe (style différent si négatif)
+  text str: deck["Moral"].map { |c|
+    if (c == nil || c.to_s.empty? || c.to_i == 0)
+      ""
+    elsif (c.to_i > 0)
+      "+#{c.to_i}"
+    else
+      "#{c.to_i}"
+    end
+  }, layout: deck["Moral"].map { |c|
+    if (c == nil || c.to_s.empty? || c.to_i == 0)
+      "Empty"
+    elsif (c.to_i < 0)
+      "MoralValueNegative"
+    else
+      "MoralValue"
+    end
+  }
+
+  # Affichage Recruit (recrutement)
+  png layout: deck["Recruit"].map { |c|
+    if (c == nil || c.to_s.empty?)
+      "Empty"
+    elsif (c == "RGB")
+      "RecruitIcon"
+    else
+      c+"RecruitIcon"
+    end
+  }
+
+  # Affichage FreeRest (flip one gratuit)
+  png layout: deck["FreeRest"].map { |c|
+    if (c == nil || c.to_s.empty? || c.to_s != 'One')
+      "Empty"
+    else
+      "FreeRestIcon"
+    end
+  }
+
+  # === ZONE DE REPOS ===
+  # Affiche le fond si OnRest n'est pas vide
+  rect layout: deck["OnRest"].map { |c|
+    if (c == nil || c.to_s.empty?)
+      "Empty"
+    else
+      "RestZoneBackground"
+    end
+  }
+
+  # Affiche l'icône tente
+  png layout: deck["OnRest"].map { |c|
+    if (c == nil || c.to_s.empty?)
+      "Empty"
+    else
+      "RestTentIcon"
+    end
+  }
+
+  # Affiche la flèche →
+  text str: deck["OnRest"].map { |c|
+    if (c == nil || c.to_s.empty?)
       ""
     else
-      "-#{c}"
+      "▶"
     end
-  }, layout: "SadnessValue"
+  }, layout: deck["OnRest"].map { |c|
+    if (c == nil || c.to_s.empty?)
+      "Empty"
+    else
+      "RestArrow"
+    end
+  }
 
-  # Icônes RestOne et RestAll
-  %w(RestOne RestAll).each do |key|
-    png layout: deck[key].map { |c| 
-      if (c == nil || c == 0)
-        "Empty"
+  # Affiche les effets du repos (position 1)
+  png layout: deck["OnRest"].map { |c|
+    if (c == nil || c.to_s.empty?)
+      "Empty"
+    else
+      effects = c.to_s.split("+")
+      if effects[0] == "One"
+        "RestEffect1Icon"  # flip-card en position 1
+      elsif effects[0] == "All"
+        "RestAllPos1Icon"  # flip-all-cards en position 1
+      elsif effects[0] == "Discard"
+        "RestEffect3Icon"  # discard en position 1
       else
-        key+"Icon"
+        "Empty"
       end
-    }
-  end
+    end
+  }, file: deck["OnRest"].map { |c|
+    if (c == nil || c.to_s.empty?)
+      "src/resources/helpers/d6-empty.png"
+    else
+      effects = c.to_s.split("+")
+      if effects[0] == "One"
+        "src/resources/helpers/flip-card2.png"
+      elsif effects[0] == "All"
+        "src/resources/helpers/flip-all-cards2.png"
+      elsif effects[0] == "Discard"
+        "src/resources/helpers/discard2.png"
+      else
+        "src/resources/helpers/d6-empty.png"
+      end
+    end
+  }
 
-  %w(Horders).each do |key|
-    png layout: deck[key].map { |c|
-      if (c == nil || c == 0)
-        "Empty"
-      elsif (c == "RGB")
-        "HordersIcon"
+  # Affiche les effets du repos (position 2 si +)
+  png layout: deck["OnRest"].map { |c|
+    if (c == nil || c.to_s.empty?)
+      "Empty"
+    else
+      effects = c.to_s.split("+")
+      if effects.length > 1
+        "RestEffect2Icon"
       else
-        c+key+"Icon"
+        "Empty"
       end
-    }
-  end
+    end
+  }, file: deck["OnRest"].map { |c|
+    if (c == nil || c.to_s.empty?)
+      "src/resources/helpers/d6-empty.png"
+    else
+      effects = c.to_s.split("+")
+      if effects.length > 1
+        if effects[1] == "One"
+          "src/resources/helpers/flip-card2.png"
+        elsif effects[1] == "All"
+          "src/resources/helpers/flip-all-cards2.png"
+        elsif effects[1] == "Discard"
+          "src/resources/helpers/discard2.png"
+        else
+          "src/resources/helpers/d6-empty.png"
+        end
+      else
+        "src/resources/helpers/d6-empty.png"
+      end
+    end
+  }
 
 
   # Fond noir semi-transparent sous les descriptions
-  rect layout: "DescriptionBackground"
+  # rect layout: "DescriptionBackground"
 
-  %w(Description).each do |key|
-    text str: deck[key], layout: key
-  end
+  # %w(Description).each do |key|
+  #   text str: deck[key], layout: key
+  # end
 
   polygon layout: deck["Type"]
 #  polygon layout: :cut

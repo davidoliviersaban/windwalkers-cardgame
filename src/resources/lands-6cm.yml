@@ -101,13 +101,20 @@ LandBadgeBackground:
     fill_color: '#00000080'
     stroke_width: 0
 
-# === BADGES - Groupes positionnés sur le bord gauche ===
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                     ZONE DES DÉS (D6)                            ║
+# ║  Badges sur le bord gauche à 60° : VERT, BLANC/GRIS, NOIR        ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
+# Position de base pour la zone des dés (angle haut-gauche)
+DiceZoneBase:
+    extends: frame
+    x: -= 220
+    y: -= 260
 
 # ---- BADGE VERT (en haut) ----
 LandGreenBase:
-    extends: frame
-    x: -=220
-    y: -=260
+    extends: DiceZoneBase
 LandGreenBackground:
     extends: LandGreenBase
     x: -= 20
@@ -138,9 +145,9 @@ LandTextGreen:
 
 # ---- BADGE GRIS/WHITE (au milieu) ----
 LandWhiteBase:
-    extends: frame
-    x: -=260
-    y: -=190
+    extends: DiceZoneBase
+    x: -= 40
+    y: += 70
 LandWhiteBackground:
     extends: LandWhiteBase
     x: -= 20
@@ -171,9 +178,9 @@ LandTextWhite:
 
 # ---- BADGE NOIR (en bas) ----
 LandBlackBase:
-    extends: frame
-    x: -=300
-    y: -=120
+    extends: DiceZoneBase
+    x: -= 80
+    y: += 140
 LandBlackBackground:
     extends: LandBlackBase
     x: -= 20
@@ -292,91 +299,159 @@ Wind6Icon:
     y: += 9.5mm
 
 
-MoralText:
-    extends: Description
-    y: += 65
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                   ZONE PERMANENTE (Effets d'entrée)              ║
+# ║  Recrutement, moral - au centre de la tuile                      ║
+# ╚══════════════════════════════════════════════════════════════════╝
 
-# Icône moral simplifiée avec texte (+1 ou -2) à côté de l'icône
-MoralIcon:
-    extends: MoralText
-    file: src/resources/helpers/moral.png
-    x: += 180
-    y: += 50
-    width: 75
-    height: :scale
-
-# Texte du moral (valeur +1 ou -2) positionné à gauche de l'icône
-MoralValue:
-    extends: MoralText
-    font: ChunkFive Roman,Bold 20
-    x: += 100
-    y: += 45
-    width: 100
-    height: 80
-    align: right
-    color: white
-    stroke_color: black
-    stroke_width: 3
-
-# Icône pour le moral négatif (tristesse) - une seule icône
-Sadness1Icon:
-    extends: MoralIcon
-    file: src/resources/helpers/moral-negatif.png
-
-# Texte pour le moral négatif
-SadnessValue:
-    extends: MoralValue
-    x: += 100
-    y: += 45
-
-# Ancienne définition gardée pour compatibilité mais repositionnée avec la nouvelle
-Sadness2Icon:
-    extends: Sadness1Icon
+# Position de base pour la zone permanente (centre de la tuile)
+PermanentZoneBase:
+    extends: frame
     x: += 0
+    y: += 85
 
-HordersIcon:
-    extends: MoralIcon
-    x: -= 130
-    y: -= 10
+# Icône de recrutement (Recruit)
+RecruitIcon:
+    extends: PermanentZoneBase
     file: src/resources/helpers/rgb-card2.png
-    width: 110
+    x: += 100
+    width: 100
     height: :scale
 
-RedHordersIcon:
-    extends: HordersIcon
+RedRecruitIcon:
+    extends: RecruitIcon
     file: src/resources/helpers/red-card2.png
     fill_color: '#ff0000'
     stroke_color: '#ff0000'
 
-BlueHordersIcon:
-    extends: HordersIcon
+BlueRecruitIcon:
+    extends: RecruitIcon
     file: src/resources/helpers/blue-card2.png
     fill_color: '#0000ff'
     stroke_color: '#0000ff'
 
-GreenHordersIcon:
-    extends: HordersIcon
+GreenRecruitIcon:
+    extends: RecruitIcon
     file: src/resources/helpers/green-card2.png
     fill_color: '#00ff00'
     stroke_color: '#00ff00'
 
-DiscardHordersIcon:
-    extends: HordersIcon
-    file: src/resources/helpers/tent-discard2.png
-    y: -= 40
-    width: 100
-
-RestAllIcon:
-    extends: HordersIcon
-    file: src/resources/helpers/tent-flip-all-cards2.png
-    x: += 200
-    y: -= 40
-    width: 100
-
-RestOneIcon:
-    extends: HordersIcon
+# Icône FreeRest (flip one gratuit) - à droite du Recruit
+FreeRestIcon:
+    extends: PermanentZoneBase
     file: src/resources/helpers/flip-card2.png
-    x: += 100
+    x: -= 30
+    width: :scale
+    height: 100
+
+# Icône moral (dans la zone permanente, à gauche de la tuile)
+MoralIcon:
+    extends: PermanentZoneBase
+    file: src/resources/helpers/moral.png
+    x: -= 120
+    width: 60
+    height: :scale
+
+# Texte du moral (valeur +1 ou -2)
+MoralValue:
+    extends: PermanentZoneBase
+    font: ChunkFive Roman,Bold 14
+    x: -= 200
+    y: += 10
+    width: 80
+    height: 80
+    align: right
+    valign: middle
+    color: white
+    stroke_color: black
+    stroke_width: 2
+
+# Texte du moral négatif (noir sur blanc)
+MoralValueNegative:
+    extends: MoralValue
+    color: black
+    stroke_color: white
+
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                      ZONE DE REPOS                               ║
+# ║  Tente → effet(s) - en bas de la tuile                           ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
+# Position de base pour la zone de repos
+RestZoneBase:
+    extends: frame
+    x: -= 80
+    y: += 220
+
+# Fond semi-transparent pour la zone de repos
+RestZoneBackground:
+    extends: RestZoneBase
+    x: -= 100
+    y: -= 30
+    width: 360
+    height: 100
+    radius: 10
+    fill_color: '#00000060'
+    stroke_width: 0
+
+# Icône tente (indique qu'on peut se reposer)
+RestTentIcon:
+    extends: RestZoneBase
+    file: src/resources/helpers/tent.png
+    x: -= 90
+    y: -= 20
+    width: 100
+    height: :scale
+
+# Triangle/flèche vers la droite
+RestArrow:
+    extends: RestZoneBase
+    font: ChunkFive Roman,Bold 10
+    color: white
+    stroke_color: black
+    stroke_width: 1
+    x: += 20
+    y: -= 25
+    width: 60
+    height: 90
+    valign: middle
+    align: center
+
+# Icône effet 1 du repos - position 1 (flip une carte)
+RestEffect1Icon:
+    extends: RestZoneBase
+    file: src/resources/helpers/flip-card2.png
+    x: += 70
+    y: -= 20
+    width: 100
+    height: :scale
+
+# Icône effet "All" en position 1 (pour villages qui ont juste "All")
+RestAllPos1Icon:
+    extends: RestZoneBase
+    file: src/resources/helpers/flip-all-cards2.png
+    x: += 70
+    y: -= 20
+    width: 100
+    height: :scale
+
+# Icône effet 2 du repos - position 2 (flip toutes les cartes)
+RestEffect2Icon:
+    extends: RestZoneBase
+    file: src/resources/helpers/flip-all-cards2.png
+    x: += 160
+    y: -= 20
+    width: 100
+    height: :scale
+
+# Icône effet 3 du repos - position 1 (Discard)
+RestEffect3Icon:
+    extends: RestZoneBase
+    file: src/resources/helpers/discard2.png
+    x: += 70
+    y: -= 10
+    width: 80
+    height: :scale
 
 Empty:
     width: 1

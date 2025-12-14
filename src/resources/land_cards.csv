@@ -1,26 +1,26 @@
-Chapter,Type,Description,Image,White,Green,Black,T1,T2,T3,T4,Moral,Sadness1,Sadness2,Wind1,Wind2,Wind3,Wind4,Wind5,Wind6,Horders,RestOne,RestAll
-chapter,village,Village Vert,village/green_midjourney2.png,6,,,,,,,,,,,,,,,,Green,1,1
-chapter,village,Village Bleu,village/blue_midjourney.png,6,,,,,,,,,,,,,,,,Blue,1,1
-chapter,village,Village Rouge,village/red_midjourney2.png,6,,,,,,,,,,,,,,,,Red,1,1
-chapter,city,Aberlaas,city/aberlaas_midjourney2.png,,,,,,,,1,,,,,,,,,RGB,,1
-chapter,city,Port-Choon,city/portchoon_midjourney2.png,,,,,,,,1,,,,,,,,,RGB,,1
-chapter,place,Tour Fontaine,place/tourfontaine_midjourney.png,6,,,,,,,,,,,,,,,,Discard,,1
-chapter,city,Chawondasee,city/chawondasee_midjourney2.png,,,,,,,,1,,,,,,,,,RGB,,1
-chapter,city,Alticcio,city/alticcio_midjourney2.png,,,,,,,,1,,,,,,,,,RGB,,1
-chapter,place,Porte d'Hurle,place/portedhurle_midjourney.png,,,6,,,,,,,,,,,,
-chapter,city,Camp Boban,city/campboban_midjourney2.png,,,,,,,,1,,,,,,,,,RGB,,1
-chapter,village,Village,village/protected_midjourney.png,6,,,,,,,,,,,,,,,,,1,1
-chapter,city,,compass.png,,,,,,,,,,,1,2,3,4,5,6,,
-chapter1,land,,mountain_midjourney3.png,3,3,,,,,,,,,,,,,,,,
-chapter1,land,,forest_midjourney3.png,4,2,,,,,,,,,,,,,,,,
-chapter1,land,,steppe_midjourney2.png,5,1,,,,,,,,,,,,,,,,
-chapter1,land,,steppe_midjourney2.png,5,1,,,,,,,,,,,,,,,,
-chapter1,land,,hills_midjourney3.png,6,,,,,,,1,,,,,,,,,,
-chapter2,land,,water_midjourney3.png,6,,2,,,,,,,,,,,,,,,
-chapter2,land,,water_midjourney3.png,6,,2,,,,,,,,,,,,,,,
-chapter3,land,,desert_midjourney3.png,5,1,,,,,,,1,1,,,,,,,,
-chapter3,land,,desert_midjourney3.png,5,1,,,,,,,1,1,,,,,,,,
-chapter4,land,,swamp_midjourney3.png,4,2,1,,,,,,1,,,,,,,,,
-chapter4,land,,swamp_midjourney3.png,4,2,1,,,,,,1,,,,,,,,,
-chapter5,land,,nordska_midjourney.png,4,3,3,,,,,,1,1,,,,,,,,
-back,back,,back_dalle1.png,,,,,,,,,,,,,,,,,,,,
+Chapter,Type,Description,Image,White,Green,Black,Moral,Recruit,FreeRest,OnRest,Wind1,Wind2,Wind3,Wind4,Wind5,Wind6
+chapter,village,Village Vert,village/green_midjourney2.png,6,,,,Green,One,All,,,,,,
+chapter,village,Village Bleu,village/blue_midjourney.png,6,,,,Blue,One,All,,,,,,
+chapter,village,Village Rouge,village/red_midjourney2.png,6,,,,Red,One,All,,,,,,
+chapter,city,Aberlaas,city/aberlaas_midjourney2.png,,,,1,RGB,One,All,,,,,,
+chapter,city,Port-Choon,city/portchoon_midjourney2.png,,,,1,RGB,One,All,,,,,,
+chapter,city,Chawondasee,city/chawondasee_midjourney2.png,,,,1,RGB,One,All,,,,,,
+chapter,city,Alticcio,city/alticcio_midjourney2.png,,,,1,RGB,One,All,,,,,,
+chapter,city,Camp Boban,city/campboban_midjourney2.png,,,,1,RGB,One,All,,,,,,
+chapter,place,Tour Fontaine,place/tourfontaine_midjourney.png,6,,,,,,Discard+All,,,,,,
+chapter,place,Porte d'Hurle,place/portedhurle_midjourney.png,,,6,,,,,,,,,
+chapter,village,Village,village/protected_midjourney.png,6,,,,,One,All,,,,,,
+chapter1,land,,mountain_midjourney3.png,3,3,,,,,One,,,,,,
+chapter1,land,,forest_midjourney3.png,4,2,,,,,One,,,,,,
+chapter1,land,,steppe_midjourney2.png,5,1,,,,,One,,,,,,
+chapter1,land,,steppe_midjourney2.png,5,1,,,,,One,,,,,,
+chapter1,land,,hills_midjourney3.png,6,,,1,,,One,,,,,,
+chapter2,land,,water_midjourney3.png,6,,2,,,,One,,,,,,
+chapter2,land,,water_midjourney3.png,6,,2,,,,One,,,,,,
+chapter3,land,,desert_midjourney3.png,5,1,,-2,,,One,,,,,,
+chapter3,land,,desert_midjourney3.png,5,1,,-2,,,One,,,,,,
+chapter4,land,,swamp_midjourney3.png,4,2,1,-1,,,One,,,,,,
+chapter4,land,,swamp_midjourney3.png,4,2,1,-1,,,One,,,,,,
+chapter5,land,,nordska_midjourney.png,4,3,3,-2,,,One,,,,,,
+chapter,city,,compass.png,,,,,,,,1,2,3,4,5,6
+back,back,,back_dalle1.png,,,,,,,,,,,,,
