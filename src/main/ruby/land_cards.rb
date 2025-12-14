@@ -31,6 +31,15 @@ def drawTile(deck, dirname)
   end
 
   %w(Black White Green).each do |key|
+    # Dessine le bandeau sombre derrière le badge si le dé existe
+    rect layout: deck[key].map { |c|
+      if (c == nil)
+        "Empty"
+      else
+        "Land"+key+"Background"
+      end
+    }
+    # Dessine l'icône du dé
     png layout: "Land"+key, file: deck[key].map{ |c| 
       if (c == nil)
         "src/resources/helpers/d6-empty.png"
@@ -46,11 +55,11 @@ def drawTile(deck, dirname)
         "src/resources/helpers/d6-empty.png"
       end
       }
-    # if (deck[key] != nil && deck[key] != 0)
-      text str: deck[key], layout: "LandText"+key.to_s
-    # end
+    # Dessine le texte à droite du dé
+    text str: deck[key], layout: "LandText"+key.to_s
   end
 
+  # Affichage du Moral avec une seule icône et le nombre (+1)
   %w(Moral).each do |key|
     png layout: deck[key].map { |c| 
       if (c == nil || c == 0)
@@ -59,9 +68,41 @@ def drawTile(deck, dirname)
         key+"Icon"
       end
     }
+    # Affiche la valeur du moral (+1) à côté de l'icône
+    text str: deck[key].map { |c|
+      if (c == nil || c == 0)
+        ""
+      else
+        "+#{c}"
+      end
+    }, layout: "MoralValue"
   end
 
-  %w(RestOne RestAll Sadness1 Sadness2).each do |key|
+  # Affichage de la Tristesse avec une seule icône et le nombre (-1 ou -2)
+  # On combine Sadness1 et Sadness2 en une seule icône avec la valeur totale
+  sadness_values = deck["Sadness1"].zip(deck["Sadness2"]).map { |s1, s2|
+    total = (s1.to_i || 0) + (s2.to_i || 0)
+    total > 0 ? total : nil
+  }
+  
+  png layout: sadness_values.map { |c|
+    if (c == nil || c == 0)
+      "Empty"
+    else
+      "Sadness1Icon"
+    end
+  }
+  
+  text str: sadness_values.map { |c|
+    if (c == nil || c == 0)
+      ""
+    else
+      "-#{c}"
+    end
+  }, layout: "SadnessValue"
+
+  # Icônes RestOne et RestAll
+  %w(RestOne RestAll).each do |key|
     png layout: deck[key].map { |c| 
       if (c == nil || c == 0)
         "Empty"
@@ -83,6 +124,9 @@ def drawTile(deck, dirname)
     }
   end
 
+
+  # Fond noir semi-transparent sous les descriptions
+  rect layout: "DescriptionBackground"
 
   %w(Description).each do |key|
     text str: deck[key], layout: key
