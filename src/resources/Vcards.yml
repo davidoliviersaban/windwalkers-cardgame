@@ -1,24 +1,30 @@
-Nom:
-  extends: inside
-  x: += 10
-  y: += 10
-  width: 500
-  height: 50
-  font: ChunkFive Roman,Bold 10
-  color: '#232F23'
-  valign: top
-  align: left
-
+# Zone sous le nom (opaque)
 TopLayer:
   extends: inside
   height: 100
   stroke_color: '#0000'
   radius: 0
 
-BottomLayer:
+Nom:
   extends: TopLayer
-  y: += 560
-  height: 150
+  x: += 10
+  y: += 10
+  width: 650
+  height: 40
+  font: ChunkFive Roman,Bold 12
+  color: '#232F23'
+  valign: middle
+  align: left
+
+
+# Zone pour pouvoirs et description (blanc)
+BottomLayer:
+  extends: inside
+  y: += 670
+  height: 305
+  fill_color: '#ffffff'
+  stroke_color: '#0000'
+  radius: 0
 
 
 Image:
@@ -29,21 +35,36 @@ Image:
   #  height: 450
   height: 675
 
-Fonction:
+# Ligne sous le nom : Position | Fonction
+# Position de base pour cette ligne
+SousNomBase:
   extends: Nom
   y: += 50
-  width: 500
-  height: 50
-  font: ChunkFive Roman,Italic 8
-  align: left
+  height: 40
+  font: ChunkFive Roman,Sans 8
+  color: '#232F23'
+  valign: top
 
-Position:
-  extends: Nom
-  x: += 500
+# Traceur (plus utilisé pour le texte, remplacé par icône)
+Traceur:
+  extends: SousNomBase
+  x: += 10
   width: 150
-  height: 50
-  font: ChunkFive Roman,Sans 10
-  align: right
+  font: ChunkFive Roman,Bold 8
+
+# Position (FER, PACK, TRAINE - à gauche maintenant)
+Position:
+  extends: SousNomBase
+  x: += 10
+  width: 130
+  font: ChunkFive Roman,Sans 8
+
+# Fonction/Métier (italique, plus de place après Position)
+Fonction:
+  extends: SousNomBase
+  x: += 145
+  width: 520
+  font: ChunkFive Roman,Italic 8
 
 Empty:
   width: 1
@@ -74,17 +95,17 @@ ConsommableIcon:
   extends: Empty
 
 TraceurIcon:
-  extends: Position
-  file: src/resources/helpers/traceur.png
-  x: += 110
-  y: += 40
-  width: 50
+  extends: inside
+  file: src/resources/helpers/poing.png
+  x: += 620
+  y: += 580
+  width: 40
   height: :scale
 
 TierIcon:
-  extends: Position
-  x: += 60
-  y: += 40
+  extends: Pouvoir_Actif
+  x: += 300
+  y: -= 25
   width: 50
   height: :scale
 
@@ -101,19 +122,23 @@ T3Icon:
   file: src/resources/helpers/tier3.png
 
 ExtensionIcon:
-  extends: TraceurIcon
-  y: += 872
+  extends: inside
+  file: src/resources/helpers/d6-empty.png
+  x: += 620
+  y: += 930
+  width: 40
+  height: :scale
 
 
 Pouvoir_Actif:
   extends: inside
   x: += 10
-  #  y: += 560
-  y: += 770
+  y: += 680
   width: 650
   height: 200
   font: ChunkFive Roman,Sans 9
   valign: middle
+  markup: true
 
 Pouvoir_Passif:
   #  extends: Position
@@ -129,3 +154,25 @@ Description:
   y: -= 90
   font: ChunkFive Roman,Sans 7
   valign: top
+
+# Ligne de séparation au-dessus du texte historique
+FlavourSeparator:
+  extends: inside
+  x: += 50
+  y: += 860
+  width: 575
+  height: 1
+  fill_color: '#00000060'
+  stroke_width: 0
+
+# Texte historique en bas de la carte (style Lorcana)
+FlavourText:
+  extends: inside
+  x: += 30
+  y: += 870
+  width: 615
+  height: 100
+  font: ChunkFive Roman,Italic 7
+  color: '#333333'
+  valign: bottom
+  align: center
