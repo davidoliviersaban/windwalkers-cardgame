@@ -1,7 +1,7 @@
 Chapter,Type,Description,Image,White,Green,Black,Moral,Recruit,FreeRest,OnRest,Wind1,Wind2,Wind3,Wind4,Wind5,Wind6
-chapter,village,Village Vert,village/green_midjourney2.png,6,,,,Green,One,All,,,,,,
-chapter,village,Village Bleu,village/blue_midjourney.png,6,,,,Blue,One,All,,,,,,
-chapter,village,Village Rouge,village/red_midjourney2.png,6,,,,Red,One,All,,,,,,
+chapter,village,Village,village/green_midjourney2.png,6,,,,Green,One,All,,,,,,
+chapter,village,Village,village/blue_midjourney.png,6,,,,Blue,One,All,,,,,,
+chapter,village,Village,village/red_midjourney2.png,6,,,,Red,One,All,,,,,,
 chapter,city,Aberlaas,city/aberlaas_midjourney2.png,,,,1,RGB,One,All,,,,,,
 chapter,city,Port-Choon,city/portchoon_midjourney2.png,,,,1,RGB,One,All,,,,,,
 chapter,city,Chawondasee,city/chawondasee_midjourney2.png,,,,1,RGB,One,All,,,,,,

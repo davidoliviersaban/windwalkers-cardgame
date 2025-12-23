@@ -2,33 +2,7 @@ require 'squib'
 
 deck = Squib.csv file: 'src/resources/land_cards.csv'
 
-
-def drawTile(deck, dirname)
-  png file: deck["Image"].map { |img| 
-    if (img == nil) 
-      "src/resources/terrain/city/_aberlaas.png" 
-    else 
-      "src/resources/terrain/"+img
-    end
-  }, layout: "Image"
-  
-  # Position of corner to lasercut the tiles
-  line layout: :corner1
-  line layout: :corner2
-
-  %w(1 2 3 4 5 6).each do |key|
-    polygon layout: deck["Wind"+key.to_s].map{ |c| 
-    if (c == nil)
-      "Empty"
-    else
-      "Wind"+c.to_s+"Icon"
-    end
-    } , n: 24, angle: (key.to_i-1)*3.14159/3
-  end
-  
-  %w(1 2 3 4 5 6).each do |key|
-    text str: deck["Wind"+key.to_s], layout: "Wind"+key.to_s, angle: -(key.to_i-1)*3.14159/3
-  end
+def drawChallenge(deck, dirname)
 
   %w(Black White Green).each do |key|
     # Dessine le bandeau sombre derrière le badge si le dé existe
@@ -58,55 +32,25 @@ def drawTile(deck, dirname)
     # Dessine le texte à droite du dé
     text str: deck[key], layout: "LandText"+key.to_s
   end
+end
 
-  # Affichage du Moral avec une seule icône et le nombre (+1 ou -2)
-  png layout: deck["Moral"].map { |c| 
-    if (c == nil || c.to_s.empty? || c.to_i == 0)
+def drawWinds(deck, dirname)
+  %w(1 2 3 4 5 6).each do |key|
+    polygon layout: deck["Wind"+key.to_s].map{ |c| 
+    if (c == nil)
       "Empty"
     else
-      "MoralIcon"
+      "Wind"+c.to_s+"Icon"
     end
-  }
-  # Affiche la valeur du moral avec son signe (style différent si négatif)
-  text str: deck["Moral"].map { |c|
-    if (c == nil || c.to_s.empty? || c.to_i == 0)
-      ""
-    elsif (c.to_i > 0)
-      "+#{c.to_i}"
-    else
-      "#{c.to_i}"
-    end
-  }, layout: deck["Moral"].map { |c|
-    if (c == nil || c.to_s.empty? || c.to_i == 0)
-      "Empty"
-    elsif (c.to_i < 0)
-      "MoralValueNegative"
-    else
-      "MoralValue"
-    end
-  }
+    } , n: 24, angle: (key.to_i-1)*3.14159/3
+  end
+  
+  %w(1 2 3 4 5 6).each do |key|
+    text str: deck["Wind"+key.to_s], layout: "Wind"+key.to_s, angle: -(key.to_i-1)*3.14159/3
+  end
+end
 
-  # Affichage Recruit (recrutement)
-  png layout: deck["Recruit"].map { |c|
-    if (c == nil || c.to_s.empty?)
-      "Empty"
-    elsif (c == "RGB")
-      "RecruitIcon"
-    else
-      c+"RecruitIcon"
-    end
-  }
-
-  # Affichage FreeRest (flip one gratuit)
-  png layout: deck["FreeRest"].map { |c|
-    if (c == nil || c.to_s.empty? || c.to_s != 'One')
-      "Empty"
-    else
-      "FreeRestIcon"
-    end
-  }
-
-  # === ZONE DE REPOS ===
+def drawRestZone(deck, dirname)
   # Affiche le fond si OnRest n'est pas vide
   rect layout: deck["OnRest"].map { |c|
     if (c == nil || c.to_s.empty?)
@@ -162,11 +106,11 @@ def drawTile(deck, dirname)
     else
       effects = c.to_s.split("+")
       if effects[0] == "One"
-        "src/resources/helpers/flip-card2.png"
+        "src/resources/helpers/flip-card.png"
       elsif effects[0] == "All"
         "src/resources/helpers/flip-all-cards2.png"
       elsif effects[0] == "Discard"
-        "src/resources/helpers/discard2.png"
+        "src/resources/helpers/discard.png"
       else
         "src/resources/helpers/d6-empty.png"
       end
@@ -192,11 +136,11 @@ def drawTile(deck, dirname)
       effects = c.to_s.split("+")
       if effects.length > 1
         if effects[1] == "One"
-          "src/resources/helpers/flip-card2.png"
+          "src/resources/helpers/flip-card.png"
         elsif effects[1] == "All"
           "src/resources/helpers/flip-all-cards2.png"
         elsif effects[1] == "Discard"
-          "src/resources/helpers/discard2.png"
+          "src/resources/helpers/discard.png"
         else
           "src/resources/helpers/d6-empty.png"
         end
@@ -205,14 +149,88 @@ def drawTile(deck, dirname)
       end
     end
   }
+end
 
+def drawPermanentZone(deck, dirname)
+  # Affiche le fond si PermanentZone n'est pas vide
+  polygon layout: "LowerHalf"
+
+  # Affichage du Moral avec une seule icône et le nombre (+1 ou -2)
+  png layout: deck["Moral"].map { |c| 
+    if (c == nil || c.to_s.empty? || c.to_i == 0)
+      "Empty"
+    else
+      "MoralIcon"
+    end
+  }
+  # Affiche la valeur du moral avec son signe (style différent si négatif)
+  text str: deck["Moral"].map { |c|
+    if (c == nil || c.to_s.empty? || c.to_i == 0)
+      ""
+    elsif (c.to_i > 0)
+      "+#{c.to_i}"
+    else
+      "#{c.to_i}"
+    end
+  }, layout: deck["Moral"].map { |c|
+    if (c == nil || c.to_s.empty? || c.to_i == 0)
+      "Empty"
+    # elsif (c.to_i < 0)
+    #   "MoralValueNegative"
+    else
+      "MoralValue"
+    end
+  }
+
+  # Affichage Recruit (recrutement)
+  png layout: deck["Recruit"].map { |c|
+    if (c == nil || c.to_s.empty?)
+      "Empty"
+    elsif (c == "RGB")
+      "RecruitIcon"
+    else
+      c+"RecruitIcon"
+    end
+  }
+
+  # Affichage FreeRest (flip one gratuit)
+  png layout: deck["FreeRest"].map { |c|
+    if (c == nil || c.to_s.empty? || c.to_s != 'One')
+      "Empty"
+    else
+      "FreeRestIcon"
+    end
+  }
+end
+
+def drawTile(deck, dirname)
+  png file: deck["Image"].map { |img| 
+    if (img == nil) 
+      "src/resources/terrain/city/_aberlaas.png" 
+    else 
+      "src/resources/terrain/"+img
+    end
+  }, layout: "Image"
+  
+  # Position of corner to lasercut the tiles
+  line layout: :corner1
+  line layout: :corner2
+
+  drawChallenge(deck, dirname)
+  # === ZONE PERMANENTE ===
+  drawPermanentZone(deck, dirname)
+  # === ZONE DE REPOS ===
+  drawRestZone(deck, dirname)
+
+  # juste pour la rose des vents
+  drawWinds(deck, dirname)
 
   # Fond noir semi-transparent sous les descriptions
   # rect layout: "DescriptionBackground"
 
-  # %w(Description).each do |key|
-  #   text str: deck[key], layout: key
-  # end
+  %w(Description).each do |key|
+    text str: deck[key], layout: key
+  end
 
   polygon layout: deck["Type"]
 #  polygon layout: :cut

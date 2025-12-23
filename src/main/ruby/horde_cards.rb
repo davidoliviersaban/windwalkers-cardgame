@@ -14,38 +14,45 @@ now = DateTime.now.to_s
 def drawCards(deck, dirname, now)
   rect layout: :bleed
 
-  # Couleur de fond pour la carte entière (crème pour traceurs, blanc pour les autres)
+  # Couleur du bord intérieur (dorée pour traceurs, blanc pour les autres)
+  rect layout: :cut, fill_color: deck['Position'].map{|c| 
+    if c == "Traceur"
+      "#AC9156"
+    else
+      :white
+    end
+  }
+
+  # Couleur de fond pour la carte entière selon la position
   card_bg_color = Hash.new("#FFFFFF")
-  card_bg_color["Traceur"] = "#F5E6C8"
+  card_bg_color["Traceur"] = "#B83002"  # Terracotta pour traceurs
+  card_bg_color["Fer"] = "#B83002"      # Terracotta pour fer
+  card_bg_color["Pack"] = "#026FB8"     # Bleu pour pack
+  card_bg_color["Traine"] = "#5DB834"   # Vert pour traine
+  card_bg_color["Croc"] = "#5DB834"     # Vert pour croc (même que traine)
 
-  # Couleur sous le nom : 3 couleurs seulement (rouge, bleu, vert)
-  position_color = Hash.new
-  position_color["Pack"] = "#AAAAFF80"
-  position_color["Traine"] = "#AAFFAA80"
-  position_color["Croc"] = "#AAFFAA80"
-  position_color["Fer"] = "#FFAAAA80"
-  position_color["Traceur"] = "#FFAAAA80"
-  position_color["Consommable"] = "#FFFFFF"
-
-  # Contour de la carte (crème/parchemin pour les traceurs, blanc pour les autres)
-  rect layout: :cut, fill_color: deck['Position'].map{|c| card_bg_color[c]}
-
-  rect layout: :inside, fill_color: deck['Position'].map{|c| card_bg_color[c]}, stroke_color: :black
+  # # Contour de la carte avec la couleur de position
+  rect layout:'BottomLayer', fill_color: deck['Position'].map{|c| card_bg_color[c]}
 
   png file: deck["Image"].map{ |img| "src/resources/images/"+img}, layout: "Image"
 
-  # Zone sous le nom (opaque avec couleur de position: rouge, bleu, vert)
-  rect layout:'TopLayer', fill_color: deck['Position'].map{|c| position_color[c]}
-  # Zone pour pouvoirs et description (blanc)
-  rect layout:'BottomLayer', fill_color: deck['Position'].map{|c| position_color[c]}
+
+  # SVG de position (contient les bandeaux nom + position/fonction)
+  svg file: deck['Position'].map { |pos|
+    # Normaliser le nom pour correspondre aux fichiers SVG
+    svg_name = pos.upcase
+    "src/resources/card-items/Position=#{svg_name}.svg"
+  }, layout: 'PositionSVG'
+
 
   text str: deck['Nom'], layout: 'Nom'
   text str: deck['Fonction'], layout: 'Fonction'
   # Pouvoir avec icônes PNG inline via embed
   # width and height of png must be specified to avoid layout shifting
   text str: deck['Pouvoir_Actif'], layout: 'Pouvoir_Actif' do |embed|
-    embed.png key: ':fatiguer:',     file: 'src/resources/helpers/flip-card.png',            width: 60, height: 60, dy: -45
+    embed.png key: ':tap:',          file: 'src/resources/helpers/tap-card.png',            width: 60, height: 60, dy: -45
     embed.png key: ':discard:',      file: 'src/resources/helpers/discard.png',              width: 60, height: 60, dy: -45
+    embed.png key: ':missing:',      file: 'src/resources/helpers/missing.png',              width: 40, height: 50, dy: -45
     embed.png key: ':terrain:',      file: 'src/resources/helpers/d6-green.png',             width: 60, height: 60, dy: -45
     embed.png key: ':fatalite:',     file: 'src/resources/helpers/d6-black.png',             width: 60, height: 60, dy: -45
     embed.png key: ':tous-des:',     file: 'src/resources/helpers/d6-black-white-green.png', width: 60, height: 60, dy: -45
@@ -62,20 +69,14 @@ def drawCards(deck, dirname, now)
     embed.png key: ':force-4:',      file: 'src/resources/helpers/wind-force-4.png',         width: 50, height: 50, dy: -38
     embed.png key: ':force-5:',      file: 'src/resources/helpers/wind-force-5.png',         width: 50, height: 50, dy: -38
     embed.png key: ':force-6:',      file: 'src/resources/helpers/wind-force-6.png',         width: 50, height: 50, dy: -38
-    embed.png key: ':force-x:',      file: 'src/resources/helpers/wind-force-x.png',         width: 50, height: 50, dy: -38
+    embed.png key: ':force-x:',      file: 'src/resources/helpers/wind-x.png',               width: 50, height: 50, dy: -38
     embed.png key: ':no-vent:',      file: 'src/resources/helpers/cancel-wind.png',          width: 50, height: 50, dy: -38
-    embed.png key: ':rest:',         file: 'src/resources/helpers/rest.png',                 width: 50, height: 50, dy: -38
-    embed.png key: ':rest-all:',     file: 'src/resources/helpers/rest-all.png',             width: 50, height: 50, dy: -38
+    embed.png key: ':rest:',         file: 'src/resources/helpers/untap-card.png',           width: 50, height: 50, dy: -38
+    embed.png key: ':rest-all:',     file: 'src/resources/helpers/untap-all-card.png',       width: 50, height: 50, dy: -38
   end
 
-  # Affichage la position (en majuscules)
-  text str: deck["Position"].map { |pos|
-    if (pos == "Traceur")
-      "FER"
-    else
-      pos.upcase
-    end
-  }, layout: "Position"
+  # Position est maintenant hardcodée dans le SVG, plus besoin de l'afficher
+  # text str: deck["Position"]..., layout: "Position"
 
   # Ligne de séparation et texte historique (Flavour Text)
   rect layout: deck["Description"].map { |h|
@@ -93,9 +94,7 @@ def drawCards(deck, dirname, now)
     end
   }
 
-  # png layout: deck["Position"].map{ |pos| ""+pos.to_s+"Icon"}
-
-  png layout: deck["Tier"].map{ |ext|  "T"+ext.to_s+"Icon"  }
+  svg layout: deck["Tier"].map{ |ext|  "T"+ext.to_s+"Icon"  }
 
   png file: deck["Extension"].map{ |ext|
     if (ext != nil)

@@ -1,18 +1,21 @@
-# Zone sous le nom (opaque)
-TopLayer:
+# SVG de position (contient les deux bandeaux: nom + position/fonction)
+PositionSVG:
   extends: inside
-  height: 100
-  stroke_color: '#0000'
-  radius: 0
+  x: += -2
+  y: += 564
+  width: 680
+  height: :scale
 
 Nom:
-  extends: TopLayer
-  x: += 10
-  y: += 10
-  width: 650
-  height: 40
-  font: ChunkFive Roman,Bold 12
-  color: '#232F23'
+  extends: PositionSVG
+  x: += 22
+  y: += 5
+  width: 630
+  height: 50
+  font: Jaro 14
+  color: '#000000'
+  stroke_color: '#FFFFFF'
+  stroke_width: 2
   valign: middle
   align: left
 
@@ -20,9 +23,8 @@ Nom:
 # Zone pour pouvoirs et description (blanc)
 BottomLayer:
   extends: inside
-  y: += 670
-  height: 305
-  fill_color: '#ffffff'
+  y: += 605
+  height: 370
   stroke_color: '#0000'
   radius: 0
 
@@ -39,10 +41,12 @@ Image:
 # Position de base pour cette ligne
 SousNomBase:
   extends: Nom
-  y: += 50
+  y: += 55
   height: 40
-  font: ChunkFive Roman,Sans 8
-  color: '#232F23'
+  font: Jaro 9
+  color: '#000000'
+  stroke_color: '#FFFFFF'
+  stroke_width: 2
   valign: top
 
 # Traceur (plus utilisé pour le texte, remplacé par icône)
@@ -50,21 +54,19 @@ Traceur:
   extends: SousNomBase
   x: += 10
   width: 150
-  font: ChunkFive Roman,Bold 8
+  font: Jaro 9
 
-# Position (FER, PACK, TRAINE - à gauche maintenant)
+# Position (FER, PACK, TRAINE - hardcodée dans le SVG, style vide)
 Position:
-  extends: SousNomBase
-  x: += 10
-  width: 130
-  font: ChunkFive Roman,Sans 8
+  extends: Empty
 
-# Fonction/Métier (italique, plus de place après Position)
+# Fonction/Métier (à droite du bandeau)
 Fonction:
   extends: SousNomBase
-  x: += 145
-  width: 520
-  font: ChunkFive Roman,Italic 8
+  x: += 240
+  width: 400
+  align: right
+  font: Jaro 9
 
 Empty:
   width: 1
@@ -103,23 +105,22 @@ TraceurIcon:
   height: :scale
 
 TierIcon:
-  extends: Pouvoir_Actif
+  extends: SousNomBase
   x: += 300
-  y: -= 25
+  y: += 25
   width: 50
   height: :scale
 
 T1Icon:
   extends: TierIcon
-  file: src/resources/helpers/tier1.png
+  file: src/resources/helpers/Tier1.svg
 
 T2Icon:
   extends: TierIcon
-  file: src/resources/helpers/tier2.png
-
+  file: src/resources/helpers/Tier2.svg
 T3Icon:
   extends: TierIcon
-  file: src/resources/helpers/tier3.png
+  file: src/resources/helpers/Tier3.svg
 
 ExtensionIcon:
   extends: inside
@@ -131,14 +132,18 @@ ExtensionIcon:
 
 
 Pouvoir_Actif:
-  extends: inside
+  extends: BottomLayer
   x: += 10
-  y: += 680
+  y: += 70
   width: 650
   height: 200
-  font: ChunkFive Roman,Sans 9
+  font: Jaro 9
+  stroke_color: '#000000'
+  color: '#FFFFFF'
+  stroke_width: 2
   valign: middle
   markup: true
+  align: center
 
 Pouvoir_Passif:
   #  extends: Position
@@ -147,12 +152,14 @@ Pouvoir_Passif:
   extends: Pouvoir_Actif
   y: -= 90
   height: 200
-  font: ChunkFive Roman,Italic 9
+  font: Jaro 9
+  stroke_color: '#FFFFFF'
+  stroke_width: 2
 
 Description:
   extends: Pouvoir_Actif
   y: -= 90
-  font: ChunkFive Roman,Sans 7
+  font: Jaldi 7
   valign: top
 
 # Ligne de séparation au-dessus du texte historique
@@ -162,7 +169,7 @@ FlavourSeparator:
   y: += 860
   width: 575
   height: 1
-  fill_color: '#00000060'
+  fill_color: '#D9D9D9'
   stroke_width: 0
 
 # Texte historique en bas de la carte (style Lorcana)
@@ -172,7 +179,7 @@ FlavourText:
   y: += 870
   width: 615
   height: 100
-  font: ChunkFive Roman,Italic 7
-  color: '#333333'
+  font: Jaldi 7
+  color: '#000000'
   valign: bottom
   align: center

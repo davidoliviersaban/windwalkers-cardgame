@@ -27,6 +27,22 @@ corner2:
 
 frame:
     extends: cut
+    font: Jaro 14
+
+# Moitié basse de l'hexagone (trapèze)
+# Pour hexagone flat-top centré (32mm, 29mm) rayon 29mm
+# r/2 = 14.5mm, r*√3/2 ≈ 25.1mm
+LowerHalf:
+    x1: 3mm      # gauche (milieu)
+    y1: 29mm
+    x2: 61mm     # droite (milieu)
+    y2: 29mm
+    x3: 46.5mm   # bas-droite
+    y3: 54.1mm
+    x4: 17.5mm   # bas-gauche
+    y4: 54.1mm
+    fill_color: '#00000060'
+    stroke_width: 0
 
 back:
     extends: frame
@@ -65,9 +81,8 @@ DescriptionBackground:
 
 Description:
     extends: frame
-    font: ChunkFive Roman,Bold 15
     x: -= 250
-    y: += 80
+    y: += 30
     width: 500
     height: 300
     align: center
@@ -79,7 +94,6 @@ Description:
 # Style de base pour le texte des dés (badges)
 LandText:
     extends: frame
-    font: ChunkFive Roman,Bold 14
     color: white
     stroke_color: black
     stroke_width: 2
@@ -132,7 +146,6 @@ LandGreen:
     height: :scale
 LandTextGreen:
     extends: LandGreenBase
-    font: ChunkFive Roman,Bold 14
     color: white
     stroke_color: black
     stroke_width: 2
@@ -165,7 +178,6 @@ LandWhite:
     height: :scale
 LandTextWhite:
     extends: LandWhiteBase
-    font: ChunkFive Roman,Bold 14
     color: white
     stroke_color: black
     stroke_width: 2
@@ -198,7 +210,6 @@ LandBlack:
     height: :scale
 LandTextBlack:
     extends: LandBlackBase
-    font: ChunkFive Roman,Bold 14
     color: white
     stroke_color: black
     stroke_width: 2
@@ -308,7 +319,17 @@ Wind6Icon:
 PermanentZoneBase:
     extends: frame
     x: += 0
-    y: += 85
+    y: += 100
+
+PermanentZoneBackground:
+    extends: PermanentZoneBase
+    x: -= 120
+    y: -= 50
+    width: 240
+    height: 100
+    radius: 10
+    fill_color: '#00000060'
+    stroke_width: 0
 
 # Icône de recrutement (Recruit)
 RecruitIcon:
@@ -339,7 +360,7 @@ GreenRecruitIcon:
 # Icône FreeRest (flip one gratuit) - à droite du Recruit
 FreeRestIcon:
     extends: PermanentZoneBase
-    file: src/resources/helpers/flip-card2.png
+    file: src/resources/helpers/flip-card.png
     x: -= 30
     width: :scale
     height: 100
@@ -355,7 +376,6 @@ MoralIcon:
 # Texte du moral (valeur +1 ou -2)
 MoralValue:
     extends: PermanentZoneBase
-    font: ChunkFive Roman,Bold 14
     x: -= 200
     y: += 10
     width: 80
@@ -406,7 +426,6 @@ RestTentIcon:
 # Triangle/flèche vers la droite
 RestArrow:
     extends: RestZoneBase
-    font: ChunkFive Roman,Bold 10
     color: white
     stroke_color: black
     stroke_width: 1
@@ -420,7 +439,7 @@ RestArrow:
 # Icône effet 1 du repos - position 1 (flip une carte)
 RestEffect1Icon:
     extends: RestZoneBase
-    file: src/resources/helpers/flip-card2.png
+    file: src/resources/helpers/flip-card.png
     x: += 70
     y: -= 20
     width: 100
@@ -447,7 +466,7 @@ RestEffect2Icon:
 # Icône effet 3 du repos - position 1 (Discard)
 RestEffect3Icon:
     extends: RestZoneBase
-    file: src/resources/helpers/discard2.png
+    file: src/resources/helpers/discard.png
     x: += 70
     y: -= 10
     width: 80

@@ -35,7 +35,7 @@ date:
   extends: inside
   y: 1055
   color: '#000000'
-  font: ChunkFive Roman,Plain 5
+  font: Jaldi 5
 
 id_card:
   extends: date

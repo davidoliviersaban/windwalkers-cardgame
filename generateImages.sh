@@ -33,9 +33,9 @@ gem list | grep pkg-config || gem install pkg-config && echo "pkg-config install
 gem list | grep squib || gem install squib && echo "squib installed" || local_install_squib
 gem update --system
 
-rm -rf .cards* .terrain*
+# rm -rf .cards* .terrain*
 ruby src/main/ruby/land_cards.rb
-ruby src/main/ruby/horde_cards.rb
+# ruby src/main/ruby/horde_cards.rb
 
 if [ ! -d "../printableCardsAppender" ]; then
     local_install_printableCardAppender
@@ -43,7 +43,7 @@ fi
 
 cd ../printableCardsAppender
 ./gradlew appendCard --args="../windwalkers-cardgame/.terrain ../windwalkers-cardgame/printable/terrain   A4 true"
-./gradlew appendCard --args="../windwalkers-cardgame/.terrain_cut ../windwalkers-cardgame/printable/.terrain_cut   A4 true"
-./gradlew appendCard --args="../windwalkers-cardgame/.cards1  ../windwalkers-cardgame/printable/cards_v1_ A4 false"
-./gradlew appendCard --args="../windwalkers-cardgame/.cards_cut  ../windwalkers-cardgame/printable/cards_cut_ A4 false"
-./gradlew appendCard --args="../windwalkers-cardgame/.cards_back  ../windwalkers-cardgame/printable/cards_back_ A4 false"
+# ./gradlew appendCard --args="../windwalkers-cardgame/.terrain_cut ../windwalkers-cardgame/printable/.terrain_cut   A4 true"
+# ./gradlew appendCard --args="../windwalkers-cardgame/.cards1  ../windwalkers-cardgame/printable/cards_v1_ A4 false"
+# ./gradlew appendCard --args="../windwalkers-cardgame/.cards_cut  ../windwalkers-cardgame/printable/cards_cut_ A4 false"
+# ./gradlew appendCard --args="../windwalkers-cardgame/.cards_back  ../windwalkers-cardgame/printable/cards_back_ A4 false"
