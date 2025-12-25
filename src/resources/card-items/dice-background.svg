@@ -1,0 +1,6 @@
+    <svg xmlns="http://www.w3.org/2000/svg">
+      <polygon points="35,0 200,0 200,60 0,60" 
+               fill="#00000080" 
+               stroke="#{stroke_color}" 
+               stroke-width="#{stroke_width}"/>
+    </svg>

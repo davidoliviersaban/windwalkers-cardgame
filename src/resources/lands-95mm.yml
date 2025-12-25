@@ -1,0 +1,283 @@
+# cut + 3mm each side
+bleed: 
+    x: 50.5mm
+    y: 44.5mm #sqrt(3)*radius/2
+    n: 6
+    radius: 50.5mm
+
+cut: #95mm
+    extends: bleed
+    radius: 47.5mm 
+    stroke_color: red
+    dash: ''
+
+#Used for lasercut pointer
+corner1:
+    x1: 3mm
+    y1: 3mm
+    x2: 13mm
+    y2: 3mm
+    stroke_color: '#000000'
+corner2:
+    extends: corner1
+    x2: 3mm
+    y2: 13mm
+    stroke_color: '#000000'
+
+frame:
+    extends: cut
+    font: Jaro 18
+
+back:
+    extends: frame
+    stroke_width: 0
+    fill_color: '#00000000'
+    stroke_color: '#00000000'
+land:
+    extends: frame
+    stroke_width: 50
+    stroke_color: '#666666aa'
+city:
+    extends: frame
+    stroke_width: 50
+    stroke_color: '#ff6666aa'
+village:
+    extends: city
+    stroke_color: '#ffffffaa'
+place:
+    extends: city
+    stroke_color: '#ffff66aa'
+
+Image:
+    width: 101mm
+    height: :scale
+
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                     ZONE DES DÉS (D6)                            ║
+# ║  Badges sur le bord gauche à 60° : VERT, BLANC/GRIS, NOIR        ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
+# Position de base pour la zone des dés (angle haut-gauche)
+DiceZoneBase:
+    extends: frame
+    x: -= 335
+    y: -= 450
+
+# ---- BADGE VERT (en haut) ----
+LandGreenBase:
+    extends: DiceZoneBase
+LandGreenBackground:
+    extends: LandGreenBase
+    # Coordonnées du trapèze (en pixels pour le SVG)
+    x: -= 15
+    y: -= 15
+    fill_color: '#00000050'
+    stroke_width: 0
+LandGreen:
+    extends: LandGreenBase
+    x: += 22
+    y: -= 45
+    width: 110
+    height: :scale
+LandTextGreen:
+    extends: LandGreenBase
+    color: white
+    stroke_color: black
+    stroke_width: 2
+    x: += 127
+    y: += 27
+    width: 50
+    height: 40
+    valign: bottom
+    align: center
+
+# ---- BADGE GRIS/WHITE (au milieu) ----
+LandWhiteBase:
+    extends: DiceZoneBase
+    x: -= 40
+    y: += 70
+LandWhiteBackground:
+    extends: LandWhiteBase
+    x: -= 15
+    y: -= 15
+    width: 200
+    height: 60
+    radius: 6
+    fill_color: '#00000050'
+    stroke_width: 0
+LandWhite:
+    extends: LandWhiteBase
+    x: += 22
+    y: -= 45
+    width: 110
+    height: :scale
+LandTextWhite:
+    extends: LandWhiteBase
+    color: white
+    stroke_color: black
+    stroke_width: 2
+    x: += 127
+    y: += 27
+    width: 50
+    height: 40
+    valign: bottom
+    align: center
+
+# ---- BADGE NOIR (en bas) ----
+LandBlackBase:
+    extends: DiceZoneBase
+    x: -= 80
+    y: += 140
+LandBlackBackground:
+    extends: LandBlackBase
+    x: -= 15
+    y: -= 15
+    width: 200
+    height: 60
+    radius: 6
+    fill_color: '#00000050'
+    stroke_width: 0
+LandBlack:
+    extends: LandBlackBase
+    x: += 22
+    y: -= 45
+    width: 110
+    height: :scale
+LandTextBlack:
+    extends: LandBlackBase
+    color: white
+    stroke_color: black
+    stroke_width: 2
+    x: += 127
+    y: += 27
+    width: 50
+    height: 40
+    valign: bottom
+    align: center   
+
+
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                   ZONE PERMANENTE (Effets d'entrée)              ║
+# ║  Recrutement, moral - au centre de la tuile                      ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
+# Position de base pour la zone permanente (centre de la tuile)
+PermanentZoneBase:
+    extends: frame
+    x: += 0
+    y: += 300
+
+PermanentZoneForeground:
+    extends: PermanentZoneBase
+    x: -= 250
+    y: -= 80
+
+PermanentZoneBackground:
+    extends: PermanentZoneForeground
+    x: 78
+    width: 1160
+    height: 286
+    file: src/resources/card-items/background-xl.svg
+
+Description:
+    extends: PermanentZoneBase
+    x: -= 250
+    y: -= 80
+    width: 500
+    height: 300
+    align: center
+    color: white
+    stroke_color: black
+    stroke_width: 3
+    fill_color: '#ffffff'
+    font: Jaro 15
+
+# Icône moral (dans la zone permanente, à gauche de la tuile)
+MoralIcon:
+    extends: PermanentZoneBase
+    file: src/resources/helpers/moral.png
+    width: 60
+    height: :scale
+
+# Texte du moral (valeur +1 ou -2)
+MoralValue:
+    extends: MoralIcon
+    x: -= 100
+    width: 80
+    height: 80
+    align: right
+    valign: middle
+    color: white
+    stroke_color: black
+    stroke_width: 2
+
+Empty:
+    width: 1
+    height: 1
+    stroke_width: 0
+    fill_color: '#00000000'
+    stroke_color: '#00000000'
+
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                 ZONE DE ROSE DES VENTS                           ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
+Wind:
+    extends: frame
+    font: ChunkFive Roman,Bold 14
+    align: right
+    valign: bottom
+    width: 10
+    height: 22mm  # used to compute the distance to the center of the tile
+    # the trick is to write the text at the bottom of the text box and rotate the text box
+    radius: 30
+    fill_color: '#ffffff60'
+    stroke_color: white
+    stroke_width: 3
+
+WindIcon:
+    extends: Wind
+    radius: 40
+    stroke_width: += 2
+
+Wind1:
+    extends: Wind
+Wind1Icon:
+    extends: WindIcon
+    x: -= 0.5mm
+    y: += 19mm
+
+Wind2:
+    extends: Wind
+Wind2Icon:
+    extends: WindIcon
+    x: += 16mm
+    y: += 9.5mm
+    
+Wind3:
+    extends: Wind
+Wind3Icon:
+    extends: WindIcon
+    x: += 16.5mm
+    y: -= 9mm
+    
+Wind4:
+    extends: Wind1
+Wind4Icon:
+    extends: WindIcon
+    x: -= 0mm
+    y: -= 19mm
+
+Wind5:
+    extends: Wind3
+Wind5Icon:
+    extends: WindIcon
+    x: -= 16.5mm
+    y: -= 10mm
+    
+Wind6:
+    extends: Wind2
+Wind6Icon:
+    extends: WindIcon
+    x: -= 17mm
+    y: += 9.5mm

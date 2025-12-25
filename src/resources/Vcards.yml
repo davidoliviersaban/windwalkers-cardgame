@@ -28,13 +28,8 @@ BottomLayer:
   stroke_color: '#0000'
   radius: 0
 
-
 Image:
   extends: inside
-  #  x: += 100
-  #  y: += 100
-  #  width: 450
-  #  height: 450
   height: 675
 
 # Ligne sous le nom : Position | Fonction
@@ -48,17 +43,6 @@ SousNomBase:
   stroke_color: '#FFFFFF'
   stroke_width: 2
   valign: top
-
-# Traceur (plus utilisé pour le texte, remplacé par icône)
-Traceur:
-  extends: SousNomBase
-  x: += 10
-  width: 150
-  font: Jaro 9
-
-# Position (FER, PACK, TRAINE - hardcodée dans le SVG, style vide)
-Position:
-  extends: Empty
 
 # Fonction/Métier (à droite du bandeau)
 Fonction:
@@ -146,9 +130,6 @@ Pouvoir_Actif:
   align: center
 
 Pouvoir_Passif:
-  #  extends: Position
-  #  x: -= 150
-  #  width: 300
   extends: Pouvoir_Actif
   y: -= 90
   height: 200

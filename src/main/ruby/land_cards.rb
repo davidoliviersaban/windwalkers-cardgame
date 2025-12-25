@@ -1,20 +1,28 @@
 require 'squib'
+require 'yaml'
 
 deck = Squib.csv file: 'src/resources/land_cards.csv'
 
-def drawChallenge(deck, dirname)
+
+# Charge le layout YAML pour récupérer les coordonnées des trapèzes
+LAYOUT_DATA = YAML.load_file('src/resources/lands-95mm.yml')
+
+def drawChallenge(deck)
 
   %w(Black White Green).each do |key|
-    # Dessine le bandeau sombre derrière le badge si le dé existe
-    rect layout: deck[key].map { |c|
+    # Affiche le trapèze
+    layoutBackground = "Land#{key}Background"
+    svg layout: layoutBackground, file: deck[key].map{ |c|
       if (c == nil)
-        "Empty"
+        "src/resources/helpers/empty.svg"
       else
-        "Land"+key+"Background"
+        "src/resources/card-items/dice-background.svg"
       end
     }
+    
     # Dessine l'icône du dé
-    png layout: "Land"+key, file: deck[key].map{ |c| 
+    layoutDice = "Land#{key}"
+    png layout: layoutDice, file: deck[key].map{ |c|
       if (c == nil)
         "src/resources/helpers/d6-empty.png"
       elsif (key == "Red")
@@ -34,7 +42,7 @@ def drawChallenge(deck, dirname)
   end
 end
 
-def drawWinds(deck, dirname)
+def drawWinds(deck)
   %w(1 2 3 4 5 6).each do |key|
     polygon layout: deck["Wind"+key.to_s].map{ |c| 
     if (c == nil)
@@ -50,110 +58,23 @@ def drawWinds(deck, dirname)
   end
 end
 
-def drawRestZone(deck, dirname)
-  # Affiche le fond si OnRest n'est pas vide
-  rect layout: deck["OnRest"].map { |c|
-    if (c == nil || c.to_s.empty?)
-      "Empty"
-    else
-      "RestZoneBackground"
-    end
-  }
-
-  # Affiche l'icône tente
-  png layout: deck["OnRest"].map { |c|
-    if (c == nil || c.to_s.empty?)
-      "Empty"
-    else
-      "RestTentIcon"
-    end
-  }
-
-  # Affiche la flèche →
-  text str: deck["OnRest"].map { |c|
-    if (c == nil || c.to_s.empty?)
-      ""
-    else
-      "▶"
-    end
-  }, layout: deck["OnRest"].map { |c|
-    if (c == nil || c.to_s.empty?)
-      "Empty"
-    else
-      "RestArrow"
-    end
-  }
-
-  # Affiche les effets du repos (position 1)
-  png layout: deck["OnRest"].map { |c|
-    if (c == nil || c.to_s.empty?)
-      "Empty"
-    else
-      effects = c.to_s.split("+")
-      if effects[0] == "One"
-        "RestEffect1Icon"  # flip-card en position 1
-      elsif effects[0] == "All"
-        "RestAllPos1Icon"  # flip-all-cards en position 1
-      elsif effects[0] == "Discard"
-        "RestEffect3Icon"  # discard en position 1
-      else
-        "Empty"
-      end
-    end
-  }, file: deck["OnRest"].map { |c|
-    if (c == nil || c.to_s.empty?)
-      "src/resources/helpers/d6-empty.png"
-    else
-      effects = c.to_s.split("+")
-      if effects[0] == "One"
-        "src/resources/helpers/flip-card.png"
-      elsif effects[0] == "All"
-        "src/resources/helpers/flip-all-cards2.png"
-      elsif effects[0] == "Discard"
-        "src/resources/helpers/discard.png"
-      else
-        "src/resources/helpers/d6-empty.png"
-      end
-    end
-  }
-
-  # Affiche les effets du repos (position 2 si +)
-  png layout: deck["OnRest"].map { |c|
-    if (c == nil || c.to_s.empty?)
-      "Empty"
-    else
-      effects = c.to_s.split("+")
-      if effects.length > 1
-        "RestEffect2Icon"
-      else
-        "Empty"
-      end
-    end
-  }, file: deck["OnRest"].map { |c|
-    if (c == nil || c.to_s.empty?)
-      "src/resources/helpers/d6-empty.png"
-    else
-      effects = c.to_s.split("+")
-      if effects.length > 1
-        if effects[1] == "One"
-          "src/resources/helpers/flip-card.png"
-        elsif effects[1] == "All"
-          "src/resources/helpers/flip-all-cards2.png"
-        elsif effects[1] == "Discard"
-          "src/resources/helpers/discard.png"
-        else
-          "src/resources/helpers/d6-empty.png"
-        end
-      else
-        "src/resources/helpers/d6-empty.png"
-      end
-    end
-  }
-end
-
-def drawPermanentZone(deck, dirname)
+def drawPermanentZone(deck)
   # Affiche le fond si PermanentZone n'est pas vide
-  polygon layout: "LowerHalf"
+  svg layout: deck["Template"].map{ |template|
+    ### Dont need to display background if no template
+    if (template == nil)
+      "Empty"
+    else
+      "PermanentZoneBackground"
+    end
+  }
+  svg layout: "PermanentZoneForeground", file: deck["Template"].map{ |template|
+      if (template == nil)
+        "src/resources/empty.svg"
+      else
+        "src/resources/card-items/#{template}.svg"
+      end
+    }
 
   # Affichage du Moral avec une seule icône et le nombre (+1 ou -2)
   png layout: deck["Moral"].map { |c| 
@@ -181,26 +102,6 @@ def drawPermanentZone(deck, dirname)
       "MoralValue"
     end
   }
-
-  # Affichage Recruit (recrutement)
-  png layout: deck["Recruit"].map { |c|
-    if (c == nil || c.to_s.empty?)
-      "Empty"
-    elsif (c == "RGB")
-      "RecruitIcon"
-    else
-      c+"RecruitIcon"
-    end
-  }
-
-  # Affichage FreeRest (flip one gratuit)
-  png layout: deck["FreeRest"].map { |c|
-    if (c == nil || c.to_s.empty? || c.to_s != 'One')
-      "Empty"
-    else
-      "FreeRestIcon"
-    end
-  }
 end
 
 def drawTile(deck, dirname)
@@ -216,18 +117,14 @@ def drawTile(deck, dirname)
   line layout: :corner1
   line layout: :corner2
 
-  drawChallenge(deck, dirname)
+  drawChallenge(deck)
   # === ZONE PERMANENTE ===
-  drawPermanentZone(deck, dirname)
-  # === ZONE DE REPOS ===
-  drawRestZone(deck, dirname)
+  drawPermanentZone(deck)
 
   # juste pour la rose des vents
-  drawWinds(deck, dirname)
+  # drawWinds(deck, dirname)
 
   # Fond noir semi-transparent sous les descriptions
-  # rect layout: "DescriptionBackground"
-
   %w(Description).each do |key|
     text str: deck[key], layout: key
   end
@@ -261,4 +158,12 @@ Squib::Deck.new(cards: 12,
                 width: "64mm", height: "58.15mm") do # height = width*sqrt(3)/2
 
   drawCutlines(deck, '.terrain_cut')
+end
+
+Squib::Deck.new(cards: deck["Chapter"].size,
+                layout: %w(src/resources/lands-95mm.yml),
+                dpi: 327.8,
+                width: "101mm", height: "93mm") do # height = width*sqrt(3)/2
+
+  drawTile(deck, '.terrain_xl')
 end
