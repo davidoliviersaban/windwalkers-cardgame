@@ -50,9 +50,10 @@ def drawCards(deck, dirname, now)
   # Pouvoir avec icônes PNG inline via embed
   # width and height of png must be specified to avoid layout shifting
   text str: deck['Pouvoir_Actif'], layout: 'Pouvoir_Actif' do |embed|
-    embed.png key: ':tap:',          file: 'src/resources/helpers/tap-card.png',            width: 60, height: 60, dy: -45
-    embed.png key: ':discard:',      file: 'src/resources/helpers/discard.png',              width: 60, height: 60, dy: -45
-    embed.png key: ':missing:',      file: 'src/resources/helpers/missing.png',              width: 40, height: 50, dy: -45
+    embed.png key: ':tap:',          file: 'src/resources/helpers/tap-card.png',             width: 60, height: 60, dy: -50
+    embed.svg key: ':card:',         file: 'src/resources/helpers/card.svg',                 width: 40, height: 50, dy: -43
+    embed.svg key: ':discard:',      file: 'src/resources/helpers/discard.svg',              width: 35, height: 50, dy: -43
+    embed.svg key: ':missing:',      file: 'src/resources/helpers/missing.svg',              width: 40, height: 50, dy: -43
     embed.png key: ':terrain:',      file: 'src/resources/helpers/d6-green.png',             width: 60, height: 60, dy: -45
     embed.png key: ':fatalite:',     file: 'src/resources/helpers/d6-black.png',             width: 60, height: 60, dy: -45
     embed.png key: ':tous-des:',     file: 'src/resources/helpers/d6-black-white-green.png', width: 60, height: 60, dy: -45
@@ -61,7 +62,7 @@ def drawCards(deck, dirname, now)
     embed.png key: ':epreuve:',      file: 'src/resources/helpers/d6-white-green.png',       width: 60, height: 60, dy: -45
     embed.png key: ':vent:',         file: 'src/resources/helpers/d6-white.png',             width: 60, height: 60, dy: -45
     embed.png key: ':violet:',       file: 'src/resources/helpers/d6-violet.png',            width: 60, height: 60, dy: -45
-    embed.png key: ':tuile:',        file: 'src/resources/helpers/hex-tile.png',             width: 50, height: 50, dy: -38
+    embed.svg key: ':tuile:',        file: 'src/resources/helpers/hex-tile.svg',             width: 45, height: 50, dy: -38
     embed.png key: ':moral:',        file: 'src/resources/helpers/moral.png',                width: 35, height: 45, dy: -40
     embed.png key: ':force-1:',      file: 'src/resources/helpers/wind-force-1.png',         width: 50, height: 50, dy: -38
     embed.png key: ':force-2:',      file: 'src/resources/helpers/wind-force-2.png',         width: 50, height: 50, dy: -38
@@ -69,10 +70,11 @@ def drawCards(deck, dirname, now)
     embed.png key: ':force-4:',      file: 'src/resources/helpers/wind-force-4.png',         width: 50, height: 50, dy: -38
     embed.png key: ':force-5:',      file: 'src/resources/helpers/wind-force-5.png',         width: 50, height: 50, dy: -38
     embed.png key: ':force-6:',      file: 'src/resources/helpers/wind-force-6.png',         width: 50, height: 50, dy: -38
-    embed.png key: ':force-x:',      file: 'src/resources/helpers/wind-x.png',               width: 50, height: 50, dy: -38
+    embed.svg key: ':force-x:',      file: 'src/resources/helpers/wind-x.svg',               width: 45, height: 50, dy: -40
+    embed.svg key: ':force:',        file: 'src/resources/helpers/wind.svg',                 width: 45, height: 50, dy: -38
     embed.png key: ':no-vent:',      file: 'src/resources/helpers/cancel-wind.png',          width: 50, height: 50, dy: -38
-    embed.png key: ':rest:',         file: 'src/resources/helpers/untap-card.png',           width: 50, height: 50, dy: -38
-    embed.png key: ':rest-all:',     file: 'src/resources/helpers/untap-all-card.png',       width: 50, height: 50, dy: -38
+    embed.png key: ':rest:',         file: 'src/resources/helpers/untap-card.png',           width: 57, height: 57, dy: -45
+    embed.png key: ':rest-all:',     file: 'src/resources/helpers/untap-all-card.png',       width: 57, height: 57, dy: -45
   end
 
   # Position est maintenant hardcodée dans le SVG, plus besoin de l'afficher

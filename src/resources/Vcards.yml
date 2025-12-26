@@ -56,38 +56,6 @@ Empty:
   width: 1
   height: 1
 
-AbandonIcon:
-  extends: Position
-  file: src/resources/helpers/abandon.png
-  x: += 110
-  y: += 40
-  width: 50
-  height: :scale
-
-TraineIcon:
-  extends: Position
-  file: src/resources/helpers/abandon.png
-  x: += 110
-  y: += 40
-  width: 50
-  height: :scale
-CrocIcon:
-  extends: TraineIcon
-FerIcon:
-  extends: Empty
-PackIcon:
-  extends: Empty
-ConsommableIcon:
-  extends: Empty
-
-TraceurIcon:
-  extends: inside
-  file: src/resources/helpers/poing.png
-  x: += 620
-  y: += 580
-  width: 40
-  height: :scale
-
 TierIcon:
   extends: SousNomBase
   x: += 300
@@ -128,14 +96,6 @@ Pouvoir_Actif:
   valign: middle
   markup: true
   align: center
-
-Pouvoir_Passif:
-  extends: Pouvoir_Actif
-  y: -= 90
-  height: 200
-  font: Jaro 9
-  stroke_color: '#FFFFFF'
-  stroke_width: 2
 
 Description:
   extends: Pouvoir_Actif
