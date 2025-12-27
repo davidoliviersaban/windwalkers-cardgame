@@ -51,7 +51,7 @@ back:
     stroke_color: '#00000000'
 land:
     extends: frame
-    stroke_width: 30
+    stroke_width: 50
     stroke_color: '#666666aa'
 city:
     extends: frame
@@ -68,17 +68,6 @@ Image:
     width: 72mm
     height: :scale
 
-# Fond noir semi-transparent pour le texte
-DescriptionBackground:
-    extends: frame
-    x: -= 250
-    y: += 50
-    width: 500
-    height: 120
-    radius: 10
-    fill_color: '#00000080'
-    stroke_width: 0
-
 Description:
     extends: frame
     x: -= 250
@@ -90,30 +79,6 @@ Description:
     stroke_color: black
     stroke_width: 3
     fill_color: '#ffffff'
-
-# Style de base pour le texte des dés (badges)
-LandText:
-    extends: frame
-    color: white
-    stroke_color: black
-    stroke_width: 2
-    valign: bottom
-    align: left
-
-# Icône du dé (badge)
-Land:
-    extends: frame
-    width: 70
-    height: :scale
-
-# Bandeau sombre derrière le badge (dé + texte)
-LandBadgeBackground:
-    extends: frame
-    width: 130
-    height: 45
-    radius: 6
-    fill_color: '#00000080'
-    stroke_width: 0
 
 # ╔══════════════════════════════════════════════════════════════════╗
 # ║                     ZONE DES DÉS (D6)                            ║
@@ -238,9 +203,13 @@ PermanentZoneForeground:
 
 PermanentZoneBackground:
     extends: frame
-    x: -10
-    width: 847
-    height: 313
+    # x: 3
+    # width: 820
+    # height: 305
+    x: 61
+    y: += 103
+    width: 703
+    height: :scale
     file: src/resources/card-items/background-sm.svg
 
 # Icône de recrutement (Recruit)

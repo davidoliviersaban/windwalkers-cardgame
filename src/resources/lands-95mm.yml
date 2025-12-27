@@ -174,10 +174,15 @@ PermanentZoneForeground:
 
 PermanentZoneBackground:
     extends: PermanentZoneForeground
-    x: 78
-    width: 1160
-    height: 286
-    file: src/resources/card-items/background-xl.svg
+    # x: 1
+    # width: 1320
+    # height: 290
+    # file: src/resources/card-items/background-xl.svg
+    x: 68
+    y: -= 28
+    width: 1170
+    height: 316
+    file: src/resources/card-items/background-sm.svg
 
 Description:
     extends: PermanentZoneBase
