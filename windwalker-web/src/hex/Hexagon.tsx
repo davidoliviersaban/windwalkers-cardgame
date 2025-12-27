@@ -39,17 +39,23 @@ const Hexagon: React.FC<HexagonProps> = ({ q, r, tile, onClick }) => {
   }, []);
 
   useEffect(() => {
-    if (tile?.name) {
-      if (cache[tile.name]) {
-        setImage(`url(#pattern-image-${tile.name})`);
-      } else if (document.getElementById(`pattern-image-${tile.name}`)) {
-        cache[tile.name] = document.getElementById(
-          `pattern-image-${tile.name}`,
-        );
-        setImage(`url(#pattern-image-${tile.name})`);
-      }
+    // Reset to default or color when tile has no name (empty/cleared)
+    if (!tile?.name) {
+      setImage(tile?.color ?? "#eee");
+      return;
     }
-  }, [tile]);
+
+    // Set pattern image if tile has a name
+    if (cache[tile.name]) {
+      setImage(`url(#pattern-image-${tile.name})`);
+    } else if (document.getElementById(`pattern-image-${tile.name}`)) {
+      cache[tile.name] = document.getElementById(`pattern-image-${tile.name}`);
+      setImage(`url(#pattern-image-${tile.name})`);
+    } else {
+      // Fallback to color if pattern not found
+      setImage(tile?.color ?? "#eee");
+    }
+  }, [tile, tile?.name, tile?.color]);
 
   // Don't render until mounted to avoid hydration mismatch with floating-point calculations
   if (!mounted) {
