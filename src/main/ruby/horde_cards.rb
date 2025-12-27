@@ -11,6 +11,15 @@ deck1['Pouvoir_Actif'] = deck1['Pouvoir_Actif'].map { |s| s.to_s.gsub(/<\/?html>
 
 now = DateTime.now.to_s
 
+# Helper function to wrap text with letter_spacing in Pango markup
+def wrap_with_letter_spacing(text, letter_spacing_value = '-5120')
+  if text.is_a?(Array)
+    text.map { |t| "<span letter_spacing='#{letter_spacing_value}'>#{t}</span>" }
+  else
+    "<span letter_spacing='#{letter_spacing_value}'>#{text}</span>"
+  end
+end
+
 def drawCards(deck, dirname, now)
   rect layout: :bleed
 
@@ -45,8 +54,8 @@ def drawCards(deck, dirname, now)
   }, layout: 'PositionSVG'
 
 
-  text str: deck['Nom'], layout: 'Nom'
-  text str: deck['Fonction'], layout: 'Fonction'
+  text str: wrap_with_letter_spacing(deck['Nom']), layout: 'Nom', markup: true
+  text str: wrap_with_letter_spacing(deck['Fonction']), layout: 'Fonction', markup: true
   # Pouvoir avec icônes PNG inline via embed
   # width and height of png must be specified to avoid layout shifting
   text str: deck['Pouvoir_Actif'], layout: 'Pouvoir_Actif' do |embed|
@@ -72,7 +81,7 @@ def drawCards(deck, dirname, now)
     embed.png key: ':force-6:',      file: 'src/resources/helpers/wind-force-6.png',         width: 50, height: 50, dy: -38
     embed.svg key: ':force-x:',      file: 'src/resources/helpers/wind-x.svg',               width: 45, height: 50, dy: -40
     embed.svg key: ':force:',        file: 'src/resources/helpers/wind.svg',                 width: 45, height: 50, dy: -38
-    embed.png key: ':no-vent:',      file: 'src/resources/helpers/cancel-wind.png',          width: 50, height: 50, dy: -38
+    # embed.png key: ':no-vent:',      file: 'src/resources/helpers/cancel-wind.png',          width: 50, height: 50, dy: -38  # TODO: missing file
     embed.png key: ':rest:',         file: 'src/resources/helpers/untap-card.png',           width: 57, height: 57, dy: -45
     embed.png key: ':rest-all:',     file: 'src/resources/helpers/untap-all-card.png',       width: 57, height: 57, dy: -45
   end

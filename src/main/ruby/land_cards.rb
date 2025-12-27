@@ -7,6 +7,15 @@ deck = Squib.csv file: 'src/resources/land_cards.csv'
 # Charge le layout YAML pour récupérer les coordonnées des trapèzes
 LAYOUT_DATA = YAML.load_file('src/resources/lands-95mm.yml')
 
+# Helper function to wrap text with letter_spacing in Pango markup
+def wrap_with_letter_spacing(text, letter_spacing_value = '-5120')
+  if text.is_a?(Array)
+    text.map { |t| "<span letter_spacing='#{letter_spacing_value}'>#{t}</span>" }
+  else
+    "<span letter_spacing='#{letter_spacing_value}'>#{text}</span>"
+  end
+end
+
 def drawChallenge(deck)
 
   %w(Black White Green).each do |key|
@@ -38,7 +47,7 @@ def drawChallenge(deck)
       end
       }
     # Dessine le texte à droite du dé
-    text str: deck[key], layout: "LandText"+key.to_s
+    text str: wrap_with_letter_spacing(deck[key]), layout: "LandText"+key.to_s, markup: true
   end
 end
 
@@ -126,7 +135,7 @@ def drawTile(deck, dirname)
 
   # Fond noir semi-transparent sous les descriptions
   %w(Description).each do |key|
-    text str: deck[key], layout: key
+    text str: wrap_with_letter_spacing(deck[key]), layout: key, markup: true
   end
 
   polygon layout: deck["Type"]

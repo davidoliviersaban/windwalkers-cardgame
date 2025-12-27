@@ -2,13 +2,13 @@ Chapter,Type,Description,Image,White,Green,Black,Moral,Recruit,Template
 chapter,village,,village/green_midjourney2.png,6,,,,Green,village-GREEN
 chapter,village,,village/blue_midjourney.png,6,,,,Blue,village-BLUE
 chapter,village,,village/red_midjourney2.png,6,,,,Red,village-RED
-chapter,city,Aberlaas,city/aberlaas_midjourney2.png,,,,,RGB,city
-chapter,city,Port-Choon,city/portchoon_midjourney2.png,,,,,RGB,city
-chapter,city,Chawondasee,city/chawondasee_midjourney2.png,,,,,RGB,city
-chapter,city,Alticcio,city/alticcio_midjourney2.png,,,,,RGB,city
-chapter,city,Camp Bòban,city/campboban_midjourney2.png,,,,,RGB,city
+chapter,city,,city/aberlaas_midjourney2.png,,,,,RGB,city-aberlaas
+chapter,city,,city/portchoon_midjourney2.png,,,,,RGB,city-portchoon
+chapter,city,,city/chawondasee_midjourney2.png,,,,,RGB,city-chawondasee
+chapter,city,,city/alticcio_midjourney2.png,,,,,RGB,city-alticcio
+chapter,city,,city/campboban_midjourney2.png,,,,,RGB,city-campboban
 chapter,place,,place/tourfontaine_midjourney.png,6,,,,,special-tour
-chapter,place,Porte d'Hurle,place/portedhurle_midjourney.png,,,6,,,none
+chapter,place,,place/portedhurle_midjourney.png,,,6,,,special-portedhurle
 chapter,village,,village/protected_midjourney.png,6,,,,,village
 chapter1,land,,mountain_midjourney3.png,3,3,,,,tile-default
 chapter1,land,,forest_midjourney3.png,4,2,,,,tile-default

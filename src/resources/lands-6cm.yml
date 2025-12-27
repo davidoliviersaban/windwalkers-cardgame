@@ -29,21 +29,6 @@ frame:
     extends: cut
     font: Jaro 14
 
-# Moitié basse de l'hexagone (trapèze)
-# Pour hexagone flat-top centré (32mm, 29mm) rayon 29mm
-# r/2 = 14.5mm, r*√3/2 ≈ 25.1mm
-LowerHalf:
-    x1: 3mm      # gauche (milieu)
-    y1: 29mm
-    x2: 61mm     # droite (milieu)
-    y2: 29mm
-    x3: 46.5mm   # bas-droite
-    y3: 54.1mm
-    x4: 17.5mm   # bas-gauche
-    y4: 54.1mm
-    fill_color: '#00000060'
-    stroke_width: 0
-
 back:
     extends: frame
     stroke_width: 0
@@ -68,17 +53,6 @@ Image:
     width: 72mm
     height: :scale
 
-Description:
-    extends: frame
-    x: -= 250
-    y: += 30
-    width: 500
-    height: 300
-    align: center
-    color: white
-    stroke_color: black
-    stroke_width: 3
-    fill_color: '#ffffff'
 
 # ╔══════════════════════════════════════════════════════════════════╗
 # ║                     ZONE DES DÉS (D6)                            ║
@@ -194,12 +168,26 @@ LandTextBlack:
 PermanentZoneBase:
     extends: frame
     x: += 0
-    y: += 100
+    y: += 120
 
 PermanentZoneForeground:
     extends: PermanentZoneBase
     x: -= 230
     y: -= 80
+
+Description:
+    extends: PermanentZoneBase
+    x: -= 250
+    y: -= 70
+    width: 500
+    height: 300
+    align: center
+    color: white
+    stroke_color: black
+    stroke_width: 3
+    fill_color: '#ffffff'
+    font: Jaro 16
+    letter_spacing: -2000
 
 PermanentZoneBackground:
     extends: frame
@@ -211,22 +199,6 @@ PermanentZoneBackground:
     width: 703
     height: :scale
     file: src/resources/card-items/background-sm.svg
-
-# Icône de recrutement (Recruit)
-RecruitIcon:
-    extends: PermanentZoneBase
-    file: src/resources/helpers/rgb-card2.png
-    x: += 100
-    width: 100
-    height: :scale
-
-# Icône FreeRest (flip one gratuit) - à droite du Recruit
-FreeRestIcon:
-    extends: PermanentZoneBase
-    file: src/resources/helpers/flip-card.png
-    x: -= 30
-    width: :scale
-    height: 100
 
 # Icône moral (dans la zone permanente, à gauche de la tuile)
 MoralIcon:
