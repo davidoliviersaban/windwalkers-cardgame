@@ -12,7 +12,7 @@ import { Print } from "./Print";
 import { computeViewport, hexToPixel, pixelToHex } from "~/hex/utilities";
 
 export default function HexGridEditor() {
-  const { hexSize, onZoomChange } = useZoom();
+  const { hexSize, onZoomChange, zoomIn, zoomOut } = useZoom();
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [title, setTitle] = useState("Windwalker-Map");
@@ -27,45 +27,71 @@ export default function HexGridEditor() {
     width: 800,
     height: 600,
   });
+  const containerSizeRef = useRef(containerSize);
 
-  // Update container size on mount and resize
+  // Keep ref in sync with state
   useEffect(() => {
+    containerSizeRef.current = containerSize;
+  }, [containerSize]);
+
+  // Update container size on mount, resize, and any layout changes
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
     const updateSize = () => {
-      if (containerRef.current) {
-        setContainerSize({
-          width: containerRef.current.clientWidth,
-          height: containerRef.current.clientHeight,
-        });
-      }
+      const newSize = {
+        width: container.clientWidth,
+        height: container.clientHeight,
+      };
+      setContainerSize(newSize);
+      containerSizeRef.current = newSize;
     };
+
+    // Use ResizeObserver to detect all size changes
+    const resizeObserver = new ResizeObserver(updateSize);
+    resizeObserver.observe(container);
+
+    // Initial size update
     updateSize();
-    window.addEventListener("resize", updateSize);
-    return () => window.removeEventListener("resize", updateSize);
+
+    return () => resizeObserver.disconnect();
   }, []);
 
-  // Adjust offset when zoom changes to keep the center of the viewport at the same world position
+  // Keep a ref to the current offset for zoom calculations
+  const offsetRef = useRef(offset);
+  useEffect(() => {
+    offsetRef.current = offset;
+  }, [offset]);
+
+  // Adjust offset when zoom changes to keep the central hex tile at the center
   useEffect(() => {
     const unsubscribe = onZoomChange((oldZoom, newZoom) => {
-      const zoomRatio = newZoom / oldZoom;
+      const currentSize = containerSizeRef.current;
+      const currentOffset = offsetRef.current;
+      const oldHexSize = 100 * oldZoom;
+      const newHexSize = 100 * newZoom;
 
-      setOffset((prev) => {
-        // Calculate the world position at the center of the viewport before zoom
-        const centerWorldX = prev.x + containerSize.width / 2;
-        const centerWorldY = prev.y + containerSize.height / 2;
-
-        // Scale the center position by the zoom ratio
-        const newCenterWorldX = centerWorldX * zoomRatio;
-        const newCenterWorldY = centerWorldY * zoomRatio;
-
-        // Calculate the new offset to keep the same center
-        return {
-          x: newCenterWorldX - containerSize.width / 2,
-          y: newCenterWorldY - containerSize.height / 2,
-        };
+      // Find the hex at the center of the viewport before zoom
+      const centerPixelX = currentOffset.x + currentSize.width / 2;
+      const centerPixelY = currentOffset.y + currentSize.height / 2;
+      const centerHex = pixelToHex(centerPixelX, centerPixelY, oldHexSize);
+      
+      // Round to get the actual central tile
+      const centralQ = Math.round(centerHex.q);
+      const centralR = Math.round(centerHex.r);
+      
+      // Calculate the pixel position of this hex with the new zoom
+      const newCenterPixel = hexToPixel(centralQ, centralR, newHexSize);
+      
+      // Set offset so this hex is at the center of the viewport
+      setOffset({
+        x: newCenterPixel.x - currentSize.width / 2,
+        y: newCenterPixel.y - currentSize.height / 2,
       });
     });
     return unsubscribe;
-  }, [onZoomChange, containerSize]);
+  }, [onZoomChange]);
 
   // Pan handlers
   const handleMouseDown = useCallback(
@@ -96,14 +122,37 @@ export default function HexGridEditor() {
     setIsPanning(false);
   }, []);
 
-  // Wheel to pan (scroll behavior)
-  const handleWheel = useCallback((e: React.WheelEvent) => {
-    e.preventDefault();
-    setOffset((prev) => ({
-      x: prev.x + e.deltaX,
-      y: prev.y + e.deltaY,
-    }));
-  }, []);
+  // Wheel to pan (scroll behavior) or zoom with pinch/ctrl+wheel
+  const zoomThresholdRef = useRef(0);
+  const handleWheel = useCallback(
+    (e: React.WheelEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Pinch to zoom (trackpad) or Ctrl+wheel
+      if (e.ctrlKey || e.metaKey) {
+        // Accumulate delta for smoother threshold-based zoom
+        zoomThresholdRef.current += e.deltaY;
+
+        // Trigger zoom when threshold is reached
+        const threshold = 50;
+        if (zoomThresholdRef.current < -threshold) {
+          zoomIn();
+          zoomThresholdRef.current = 0;
+        } else if (zoomThresholdRef.current > threshold) {
+          zoomOut();
+          zoomThresholdRef.current = 0;
+        }
+      } else {
+        // Regular scroll to pan
+        setOffset((prev) => ({
+          x: prev.x + e.deltaX,
+          y: prev.y + e.deltaY,
+        }));
+      }
+    },
+    [zoomIn, zoomOut],
+  );
 
   const onClick = (q: number, r: number) => {
     setGrid((prev) => {
@@ -249,8 +298,9 @@ export default function HexGridEditor() {
 
     return (
       <svg
-        width={containerSize.width}
-        height={containerSize.height}
+        width="100%"
+        height="100%"
+        viewBox={`0 0 ${containerSize.width} ${containerSize.height}`}
         className="bg-white"
         style={{ cursor: isPanning ? "grabbing" : "default" }}
       >
@@ -273,8 +323,8 @@ export default function HexGridEditor() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-6xl p-4">
-      <div className="rounded-lg bg-white p-4 shadow-lg">
+    <div className="flex h-full flex-col px-[15%] py-4">
+      <div className="flex min-h-0 flex-1 flex-col rounded-lg bg-white p-4 shadow-lg">
         <NavBar
           title={title}
           onTitleChange={setTitle}
@@ -284,7 +334,7 @@ export default function HexGridEditor() {
           onClear={clearMap}
         />
 
-        <div className="flex gap-4">
+        <div className="flex min-h-0 flex-1 gap-4">
           <ToolBar
             selectedAsset={selectedAsset}
             setSelectedAsset={setSelectedAsset}
@@ -292,16 +342,12 @@ export default function HexGridEditor() {
 
           <div
             ref={containerRef}
-            className="flex-1 overflow-hidden rounded-lg border border-gray-200 bg-white"
+            className="min-h-0 flex-1 overflow-hidden rounded-lg border border-gray-200 bg-white"
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
             onWheel={handleWheel}
-            style={{
-              maxWidth: "calc(100vw - 200px)",
-              maxHeight: "calc(100vh - 200px)",
-            }}
           >
             {renderSvgContent()}
           </div>

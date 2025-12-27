@@ -4,7 +4,7 @@ import HexGridEditor from "~/components/HexGridEditor";
 export default function HomePage() {
   return (
     <ZoomProvider>
-      <div className="container mx-auto p-4">
+      <div className="h-screen overflow-hidden">
         <HexGridEditor />
       </div>
     </ZoomProvider>
