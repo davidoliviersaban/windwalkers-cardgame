@@ -145,14 +145,7 @@ const Assets: { [key: string]: Asset; empty: Asset } = {
     color: "#FFD700",
     img: "terrain/chapter.10.png",
   },
-  compass: {
-    type: "building",
-    name: "compass",
-    icon: null,
-    color: "#FFD700",
-    img: "terrain/chapter.11.png",
-  },
-
+  // compass: { type: "building", name: "compass", icon: null, color: "#FFD700", img: "terrain/chapter.11.png" },
   // temple: { type: 'building', name: 'temple', icon: IconComponents.Temple, color: '#DEB887' },
   // tour: { type: 'building', name: 'tower', icon: IconComponents.Tower, color: '#808080' }
 };
