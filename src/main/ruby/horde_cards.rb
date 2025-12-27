@@ -54,8 +54,8 @@ def drawCards(deck, dirname, now)
   }, layout: 'PositionSVG'
 
 
-  text str: wrap_with_letter_spacing(deck['Nom']), layout: 'Nom', markup: true
-  text str: wrap_with_letter_spacing(deck['Fonction']), layout: 'Fonction', markup: true
+  text str: deck['Nom'], layout: 'Nom', markup: true
+  text str: deck['Fonction'], layout: 'Fonction', markup: true
   # Pouvoir avec icônes PNG inline via embed
   # width and height of png must be specified to avoid layout shifting
   text str: deck['Pouvoir_Actif'], layout: 'Pouvoir_Actif' do |embed|
