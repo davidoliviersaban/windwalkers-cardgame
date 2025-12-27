@@ -12,7 +12,10 @@ export const ToolBar: React.FC<ToolBarProps> = ({
   setSelectedAsset,
 }) => {
   return (
-    <div className="flex h-screen w-48 flex-col overflow-y-auto rounded bg-gray-100 p-4">
+    <div 
+      className="flex w-48 flex-col overflow-y-auto rounded bg-gray-100 p-4"
+      style={{ maxHeight: "calc(100vh - 180px)" }}
+    >
       <h3 className="mb-2 font-bold">Terrains</h3>
       <div className="flex flex-col gap-2">
         <button

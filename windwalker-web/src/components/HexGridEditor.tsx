@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { ToolBar } from "./ToolBar";
 import { NavBar } from "./NavBar";
 import Hexagon from "~/hex/Hexagon";
@@ -9,51 +9,101 @@ import type { Tile } from "~/models/Tile";
 import { createTile } from "~/models/Tile";
 import { useZoom } from "~/providers/ZoomProvider";
 import { Print } from "./Print";
-import { computeViewport } from "~/hex/utilities";
+import { computeViewport, hexToPixel, pixelToHex } from "~/hex/utilities";
 
 export default function HexGridEditor() {
   const { hexSize, onZoomChange } = useZoom();
-  const [dimensions] = useState({ width: 5000, height: 5000 });
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [title, setTitle] = useState("Windwalker-Map");
   const [grid, setGrid] = useState([] as Tile[]);
   const [selectedAsset, setSelectedAsset] = useState<Asset>(Assets.empty);
-  const [viewport, setViewport] = useState({
-    x: dimensions.width / 2,
-    y: dimensions.height / 2,
+
+  // Virtual offset - represents where we are in the infinite canvas
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+  const [containerSize, setContainerSize] = useState({
     width: 800,
     height: 600,
   });
 
-  // Adjust scroll position when zoom changes to keep the center
+  // Update container size on mount and resize
+  useEffect(() => {
+    const updateSize = () => {
+      if (containerRef.current) {
+        setContainerSize({
+          width: containerRef.current.clientWidth,
+          height: containerRef.current.clientHeight,
+        });
+      }
+    };
+    updateSize();
+    window.addEventListener("resize", updateSize);
+    return () => window.removeEventListener("resize", updateSize);
+  }, []);
+
+  // Adjust offset when zoom changes to keep the center of the viewport at the same world position
   useEffect(() => {
     const unsubscribe = onZoomChange((oldZoom, newZoom) => {
-      if (!containerRef.current) return;
-
-      const container = containerRef.current;
       const zoomRatio = newZoom / oldZoom;
 
-      // Calculate current center point
-      const centerX = container.scrollLeft + container.clientWidth / 2;
-      const centerY = container.scrollTop + container.clientHeight / 2;
+      setOffset((prev) => {
+        // Calculate the world position at the center of the viewport before zoom
+        const centerWorldX = prev.x + containerSize.width / 2;
+        const centerWorldY = prev.y + containerSize.height / 2;
 
-      // Calculate new scroll position to keep the same center
-      const newScrollX = centerX * zoomRatio - container.clientWidth / 2;
-      const newScrollY = centerY * zoomRatio - container.clientHeight / 2;
+        // Scale the center position by the zoom ratio
+        const newCenterWorldX = centerWorldX * zoomRatio;
+        const newCenterWorldY = centerWorldY * zoomRatio;
 
-      // Apply new scroll position after render
-      requestAnimationFrame(() => {
-        container.scrollTo({
-          left: newScrollX,
-          top: newScrollY,
-          behavior: "instant",
-        });
+        // Calculate the new offset to keep the same center
+        return {
+          x: newCenterWorldX - containerSize.width / 2,
+          y: newCenterWorldY - containerSize.height / 2,
+        };
       });
     });
-
     return unsubscribe;
-  }, [onZoomChange]);
+  }, [onZoomChange, containerSize]);
+
+  // Pan handlers
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      // Only start panning with middle mouse button or when holding space
+      if (e.button === 1 || e.shiftKey) {
+        setIsPanning(true);
+        setPanStart({ x: e.clientX + offset.x, y: e.clientY + offset.y });
+        e.preventDefault();
+      }
+    },
+    [offset],
+  );
+
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      if (isPanning) {
+        setOffset({
+          x: panStart.x - e.clientX,
+          y: panStart.y - e.clientY,
+        });
+      }
+    },
+    [isPanning, panStart],
+  );
+
+  const handleMouseUp = useCallback(() => {
+    setIsPanning(false);
+  }, []);
+
+  // Wheel to pan (scroll behavior)
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault();
+    setOffset((prev) => ({
+      x: prev.x + e.deltaX,
+      y: prev.y + e.deltaY,
+    }));
+  }, []);
 
   const onClick = (q: number, r: number) => {
     setGrid((prev) => {
@@ -76,20 +126,16 @@ export default function HexGridEditor() {
   };
 
   const centerViewOnGrid = (tiles: Tile[]) => {
-    if (!containerRef.current || tiles.length === 0) return;
+    if (tiles.length === 0) return;
 
     const bounds = computeViewport(tiles, hexSize);
     const centerX = bounds.x + bounds.width / 2;
     const centerY = bounds.y + bounds.height / 2;
 
-    const container = containerRef.current;
-    const scrollX = centerX - container.clientWidth / 2;
-    const scrollY = centerY - container.clientHeight / 2;
-
-    container.scrollTo({
-      left: scrollX,
-      top: scrollY,
-      behavior: "smooth",
+    // Set offset to center on the grid
+    setOffset({
+      x: centerX - containerSize.width / 2,
+      y: centerY - containerSize.height / 2,
     });
   };
 
@@ -140,18 +186,6 @@ export default function HexGridEditor() {
     setGrid([]);
   };
 
-  const handleScroll: React.UIEventHandler<HTMLDivElement> = (event) => {
-    const { scrollLeft, scrollTop, clientWidth, clientHeight } =
-      event.target as HTMLDivElement;
-    setViewport({
-      x: scrollLeft,
-      y: scrollTop,
-      width: clientWidth,
-      height: clientHeight,
-    });
-    console.log("Viewport:", viewport);
-  };
-
   useEffect(() => {
     const handleError = (error: Error | ErrorEvent | PromiseRejectionEvent) => {
       console.error("Unhandled error:", error);
@@ -166,38 +200,77 @@ export default function HexGridEditor() {
     };
   }, []);
 
-  const renderSvgContent = () => (
-    <svg
-      width={dimensions.width}
-      height={dimensions.height}
-      className="bg-white"
-    >
-      <defs>{loadImageAssetsToSvg(hexSize)}</defs>
+  // Calculate which hexagons are visible based on offset and container size
+  const getVisibleHexagons = () => {
+    // Add padding to render hexagons just outside the viewport
+    const padding = 3;
 
-      {Array.from({ length: Math.ceil(viewport.width / hexSize) + 2 }, (_, q) =>
-        Array.from(
-          { length: Math.ceil(viewport.height / hexSize) + 10 },
-          (_, r) => {
-            const adjustedQ = q + Math.floor(viewport.x / (2 * hexSize)) - 1;
-            const adjustedR = r + Math.floor(viewport.y / (2 * hexSize)) - 5;
-            return (
-              <Hexagon
-                key={`${adjustedQ}-${adjustedR}`}
-                q={adjustedQ}
-                r={adjustedR}
-                tile={
-                  grid.find(
-                    (tile) => tile.q === adjustedQ && tile.r === adjustedR,
-                  ) ?? {}
-                }
-                onClick={() => onClick(adjustedQ, adjustedR)}
-              />
-            );
-          },
-        ),
-      )}
-    </svg>
-  );
+    // Convert all 4 corners of the viewport to hex coordinates
+    // In axial coordinates, q and r axes are not perpendicular, so we need all corners
+    const topLeft = pixelToHex(offset.x, offset.y, hexSize);
+    const topRight = pixelToHex(
+      offset.x + containerSize.width,
+      offset.y,
+      hexSize,
+    );
+    const bottomLeft = pixelToHex(
+      offset.x,
+      offset.y + containerSize.height,
+      hexSize,
+    );
+    const bottomRight = pixelToHex(
+      offset.x + containerSize.width,
+      offset.y + containerSize.height,
+      hexSize,
+    );
+
+    // Find the min/max q and r across all 4 corners
+    const minQ = Math.min(topLeft.q, topRight.q, bottomLeft.q, bottomRight.q);
+    const maxQ = Math.max(topLeft.q, topRight.q, bottomLeft.q, bottomRight.q);
+    const minR = Math.min(topLeft.r, topRight.r, bottomLeft.r, bottomRight.r);
+    const maxR = Math.max(topLeft.r, topRight.r, bottomLeft.r, bottomRight.r);
+
+    const startQ = Math.floor(minQ) - padding;
+    const startR = Math.floor(minR) - padding;
+    const endQ = Math.ceil(maxQ) + padding;
+    const endR = Math.ceil(maxR) + padding;
+
+    const hexagons: { q: number; r: number }[] = [];
+    for (let q = startQ; q <= endQ; q++) {
+      for (let r = startR; r <= endR; r++) {
+        hexagons.push({ q, r });
+      }
+    }
+    return hexagons;
+  };
+
+  const renderSvgContent = () => {
+    const visibleHexagons = getVisibleHexagons();
+
+    return (
+      <svg
+        width={containerSize.width}
+        height={containerSize.height}
+        className="bg-white"
+        style={{ cursor: isPanning ? "grabbing" : "default" }}
+      >
+        <defs>{loadImageAssetsToSvg(hexSize)}</defs>
+
+        {/* Offset group to simulate infinite canvas */}
+        <g transform={`translate(${-offset.x}, ${-offset.y})`}>
+          {visibleHexagons.map(({ q, r }) => (
+            <Hexagon
+              key={`${q}-${r}`}
+              q={q}
+              r={r}
+              tile={grid.find((tile) => tile.q === q && tile.r === r) ?? {}}
+              onClick={() => onClick(q, r)}
+            />
+          ))}
+        </g>
+      </svg>
+    );
+  };
 
   return (
     <div className="mx-auto w-full max-w-6xl p-4">
@@ -219,12 +292,15 @@ export default function HexGridEditor() {
 
           <div
             ref={containerRef}
-            className="flex-1 overflow-auto rounded-lg border border-gray-200 bg-white"
-            onScroll={handleScroll}
+            className="flex-1 overflow-hidden rounded-lg border border-gray-200 bg-white"
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            onWheel={handleWheel}
             style={{
               maxWidth: "calc(100vw - 200px)",
               maxHeight: "calc(100vh - 200px)",
-              overflow: "auto",
             }}
           >
             {renderSvgContent()}
