@@ -266,10 +266,18 @@ function (dojo, declare) {
             
             switch (stateName) {
                 case 'draftHorde':
+                    // Hide other panels during draft
+                    dojo.style('ww_map_container', 'display', 'none');
+                    dojo.style('ww_dice_panel', 'display', 'none');
                     this.showDraftInterface(args.args);
                     break;
                     
                 case 'playerTurn':
+                    // Show game panels
+                    dojo.style('ww_map_container', 'display', 'block');
+                    dojo.style('ww_dice_panel', 'display', 'block');
+                    dojo.style('ww_draft_panel', 'display', 'none');
+                    
                     if (this.isCurrentPlayerActive()) {
                         this.highlightAdjacentTiles(args.args.adjacent);
                     }
@@ -343,15 +351,152 @@ function (dojo, declare) {
         showDraftInterface: function(args)
         {
             console.log('Draft interface:', args);
-            // TODO: Implement draft UI - for now just show a message
-            if (args && args.requirements) {
-                var msg = 'Select your horde: ' + 
-                    args.requirements.traceur + ' Traceur, ' +
-                    args.requirements.fer + ' Fers, ' +
-                    args.requirements.pack + ' Packs, ' +
-                    args.requirements.traine + ' Traînes';
-                this.showMessage(msg, 'info');
+            
+            if (!args) {
+                console.error('No draft args provided');
+                return;
             }
+            
+            // Show draft panel
+            dojo.style('ww_draft_panel', 'display', 'block');
+            
+            // Clear previous content
+            var poolContainer = $('ww_available_characters');
+            if (poolContainer) {
+                poolContainer.innerHTML = '';
+            }
+            
+            // Store draft state
+            this.draftArgs = args;
+            this.draftSelected = args.selected || {};
+            
+            // Create character cards for each available character
+            if (args.available) {
+                for (var cardId in args.available) {
+                    var card = args.available[cardId];
+                    this.createDraftCard(card, 'ww_available_characters');
+                }
+            }
+            
+            // Display already selected cards in the horde panel
+            if (args.selected) {
+                for (var cardId in args.selected) {
+                    var card = args.selected[cardId];
+                    this.createDraftCard(card, 'ww_horde', true);
+                }
+            }
+            
+            // Update counts
+            this.updateDraftCounts(args.counts, args.requirements);
+        },
+        
+        /**
+         * Create a card element for draft
+         */
+        createDraftCard: function(card, containerId, isSelected)
+        {
+            // Use enriched data from server if available, fallback to local characters data
+            var charType = card.char_type || card.type;
+            var isLeader = card.is_leader || false;
+            var charName = card.name || 'Card ' + card.id;
+            var charPower = card.power || '';
+            
+            // Fallback: try to get info from local characters data
+            if (this.characters && this.characters[card.type_arg]) {
+                var charInfo = this.characters[card.type_arg];
+                charType = charInfo.type || charType;
+                isLeader = charInfo.is_leader || isLeader;
+                charName = charInfo.name || charName;
+                charPower = charInfo.power || charPower;
+            }
+            
+            // Determine display type
+            var displayType = isLeader ? 'traceur' : charType;
+            
+            var cardHtml = '<div id="draft_card_' + card.id + '" ' +
+                           'class="ww_draft_card' + (isSelected ? ' ww_selected' : '') + '" ' +
+                           'data-card-id="' + card.id + '" ' +
+                           'data-type="' + displayType + '" ' +
+                           'data-type-arg="' + card.type_arg + '">' +
+                           '<div class="ww_draft_card_name">' + charName + '</div>' +
+                           '<div class="ww_draft_card_type">' + this.capitalizeFirst(displayType) + '</div>' +
+                           '<div class="ww_draft_card_power">' + charPower + '</div>' +
+                           '</div>';
+            
+            dojo.place(cardHtml, containerId);
+            
+            // Add click handler
+            var self = this;
+            dojo.connect($('draft_card_' + card.id), 'onclick', function(evt) {
+                dojo.stopEvent(evt);
+                self.onDraftCardClick(card.id);
+            });
+        },
+        
+        /**
+         * Update draft requirement counts display
+         */
+        updateDraftCounts: function(counts, requirements)
+        {
+            if (!counts || !requirements) return;
+            
+            var types = ['traceur', 'fer', 'pack', 'traine'];
+            for (var i = 0; i < types.length; i++) {
+                var type = types[i];
+                var countEl = $('count_' + type);
+                if (countEl) {
+                    countEl.innerHTML = counts[type] || 0;
+                }
+                
+                var reqEl = $('req_' + type);
+                if (reqEl) {
+                    var current = counts[type] || 0;
+                    var required = requirements[type] || 0;
+                    
+                    dojo.removeClass(reqEl, 'ww_complete ww_incomplete');
+                    dojo.addClass(reqEl, current >= required ? 'ww_complete' : 'ww_incomplete');
+                }
+            }
+        },
+        
+        /**
+         * Handle draft card click
+         */
+        onDraftCardClick: function(cardId)
+        {
+            console.log('Draft card clicked:', cardId);
+            
+            if (!this.isCurrentPlayerActive()) {
+                return;
+            }
+            
+            var cardEl = $('draft_card_' + cardId);
+            if (!cardEl) return;
+            
+            var isSelected = dojo.hasClass(cardEl, 'ww_selected');
+            
+            if (isSelected) {
+                // Deselect - remove from horde
+                this.bgaPerformAction('actToggleDraftCard', {
+                    card_id: cardId,
+                    select: false
+                });
+            } else {
+                // Select - add to horde
+                this.bgaPerformAction('actToggleDraftCard', {
+                    card_id: cardId,
+                    select: true
+                });
+            }
+        },
+        
+        /**
+         * Capitalize first letter
+         */
+        capitalizeFirst: function(str)
+        {
+            if (!str) return '';
+            return str.charAt(0).toUpperCase() + str.slice(1);
         },
         
         /**
@@ -645,6 +790,13 @@ function (dojo, declare) {
             
             dojo.subscribe('playerMoves', this, "notif_playerMoves");
             this.notifqueue.setSynchronous('playerMoves', 500);
+            
+            // Draft notifications
+            dojo.subscribe('cardToggled', this, "notif_cardToggled");
+            this.notifqueue.setSynchronous('cardToggled', 300);
+            
+            dojo.subscribe('draftComplete', this, "notif_draftComplete");
+            this.notifqueue.setSynchronous('draftComplete', 500);
         },
         
         notif_diceRolled: function(notif)
@@ -766,6 +918,67 @@ function (dojo, declare) {
             console.log('notif_playerMoves', notif);
             
             this.movePlayerToken(notif.args.player_id, notif.args.q, notif.args.r);
+        },
+        
+        notif_cardToggled: function(notif)
+        {
+            console.log('notif_cardToggled', notif);
+            
+            var cardEl = $('draft_card_' + notif.args.card_id);
+            if (!cardEl) return;
+            
+            if (notif.args.selected) {
+                dojo.addClass(cardEl, 'ww_selected');
+            } else {
+                dojo.removeClass(cardEl, 'ww_selected');
+            }
+            
+            // Update counts
+            if (notif.args.counts && notif.args.requirements) {
+                this.updateDraftCounts(notif.args.counts, notif.args.requirements);
+            }
+        },
+        
+        notif_draftComplete: function(notif)
+        {
+            console.log('notif_draftComplete', notif);
+            
+            // Hide draft panel
+            dojo.style('ww_draft_panel', 'display', 'none');
+            
+            // Refresh horde display
+            if (notif.args.horde) {
+                this.refreshHorde(notif.args.horde);
+            }
+        },
+        
+        /**
+         * Refresh horde display with new cards
+         */
+        refreshHorde: function(horde)
+        {
+            // Clear current horde
+            var hordeEl = $('ww_horde');
+            if (hordeEl) {
+                hordeEl.innerHTML = '';
+            }
+            
+            // Add new cards
+            for (var cardId in horde) {
+                var card = horde[cardId];
+                var charInfo = this.characters[card.type_arg] || {};
+                var charType = charInfo.type || card.type;
+                var isLeader = charInfo.is_leader;
+                var displayType = isLeader ? 'traceur' : charType;
+                
+                var cardHtml = '<div id="horde_card_' + card.id + '" ' +
+                               'class="ww_character_card" ' +
+                               'data-type="' + displayType + '">' +
+                               '<div class="ww_card_name">' + (charInfo.name || '') + '</div>' +
+                               '</div>';
+                
+                dojo.place(cardHtml, hordeEl);
+            }
         }
    });
 });

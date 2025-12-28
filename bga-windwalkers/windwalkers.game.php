@@ -576,6 +576,146 @@ class Windwalkers extends Table
         $this->gamestate->nextState('moveToTile');
     }
 
+    /**
+     * Toggle a card selection during draft
+     */
+    function actToggleDraftCard(int $card_id, bool $select)
+    {
+        $this->checkAction('actToggleDraftCard');
+        $player_id = $this->getActivePlayerId();
+        
+        $card = $this->cards->getCard($card_id);
+        if (!$card) {
+            throw new BgaUserException($this->_("Card not found"));
+        }
+        
+        if ($select) {
+            // Check if card is in deck (available)
+            if ($card['location'] != 'deck') {
+                throw new BgaUserException($this->_("This card is not available"));
+            }
+            
+            // Check horde limits
+            $horde = $this->cards->getCardsInLocation('horde_' . $player_id);
+            $char_info = $this->characters[$card['type_arg']] ?? [];
+            $card_type = $char_info['type'] ?? $card['type'];
+            $is_leader = !empty($char_info['is_leader']);
+            
+            $counts = $this->countHordeByType($horde);
+            
+            $requirements = [
+                'traceur' => 1,
+                'fer' => 2,
+                'pack' => 3,
+                'traine' => 2
+            ];
+            
+            $type_key = $is_leader ? 'traceur' : $card_type;
+            
+            if ($counts[$type_key] >= $requirements[$type_key]) {
+                throw new BgaUserException($this->_("You already have enough characters of this type"));
+            }
+            
+            // Move card to horde
+            $this->cards->moveCard($card_id, 'horde_' . $player_id);
+            $this->trackHordierSelection($card_id);
+            
+        } else {
+            // Check if card is in player's horde
+            if ($card['location'] != 'horde_' . $player_id) {
+                throw new BgaUserException($this->_("This card is not in your horde"));
+            }
+            
+            // Move card back to deck
+            $this->cards->moveCard($card_id, 'deck');
+        }
+        
+        // Get updated counts
+        $horde = $this->cards->getCardsInLocation('horde_' . $player_id);
+        $counts = $this->countHordeByType($horde);
+        
+        // Notify
+        $this->notify->all('cardToggled', '', [
+            'player_id' => $player_id,
+            'card_id' => $card_id,
+            'selected' => $select,
+            'counts' => $counts,
+            'requirements' => [
+                'traceur' => 1,
+                'fer' => 2,
+                'pack' => 3,
+                'traine' => 2
+            ]
+        ]);
+    }
+    
+    /**
+     * Confirm the drafted horde
+     */
+    function actConfirmDraft()
+    {
+        $this->checkAction('actConfirmDraft');
+        $player_id = $this->getActivePlayerId();
+        
+        // Check horde is complete
+        $horde = $this->cards->getCardsInLocation('horde_' . $player_id);
+        $counts = $this->countHordeByType($horde);
+        
+        $requirements = [
+            'traceur' => 1,
+            'fer' => 2,
+            'pack' => 3,
+            'traine' => 2
+        ];
+        
+        foreach ($requirements as $type => $required) {
+            if ($counts[$type] < $required) {
+                throw new BgaUserException(sprintf(
+                    $this->_("You need %d %s, but only have %d"),
+                    $required,
+                    $type,
+                    $counts[$type]
+                ));
+            }
+        }
+        
+        // Notify draft complete
+        $this->notify->all('draftComplete', clienttranslate('${player_name} has completed their horde'), [
+            'player_id' => $player_id,
+            'player_name' => $this->getActivePlayerName(),
+            'horde' => $horde
+        ]);
+        
+        $this->gamestate->nextState('hordeComplete');
+    }
+    
+    /**
+     * Count cards in horde by type
+     */
+    function countHordeByType($horde)
+    {
+        $counts = [
+            'traceur' => 0,
+            'fer' => 0,
+            'pack' => 0,
+            'traine' => 0
+        ];
+        
+        foreach ($horde as $card) {
+            $char_info = $this->characters[$card['type_arg']] ?? [];
+            $card_type = $char_info['type'] ?? $card['type'];
+            $is_leader = !empty($char_info['is_leader']);
+            
+            if ($is_leader) {
+                $counts['traceur']++;
+            } else if (isset($counts[$card_type])) {
+                $counts[$card_type]++;
+            }
+        }
+        
+        return $counts;
+    }
+
     function actSurpassAndSelectTile($tile_id)
     {
         $this->checkAction('actSurpassAndSelectTile');
@@ -727,8 +867,27 @@ class Windwalkers extends Table
         $available = [];
         $selected = [];
         try {
-            $available = $this->cards->getCardsInLocation('deck');
-            $selected = $this->cards->getCardsInLocation('horde_' . $player_id);
+            $rawAvailable = $this->cards->getCardsInLocation('deck');
+            $rawSelected = $this->cards->getCardsInLocation('horde_' . $player_id);
+            
+            // Enrich cards with character info
+            foreach ($rawAvailable as $card) {
+                $charInfo = $this->characters[$card['type_arg']] ?? [];
+                $card['name'] = $charInfo['name'] ?? 'Unknown';
+                $card['char_type'] = $charInfo['type'] ?? $card['type'];
+                $card['is_leader'] = !empty($charInfo['is_leader']);
+                $card['power'] = $charInfo['power'] ?? '';
+                $available[$card['id']] = $card;
+            }
+            
+            foreach ($rawSelected as $card) {
+                $charInfo = $this->characters[$card['type_arg']] ?? [];
+                $card['name'] = $charInfo['name'] ?? 'Unknown';
+                $card['char_type'] = $charInfo['type'] ?? $card['type'];
+                $card['is_leader'] = !empty($charInfo['is_leader']);
+                $card['power'] = $charInfo['power'] ?? '';
+                $selected[$card['id']] = $card;
+            }
         } catch (Exception $e) {
             // Cards may not be initialized yet
         }
@@ -741,10 +900,10 @@ class Windwalkers extends Table
             'traine' => 0
         ];
         foreach ($selected as $card) {
-            if (!empty($card['card_is_leader'])) {
+            if (!empty($card['is_leader'])) {
                 $counts['traceur']++;
             } else {
-                $type = $card['card_type'] ?? 'fer';
+                $type = $card['char_type'] ?? 'fer';
                 if (isset($counts[$type])) {
                     $counts[$type]++;
                 }
