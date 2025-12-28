@@ -566,3 +566,40 @@ $this->wind_distribution = [
     5 => 6,  // 20%
     6 => 4,  // 13% (Furevent!)
 ];
+
+/*
+ * Chapter definitions
+ * Each chapter contains a list of tiles with their hex coordinates and terrain types
+ */
+$this->chapters = [
+    1 => [
+        'name' => clienttranslate('Chapter 1: The Journey Begins'),
+        'tiles' => [
+            ['q' => 3, 'r' => 17, 'subtype' => 'aberlaas'],
+            ['q' => 3, 'r' => 16, 'subtype' => 'mountain'],
+            ['q' => 3, 'r' => 15, 'subtype' => 'forest'],
+            ['q' => 3, 'r' => 14, 'subtype' => 'village_green'],
+            ['q' => 3, 'r' => 13, 'subtype' => 'plain'],
+            ['q' => 3, 'r' => 12, 'subtype' => 'hut'],
+            ['q' => 3, 'r' => 11, 'subtype' => 'portchoon'],
+        ]
+    ],
+    2 => [
+        'name' => clienttranslate('Chapter 2'),
+        'tiles' => [
+            // Chapter 2 tiles would be defined here
+        ]
+    ],
+    3 => [
+        'name' => clienttranslate('Chapter 3'),
+        'tiles' => [
+            // Chapter 3 tiles would be defined here
+        ]
+    ],
+    4 => [
+        'name' => clienttranslate('Chapter 4'),
+        'tiles' => [
+            // Chapter 4 tiles would be defined here
+        ]
+    ],
+];

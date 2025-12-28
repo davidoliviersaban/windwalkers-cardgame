@@ -523,17 +523,16 @@ function (dojo, declare) {
             
             this.selectedTile = tile_id;
             
-            this.ajaxcall('/windwalkers/windwalkers/actSelectTile.html', {
+            this.bgaPerformAction('actSelectTile', {
                 tile_id: tile_id
-            }, this, function(result) {}, function(is_error) {});
+            });
         },
         
         onRollDice: function(evt)
         {
             dojo.stopEvent(evt);
             
-            this.ajaxcall('/windwalkers/windwalkers/actRollDice.html', {}, 
-                this, function(result) {}, function(is_error) {});
+            this.bgaPerformAction('actRollDice', {});
         },
         
         onMoralPlus: function(evt)
@@ -545,10 +544,10 @@ function (dojo, declare) {
                 return;
             }
             
-            this.ajaxcall('/windwalkers/windwalkers/actUseMoral.html', {
+            this.bgaPerformAction('actUseMoral', {
                 dice_id: this.selectedDice[0],
                 modifier: 1
-            }, this, function(result) {}, function(is_error) {});
+            });
         },
         
         onMoralMinus: function(evt)
@@ -560,50 +559,45 @@ function (dojo, declare) {
                 return;
             }
             
-            this.ajaxcall('/windwalkers/windwalkers/actUseMoral.html', {
+            this.bgaPerformAction('actUseMoral', {
                 dice_id: this.selectedDice[0],
                 modifier: -1
-            }, this, function(result) {}, function(is_error) {});
+            });
         },
         
         onConfirmRoll: function(evt)
         {
             dojo.stopEvent(evt);
             
-            this.ajaxcall('/windwalkers/windwalkers/actConfirmRoll.html', {},
-                this, function(result) {}, function(is_error) {});
+            this.bgaPerformAction('actConfirmRoll', {});
         },
         
         onSurpass: function(evt)
         {
             dojo.stopEvent(evt);
             
-            this.ajaxcall('/windwalkers/windwalkers/actSurpass.html', {},
-                this, function(result) {}, function(is_error) {});
+            this.bgaPerformAction('actSurpass', {});
         },
         
         onEndTurn: function(evt)
         {
             dojo.stopEvent(evt);
             
-            this.ajaxcall('/windwalkers/windwalkers/actEndTurn.html', {},
-                this, function(result) {}, function(is_error) {});
+            this.bgaPerformAction('actEndTurn', {});
         },
         
         onRest: function(evt)
         {
             dojo.stopEvent(evt);
             
-            this.ajaxcall('/windwalkers/windwalkers/actRest.html', {},
-                this, function(result) {}, function(is_error) {});
+            this.bgaPerformAction('actRest', {});
         },
         
         onConfirmDraft: function(evt)
         {
             dojo.stopEvent(evt);
             
-            this.ajaxcall('/windwalkers/windwalkers/actConfirmDraft.html', {},
-                this, function(result) {}, function(is_error) {});
+            this.bgaPerformAction('actConfirmDraft', {});
         },
         
         ///////////////////////////////////////////////////

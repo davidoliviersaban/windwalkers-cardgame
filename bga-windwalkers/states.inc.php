@@ -12,15 +12,6 @@
 
 $machinestates = [
 
-    // The initial state. Please do not modify.
-    1 => [
-        "name" => "gameSetup",
-        "description" => "",
-        "type" => "manager",
-        "action" => "stGameSetup",
-        "transitions" => ["" => 2]
-    ],
-
     // ==================== DRAFT PHASE ====================
     
     2 => [
@@ -59,8 +50,7 @@ $machinestates = [
         "args" => "argPlayerTurn",
         "transitions" => [
             "moveToTile" => 20,
-            "rest" => 30,
-            "endGame" => 99
+            "rest" => 30
         ]
     ],
 
@@ -148,8 +138,7 @@ $machinestates = [
         "possibleactions" => ["actAbandonHordier"],
         "args" => "argLoseHordier",
         "transitions" => [
-            "hordierLost" => 30,  // Rest after failure (no surpass possible)
-            "gameOver" => 99
+            "hordierLost" => 30  // Rest after failure (no surpass possible)
         ]
     ],
 
@@ -177,8 +166,7 @@ $machinestates = [
         "action" => "stEndChapter",
         "args" => "argEndChapter",
         "transitions" => [
-            "nextChapter" => 65,
-            "gameEnd" => 99
+            "nextChapter" => 65
         ]
     ],
 
@@ -201,8 +189,7 @@ $machinestates = [
         "action" => "stNextPlayer",
         "transitions" => [
             "nextTurn" => 10,  // After rest: next player must move
-            "endRound" => 75,
-            "endGame" => 99
+            "endRound" => 75
         ]
     ],
 
@@ -212,19 +199,8 @@ $machinestates = [
         "type" => "game",
         "action" => "stEndRound",
         "transitions" => [
-            "newRound" => 10,
-            "endGame" => 99
+            "newRound" => 10
         ]
-    ],
-
-    // ==================== GAME END ====================
-
-    99 => [
-        "name" => "gameEnd",
-        "description" => clienttranslate("End of game"),
-        "type" => "manager",
-        "action" => "stGameEnd",
-        "args" => "argGameEnd"
     ]
 
 ];

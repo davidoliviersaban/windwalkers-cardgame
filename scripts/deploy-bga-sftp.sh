@@ -11,12 +11,18 @@ if [[ -f "$ENV_FILE" ]]; then
   while IFS= read -r line; do
     # skip comments and empty lines
     [[ -z "$line" || "$line" =~ ^\s*# ]] && continue
-    if [[ "$line" =~ ^(BGA_SFTP_HOST|BGA_SFTP_PORT|BGA_SFTP_USER|BGA_SFTP_PASSWORD|BGA_SFTP_REMOTE_DIR|DEPLOY_SOURCE)= ]]; then
+    if [[ "$line" =~ ^(BGA_SFTP_HOST|BGA_SFTP_PORT|BGA_SFTP_USER|BGA_SFTP_PASSWORD|BGA_SFTP_REMOTE_DIR|DEPLOY_SOURCE|BGA_DB_USER)= ]]; then
       key="${line%%=*}"
       val="${line#*=}"
       export "$key=$val"
     fi
   done < "$ENV_FILE"
+fi
+
+# Expand placeholder ${BGA_DB_USER} inside BGA_SFTP_REMOTE_DIR if present
+if [[ -n "${BGA_SFTP_REMOTE_DIR:-}" && -n "${BGA_DB_USER:-}" ]]; then
+  BGA_SFTP_REMOTE_DIR="${BGA_SFTP_REMOTE_DIR//\$\{BGA_DB_USER\}/$BGA_DB_USER}"
+  export BGA_SFTP_REMOTE_DIR
 fi
 
 # Validate required variables
@@ -48,6 +54,8 @@ EXCLUDES=(
   "vendor"
   ".venv"
   ".next/cache"
+  ".phpunit.result.cache"
+  ".*"
 )
 
 excludeFlags=()
@@ -63,13 +71,26 @@ fi
 
 echo "Deploying 'bga-windwalkers' from '$LOCAL_PATH' to '$BGA_SFTP_USER@$BGA_SFTP_HOST:$BGA_SFTP_REMOTE_DIR' (port $BGA_SFTP_PORT)"
 
+# Prepare relative remote dir for creation steps (assumes login starts at user home)
+REMOTE_DIR_PREFIX="/home/studio/$BGA_DB_USER/"
+if [[ "$BGA_SFTP_REMOTE_DIR" == "$REMOTE_DIR_PREFIX"* ]]; then
+  REMOTE_DIR_REL="${BGA_SFTP_REMOTE_DIR#"$REMOTE_DIR_PREFIX"}"
+else
+  REMOTE_DIR_REL="$BGA_SFTP_REMOTE_DIR"
+fi
+# strip any leading '/'
+REMOTE_DIR_REL="${REMOTE_DIR_REL#/}"
+
 # Execute lftp mirror reverse (upload)
 lftp -u "$BGA_SFTP_USER","$BGA_SFTP_PASSWORD" "sftp://$BGA_SFTP_HOST:$BGA_SFTP_PORT" <<EOF
 set net:max-retries 2
 set net:timeout 30
 set sftp:auto-confirm yes
+set cmd:fail-exit yes
 lcd "$LOCAL_PATH"
-cd "$BGA_SFTP_REMOTE_DIR"
+# Ensure remote directory exists (create parents when possible)
+cd ~
+cd "$REMOTE_DIR_REL"
 mirror -R --parallel=4 --delete $DRY_RUN_FLAG ${excludeFlags[@]}
 bye
 EOF

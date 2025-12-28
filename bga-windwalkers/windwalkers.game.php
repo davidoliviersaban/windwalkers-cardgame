@@ -23,11 +23,6 @@ class Windwalkers extends Table
         $this->cards->init('card');
     }
 
-    protected function getGameName()
-    {
-        return "windwalkers";
-    }
-
     /*
      * setupNewGame:
      * Called once, when a new game is created.
@@ -93,6 +88,9 @@ class Windwalkers extends Table
 
         // Activate first player
         $this->activeNextPlayer();
+
+        // Return first state id for the game flow (playerTurn)
+        return 10;
     }
 
     /**
@@ -139,11 +137,9 @@ class Windwalkers extends Table
      */
     function setupChapterTiles($chapter)
     {
-        // Load chapter data from JSON file
-        $chapter_file = __DIR__ . "/modules/chapters/chapter{$chapter}.json";
-        if (file_exists($chapter_file)) {
-            $chapter_data = json_decode(file_get_contents($chapter_file), true);
-            $this->createTilesFromData($chapter_data, $chapter);
+        // Load chapter data from material.inc.php
+        if (isset($this->chapters[$chapter]) && !empty($this->chapters[$chapter]['tiles'])) {
+            $this->createTilesFromData($this->chapters[$chapter]['tiles'], $chapter);
         } else {
             // Fallback: create basic chapter 1 layout
             $this->createDefaultChapter1();
@@ -151,18 +147,24 @@ class Windwalkers extends Table
     }
 
     /**
-     * Create tiles from chapter JSON data
+     * Create tiles from chapter data array
      */
-    function createTilesFromData($data, $chapter)
+    function createTilesFromData($tiles, $chapter)
     {
         $values = [];
-        foreach ($data['grid'] as $tile) {
-            // Determine tile type: city, village, terrain, or special
-            $type = $tile['type'] === 'building' ? 
-                    (strpos(strtolower($tile['name']), 'village') !== false ? 'village' : 'city') 
-                    : (strpos(strtolower($tile['name']), 'fontaine') !== false || 
-                       strpos(strtolower($tile['name']), 'hurle') !== false ? 'special' : 'terrain');
-            $subtype = strtolower($tile['name']);
+        foreach ($tiles as $tile) {
+            $subtype = $tile['subtype'];
+            
+            // Determine tile type from subtype
+            if (isset($this->cities[$subtype])) {
+                $type = 'city';
+            } elseif (isset($this->village_types[$subtype])) {
+                $type = 'village';
+            } elseif (in_array($subtype, ['tourfontaine', 'portedhurle'])) {
+                $type = 'special';
+            } else {
+                $type = 'terrain';
+            }
             
             $terrain = $this->terrain_types[$subtype] ?? $this->terrain_types['plain'];
             
@@ -173,10 +175,10 @@ class Windwalkers extends Table
                 $type,
                 $subtype,
                 $chapter,
-                $terrain['white_dice'],
-                $terrain['green_dice'],
-                $terrain['black_dice'],
-                $terrain['moral_effect']
+                $terrain['white_dice'] ?? 0,
+                $terrain['green_dice'] ?? 0,
+                $terrain['black_dice'] ?? 0,
+                $terrain['moral_effect'] ?? 0
             );
         }
         
@@ -943,7 +945,7 @@ class Windwalkers extends Table
         // Check if game end (chapter 4 complete)
         if ($chapter >= 4) {
             $this->calculateFinalScores();
-            $this->gamestate->nextState('gameEnd');
+            $this->gamestate->nextState('nextChapter');
             return;
         }
         
