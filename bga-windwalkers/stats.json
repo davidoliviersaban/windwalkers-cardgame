@@ -19,6 +19,11 @@
       "id": 13,
       "name": "Furevents (Force 6) defeated",
       "type": "int"
+    },
+    "hordier_selections": {
+      "id": 14,
+      "name": "Hordier selections",
+      "type": "int"
     }
   },
   "player": {
@@ -75,6 +80,11 @@
     "total_score": {
       "id": 20,
       "name": "Final score",
+      "type": "int"
+    },
+    "rest_count": {
+      "id": 21,
+      "name": "Rest actions",
       "type": "int"
     }
   }

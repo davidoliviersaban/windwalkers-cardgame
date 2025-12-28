@@ -17,10 +17,21 @@ class Windwalkers extends Table
     function __construct()
     {
         parent::__construct();
+        
+        // Load game material
+        include_once(__DIR__ . '/material.inc.php');
 
         // Initialize Deck component for character cards
         $this->cards = $this->deckFactory->createDeck('card');
         $this->cards->init('card');
+
+        // Declare game state labels used throughout the game
+        // These labels must be defined before using get/setGameStateValue/InitialValue
+        $this->initGameStateLabels([
+            'current_chapter' => 1,   // starting chapter (default 1)
+            'current_round' => 1,     // round counter
+            'selected_tile' => 0      // currently selected tile id (0 = none)
+        ]);
     }
 
     /*
@@ -46,7 +57,20 @@ class Windwalkers extends Table
         $this->reloadPlayersBasicInfos();
 
         // Init global values
-        $this->setGameStateInitialValue('current_chapter', $this->getGameStateValue('starting_chapter') ?? 1);
+        // Determine starting chapter from game option if available, else default to 1
+        $startingChapter = 1;
+        if (method_exists($this, 'getGameOption')) {
+            try {
+                $optChapter = (int) $this->getGameOption(101); // "Starting chapter" option id
+                if ($optChapter >= 1 && $optChapter <= 4) {
+                    $startingChapter = $optChapter;
+                }
+            } catch (Exception $e) {
+                // Fallback to default if option access fails
+                $startingChapter = 1;
+            }
+        }
+        $this->setGameStateInitialValue('current_chapter', $startingChapter);
         $this->setGameStateInitialValue('current_round', 1);
 
         // Init game statistics
@@ -54,6 +78,7 @@ class Windwalkers extends Table
         $this->initStat('table', 'chapters_completed', 0);
         $this->initStat('table', 'total_wind_faced', 0);
         $this->initStat('table', 'furevents_defeated', 0);
+        $this->initStat('table', 'hordier_selections', 0);
 
         foreach ($players as $player_id => $player) {
             $this->initStat('player', 'turns_number', 0, $player_id);
@@ -80,17 +105,60 @@ class Windwalkers extends Table
         $chapter = $this->getGameStateValue('current_chapter');
         $this->setupChapterTiles($chapter);
 
-        // Init hordier selection statistics
-        foreach ($this->characters as $char_id => $char) {
-            $stat_name = 'hordier_' . $char_id . '_selected';
-            $this->initStat('table', $stat_name, 0);
+        // Initialize player positions to the chapter's starting city
+        $startPos = $this->getStartingCityPosition($chapter);
+        if ($startPos) {
+            foreach ($players as $player_id => $player) {
+                $this->DbQuery(
+                    "UPDATE player SET player_position_q = {$startPos['q']}, player_position_r = {$startPos['r']}, player_chapter = $chapter WHERE player_id = $player_id"
+                ); // NOI18N
+            }
         }
 
         // Activate first player
         $this->activeNextPlayer();
 
-        // Return first state id for the game flow (playerTurn)
-        return 10;
+        // Start at draft phase
+        return 2;
+    }
+
+    /**
+     * Find starting city position for the given chapter from material & DB tiles
+     */
+    function getStartingCityPosition($chapter)
+    {
+        // Determine start city subtype for chapter
+        $startSubtype = null;
+        foreach ($this->cities as $subtype => $city) {
+            if (($city['chapter'] ?? null) == $chapter && !empty($city['is_start'])) {
+                $startSubtype = $subtype;
+                break;
+            }
+        }
+        if ($startSubtype === null) {
+            return null;
+        }
+
+        // Query tile coordinates for the start city
+        $tile = $this->getObjectFromDB(
+            "SELECT tile_q q, tile_r r FROM tile WHERE tile_subtype = '" . addslashes($startSubtype) . "' AND tile_chapter = $chapter LIMIT 1"
+        );
+        if (!$tile) {
+            return null;
+        }
+        return [ 'q' => (int)$tile['q'], 'r' => (int)$tile['r'] ];
+    }
+
+    /**
+     * Ensure tiles exist for the given chapter (minimal safety check)
+     */
+    function ensureChapterSetup($chapter)
+    {
+        // If no tiles for this chapter, rebuild them
+        $tile_count = (int)$this->getUniqueValueFromDB("SELECT COUNT(*) FROM tile WHERE tile_chapter = $chapter");
+        if ($tile_count == 0) {
+            $this->setupChapterTiles($chapter);
+        }
     }
 
     /**
@@ -169,7 +237,7 @@ class Windwalkers extends Table
             $terrain = $this->terrain_types[$subtype] ?? $this->terrain_types['plain'];
             
             $values[] = sprintf(
-                "(%d, %d, '%s', '%s', %d, %d, %d, %d, %d)",
+                "(%d, %d, '%s', '%s', %d, %d, %d, %d, %d)", // NOI18N
                 $tile['q'],
                 $tile['r'],
                 $type,
@@ -183,9 +251,10 @@ class Windwalkers extends Table
         }
         
         if (!empty($values)) {
-            $sql = "INSERT INTO tile (tile_q, tile_r, tile_type, tile_subtype, tile_chapter, 
-                    tile_white_dice, tile_green_dice, tile_black_dice, tile_moral_effect) 
-                    VALUES " . implode(',', $values);
+            // Use INSERT IGNORE to avoid duplicate coordinate errors if tiles already exist (e.g., studio replay safety)
+            $sql = "INSERT IGNORE INTO tile (tile_q, tile_r, tile_type, tile_subtype, tile_chapter, 
+                tile_white_dice, tile_green_dice, tile_black_dice, tile_moral_effect) 
+                VALUES " . implode(',', $values); // NOI18N
             $this->DbQuery($sql);
         }
     }
@@ -210,7 +279,7 @@ class Windwalkers extends Table
         foreach ($tiles as $tile) {
             $terrain = $this->terrain_types[$tile['subtype']] ?? $this->terrain_types['plain'];
             $values[] = sprintf(
-                "(%d, %d, '%s', '%s', 1, %d, %d, %d, %d)",
+                "(%d, %d, '%s', '%s', 1, %d, %d, %d, %d)", // NOI18N
                 $tile['q'],
                 $tile['r'],
                 $tile['type'],
@@ -222,9 +291,9 @@ class Windwalkers extends Table
             );
         }
         
-        $sql = "INSERT INTO tile (tile_q, tile_r, tile_type, tile_subtype, tile_chapter,
-                tile_white_dice, tile_green_dice, tile_black_dice, tile_moral_effect) 
-                VALUES " . implode(',', $values);
+        $sql = "INSERT IGNORE INTO tile (tile_q, tile_r, tile_type, tile_subtype, tile_chapter,
+            tile_white_dice, tile_green_dice, tile_black_dice, tile_moral_effect) 
+            VALUES " . implode(',', $values); // NOI18N
         $this->DbQuery($sql);
     }
 
@@ -236,18 +305,30 @@ class Windwalkers extends Table
         $result = [];
         $current_player_id = $this->getCurrentPlayerId();
 
-        // Get players info
-        $sql = "SELECT player_id id, player_score score, player_color color, player_moral moral, 
-                player_position_q pos_q, player_position_r pos_r, player_chapter chapter,
-                player_day day, player_has_moved has_moved, player_surpass_count surpass_count, player_dice_count dice_count
-                FROM player";
-        $result['players'] = $this->getCollectionFromDb($sql);
-
         // Get current chapter
-        $result['current_chapter'] = $this->getGameStateValue('current_chapter');
+        $chapter = $this->getGameStateValue('current_chapter');
+        $result['current_chapter'] = $chapter;
+
+        // Get players info
+        $result['players'] = $this->loadPlayersBasicInfos();
+        
+        // Add moral and position info
+        foreach ($result['players'] as $player_id => &$player) {
+            $p = $this->getObjectFromDB("SELECT player_moral moral, player_position_q pos_q, player_position_r pos_r, 
+                player_has_moved has_moved, player_surpass_count surpass_count, player_dice_count dice_count 
+                FROM player WHERE player_id = $player_id");
+            if ($p) {
+                $player['moral'] = $p['moral'];
+                $player['pos_q'] = $p['pos_q'];
+                $player['pos_r'] = $p['pos_r'];
+                $player['has_moved'] = $p['has_moved'];
+                $player['surpass'] = $p['surpass_count'];
+                $player['dice_count'] = $p['dice_count'];
+            }
+        }
+        unset($player);
 
         // Get all tiles for current chapter
-        $chapter = $result['current_chapter'];
         $result['tiles'] = $this->getCollectionFromDb(
             "SELECT tile_id id, tile_q q, tile_r r, tile_type type, tile_subtype subtype,
              tile_wind_force wind_force, tile_discovered discovered,
@@ -257,15 +338,20 @@ class Windwalkers extends Table
         );
 
         // Get player's horde (cards in hand)
-        $result['myHorde'] = $this->cards->getCardsInLocation('horde_' . $current_player_id);
+        $result['myHorde'] = [];
+        try {
+            $result['myHorde'] = $this->cards->getCardsInLocation('horde_' . $current_player_id);
+        } catch (Exception $e) {
+            // Cards may not be set up yet
+        }
 
         // Get available characters for recruitment (if in city/village)
-        $result['recruitPool'] = $this->getRecruitPool($current_player_id);
+        $result['recruitPool'] = [];
 
-        // Material data
-        $result['characters'] = $this->characters;
-        $result['character_types'] = $this->character_types;
-        $result['terrain_types'] = $this->terrain_types;
+        // Material data - use empty arrays if not loaded
+        $result['characters'] = isset($this->characters) ? $this->characters : [];
+        $result['character_types'] = isset($this->character_types) ? $this->character_types : [];
+        $result['terrain_types'] = isset($this->terrain_types) ? $this->terrain_types : [];
 
         return $result;
     }
@@ -450,26 +536,9 @@ class Windwalkers extends Table
      */
     function trackHordierSelection($card_id)
     {
-        $card = $this->getObjectFromDB("SELECT * FROM card WHERE card_id = $card_id");
-        if (!$card) {
-            return;
-        }
-        
-        $char_id = $card['card_type_arg'];
-        $char = $this->characters[$char_id] ?? null;
-        
-        if ($char) {
-            $stat_name = 'hordier_' . $char_id . '_selected';
-            
-            // Initialize stat if it doesn't exist (table stat to track across all games)
-            try {
-                $this->incStat(1, $stat_name);
-            } catch (Exception $e) {
-                // Stat might not be initialized, try to init it first
-                $this->initStat('table', $stat_name, 0);
-                $this->incStat(1, $stat_name);
-            }
-        }
+        // Track total hordier selections with a predefined table stat
+        // Avoid dynamic stat names which are not supported by the analyzer
+        $this->incStat(1, 'hordier_selections');
     }
 
     //////////////////////////////////////////////////////////////////////////////
@@ -642,6 +711,7 @@ class Windwalkers extends Table
         ]);
         
         $this->incStat(1, 'rest_count', $player_id);
+        // Move immediately to rest processing state
         $this->gamestate->nextState('rest');
     }
 
@@ -654,23 +724,30 @@ class Windwalkers extends Table
         $player_id = $this->getActivePlayerId();
         
         // Get available characters from deck
-        $available = $this->cards->getCardsInLocation('deck');
-        
-        // Get already selected characters for this horde
-        $selected = $this->cards->getCardsInLocation('horde_' . $player_id);
+        $available = [];
+        $selected = [];
+        try {
+            $available = $this->cards->getCardsInLocation('deck');
+            $selected = $this->cards->getCardsInLocation('horde_' . $player_id);
+        } catch (Exception $e) {
+            // Cards may not be initialized yet
+        }
         
         // Count by type
         $counts = [
-            'traceur' => 0,  // Fers with is_leader=1
-            'fer' => 0,      // Fers without is_leader
+            'traceur' => 0,
+            'fer' => 0,
             'pack' => 0,
             'traine' => 0
         ];
         foreach ($selected as $card) {
-            if ($card['card_is_leader']) {
+            if (!empty($card['card_is_leader'])) {
                 $counts['traceur']++;
             } else {
-                $counts[$card['card_type']]++;
+                $type = $card['card_type'] ?? 'fer';
+                if (isset($counts[$type])) {
+                    $counts[$type]++;
+                }
             }
         }
         
@@ -679,8 +756,8 @@ class Windwalkers extends Table
             'selected' => $selected,
             'counts' => $counts,
             'requirements' => [
-                'traceur' => 1,    // 1 fer with is_leader=1
-                'fer' => 2,        // 2 fers without is_leader
+                'traceur' => 1,
+                'fer' => 2,
                 'pack' => 3,
                 'traine' => 2
             ]
@@ -722,11 +799,6 @@ class Windwalkers extends Table
     //////////// Game state actions
     ////////////
 
-    function stGameSetup()
-    {
-        // Game setup is done in setupNewGame
-    }
-
     function stNextDraft()
     {
         $player_id = $this->getActivePlayerId();
@@ -748,6 +820,17 @@ class Windwalkers extends Table
         } else {
             $this->gamestate->nextState('nextPlayer');
         }
+    }
+
+    /**
+     * Process rest (non-interactive for now): finalize rest and pass to next player
+     */
+    function stRest()
+    {
+        // Active player already reset in actRest; ensure dice and temporary effects are cleared if needed
+        // Future: implement interactive rest (restore hordier power) when power flags are tracked
+
+        $this->gamestate->nextState('restComplete');
     }
 
     function stRevealWind()

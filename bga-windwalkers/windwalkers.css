@@ -613,3 +613,40 @@
 .ww_fade_in {
     animation: fade-in 0.3s ease-out;
 }
+/* ==========================================
+   DRAFT INTERFACE
+   ========================================== */
+
+#ww_draft_panel {
+    background: white;
+    border: 2px solid #333;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px auto;
+    max-width: 1200px;
+}
+
+#ww_draft_counts {
+    background: #f0f0f0;
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+    font-weight: bold;
+    text-align: center;
+}
+
+#ww_draft_pool {
+    min-height: 150px;
+    padding: 10px;
+    border: 2px dashed #ccc;
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
+
+#ww_draft_selected {
+    min-height: 150px;
+    padding: 10px;
+    border: 2px solid #4caf50;
+    border-radius: 4px;
+    background: #e8f5e9;
+}

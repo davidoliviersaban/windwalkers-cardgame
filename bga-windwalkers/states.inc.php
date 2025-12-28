@@ -101,14 +101,9 @@ $machinestates = [
 
     30 => [
         "name" => "rest",
-        "description" => clienttranslate('${actplayer} is resting'),
-        "descriptionmyturn" => clienttranslate('${you} are resting - select a Hordier to restore their power'),
-        "type" => "activeplayer",
-        "possibleactions" => [
-            "actSelectHordierToRest", 
-            "actUsePower",
-            "actRestAll"],
-        "args" => "argRest",
+        "description" => clienttranslate('Processing rest...'),
+        "type" => "game",
+        "action" => "stRest",
         "transitions" => [
             "restComplete" => 70  // Skip recruitment, go directly to nextPlayer
         ]

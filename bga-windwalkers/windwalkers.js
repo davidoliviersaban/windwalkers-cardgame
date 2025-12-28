@@ -338,6 +338,23 @@ function (dojo, declare) {
         //// Utility methods
         
         /**
+         * Show draft interface
+         */
+        showDraftInterface: function(args)
+        {
+            console.log('Draft interface:', args);
+            // TODO: Implement draft UI - for now just show a message
+            if (args && args.requirements) {
+                var msg = 'Select your horde: ' + 
+                    args.requirements.traceur + ' Traceur, ' +
+                    args.requirements.fer + ' Fers, ' +
+                    args.requirements.pack + ' Packs, ' +
+                    args.requirements.traine + ' Traînes';
+                this.showMessage(msg, 'info');
+            }
+        },
+        
+        /**
          * Get localized terrain name
          */
         getTerrainName: function(subtype)

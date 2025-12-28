@@ -13,8 +13,9 @@ $gameinfos = [
     'game_name' => 'Windwalkers',
     'publisher' => 'Self-published',
     'publisher_website' => '',
-    'publisher_bgg_id' => 0,
-    'bgg_id' => 0,
+    // Temporary placeholder BGG id; replace with the real BoardGameGeek id when available.
+    'publisher_bgg_id' => 999999, // NOI18N
+    'bgg_id' => 999999, // NOI18N
 
     'players' => [1, 2, 3],
     'player_colors' => ['ff0000', '008000', '0000ff'],
