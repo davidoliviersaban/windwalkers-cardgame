@@ -12,8 +12,30 @@
 
 require_once(APP_GAMEMODULE_PATH . 'module/table/table.game.php');
 
+// Load modular traits
+require_once(__DIR__ . '/modules/WW_HexGrid.php');
+require_once(__DIR__ . '/modules/WW_Dice.php');
+require_once(__DIR__ . '/modules/WW_WindToken.php');
+require_once(__DIR__ . '/modules/WW_Validation.php');
+require_once(__DIR__ . '/modules/WW_PlayerHelper.php');
+require_once(__DIR__ . '/modules/WW_Setup.php');
+require_once(__DIR__ . '/modules/WW_Draft.php');
+require_once(__DIR__ . '/modules/WW_Movement.php');
+require_once(__DIR__ . '/modules/WW_Confrontation.php');
+
 class Windwalkers extends Table
 {
+    // Include modular traits
+    use WW_HexGrid;
+    use WW_Dice;
+    use WW_WindToken;
+    use WW_Validation;
+    use WW_PlayerHelper;
+    use WW_Setup;
+    use WW_Draft;
+    use WW_Movement;
+    use WW_Confrontation;
+
     function __construct()
     {
         parent::__construct();
@@ -25,20 +47,18 @@ class Windwalkers extends Table
         $this->cards = $this->deckFactory->createDeck('card');
         $this->cards->init('card');
 
-        // Declare game state labels used throughout the game
-        // The values are DATABASE SLOT IDs (must be >= 10 for custom labels), NOT initial values!
-        // Initial values are set with setGameStateInitialValue() in setupNewGame()
+        // Declare game state labels (IDs must be >= 10)
         $this->initGameStateLabels([
-            'current_chapter' => 10,   // slot ID 10
-            'current_round' => 11,     // slot ID 11
-            'selected_tile' => 12      // slot ID 12
+            'current_chapter' => 10,
+            'current_round' => 11,
+            'selected_tile' => 12
         ]);
     }
 
-    /*
-     * setupNewGame:
-     * Called once, when a new game is created.
-     */
+    //////////////////////////////////////////////////////////////////////////////
+    //////////// Game Setup
+    //////////////////////////////////////////////////////////////////////////////
+
     protected function setupNewGame($players, $options = [])
     {
         // Set the colors of the players
@@ -57,31 +77,64 @@ class Windwalkers extends Table
 
         $this->reloadPlayersBasicInfos();
 
+        // Determine starting chapter
+        $startingChapter = $this->determineStartingChapter();
+        
         // Init global values
-        // Determine starting chapter from game option if available, else default to 1
-        $startingChapter = 1;
-        if (method_exists($this, 'getGameOption')) {
-            try {
-                $optChapter = (int) $this->getGameOption(101); // "Starting chapter" option id
-                if ($optChapter >= 1 && $optChapter <= 4) {
-                    $startingChapter = $optChapter;
-                }
-            } catch (Exception $e) {
-                // Fallback to default if option access fails
-                $startingChapter = 1;
-            }
-        }
         $this->setGameStateInitialValue('current_chapter', $startingChapter);
         $this->setGameStateInitialValue('current_round', 1);
         $this->setGameStateInitialValue('selected_tile', 0);
 
         // Init game statistics
+        $this->initializeStatistics($players);
+
+        // Setup game components
+        $this->setupCharacterCards();
+        $this->setupWindTokens();
+        $this->setupChapterTiles($startingChapter);
+
+        // Initialize player positions
+        $this->initializePlayerPositions(array_keys($players), $startingChapter);
+
+        // Activate first player
+        $this->activeNextPlayer();
+
+        // Start at draft phase
+        return 2;
+    }
+
+    /**
+     * Determine starting chapter from options
+     */
+    private function determineStartingChapter(): int
+    {
+        $startingChapter = 1;
+        if (method_exists($this, 'getGameOption')) {
+            try {
+                $optChapter = (int) $this->getGameOption(101);
+                if ($optChapter >= 1 && $optChapter <= 4) {
+                    $startingChapter = $optChapter;
+                }
+            } catch (Exception $e) {
+                // Fallback to default
+            }
+        }
+        return $startingChapter;
+    }
+
+    /**
+     * Initialize all game statistics
+     */
+    private function initializeStatistics(array $players): void
+    {
+        // Table stats
         $this->initStat('table', 'turns_number', 0);
         $this->initStat('table', 'chapters_completed', 0);
         $this->initStat('table', 'total_wind_faced', 0);
         $this->initStat('table', 'furevents_defeated', 0);
         $this->initStat('table', 'hordier_selections', 0);
 
+        // Player stats
         foreach ($players as $player_id => $player) {
             $this->initStat('player', 'turns_number', 0, $player_id);
             $this->initStat('player', 'tiles_traversed', 0, $player_id);
@@ -96,293 +149,35 @@ class Windwalkers extends Table
             $this->initStat('player', 'confrontations_lost', 0, $player_id);
             $this->initStat('player', 'total_score', 0, $player_id);
         }
-
-        // Setup character cards
-        $this->setupCharacterCards();
-
-        // Setup wind tokens
-        $this->setupWindTokens();
-
-        // Setup chapter tiles - use $startingChapter directly instead of getGameStateValue
-        // because getGameStateValue may not work immediately after setGameStateInitialValue
-        $this->setupChapterTiles($startingChapter);
-
-        // Initialize player positions to the chapter's starting city
-        $startPos = $this->getStartingCityPosition($startingChapter);
-        if ($startPos) {
-            foreach ($players as $player_id => $player) {
-                $this->DbQuery(
-                    "UPDATE player SET player_position_q = {$startPos['q']}, player_position_r = {$startPos['r']}, player_chapter = $startingChapter WHERE player_id = $player_id"
-                ); // NOI18N
-            }
-        }
-
-        // Activate first player
-        $this->activeNextPlayer();
-
-        // Start at draft phase
-        return 2;
     }
 
-    /**
-     * Find starting city position for the given chapter from material & DB tiles
-     */
-    function getStartingCityPosition($chapter)
-    {
-        // Determine start city subtype for chapter
-        $startSubtype = null;
-        foreach ($this->cities as $subtype => $city) {
-            if (($city['chapter'] ?? null) == $chapter && !empty($city['is_start'])) {
-                $startSubtype = $subtype;
-                break;
-            }
-        }
-        if ($startSubtype === null) {
-            return null;
-        }
+    //////////////////////////////////////////////////////////////////////////////
+    //////////// getAllDatas
+    //////////////////////////////////////////////////////////////////////////////
 
-        // Query tile coordinates for the start city
-        $tile = $this->getObjectFromDB(
-            "SELECT tile_q q, tile_r r FROM tile WHERE tile_subtype = '" . addslashes($startSubtype) . "' AND tile_chapter = $chapter LIMIT 1"
-        );
-        if (!$tile) {
-            return null;
-        }
-        return [ 'q' => (int)$tile['q'], 'r' => (int)$tile['r'] ];
-    }
-
-    /**
-     * Ensure tiles exist for the given chapter (minimal safety check)
-     */
-    function ensureChapterSetup($chapter)
-    {
-        // If no tiles for this chapter, rebuild them
-        $tile_count = (int)$this->getUniqueValueFromDB("SELECT COUNT(*) FROM tile WHERE tile_chapter = $chapter");
-        if ($tile_count == 0) {
-            $this->setupChapterTiles($chapter);
-        }
-    }
-
-    /**
-     * Create all character cards
-     */
-    function setupCharacterCards()
-    {
-        $cards = [];
-        foreach ($this->characters as $char_id => $char) {
-            $cards[] = [
-                'type' => $char['type'],  // 'fer', 'pack', 'traine'
-                'type_arg' => $char_id,
-                'nbr' => 1
-            ];
-        }
-        $this->cards->createCards($cards, 'deck');
-        $this->cards->shuffle('deck');
-        
-        // Set is_leader flag for traceurs
-        foreach ($this->characters as $char_id => $char) {
-            if (isset($char['is_leader']) && $char['is_leader']) {
-                $this->DbQuery("UPDATE card SET card_is_leader = 1 WHERE card_type_arg = $char_id");
-            }
-        }
-    }
-
-    /**
-     * Create wind tokens according to distribution
-     */
-    function setupWindTokens()
-    {
-        $values = [];
-        foreach ($this->wind_distribution as $force => $count) {
-            for ($i = 0; $i < $count; $i++) {
-                $values[] = "($force, 'bag', NULL)";
-            }
-        }
-        $sql = "INSERT INTO wind_token (token_force, token_location, token_tile_id) VALUES " . implode(',', $values);
-        $this->DbQuery($sql);
-    }
-
-    /**
-     * Setup tiles for a specific chapter
-     */
-    function setupChapterTiles($chapter)
-    {
-        // Validate chapter
-        if (!$chapter || $chapter < 1 || $chapter > 4) {
-            throw new BgaVisibleSystemException("setupChapterTiles called with invalid chapter: $chapter");
-        }
-        
-        // Load chapter data from material.inc.php
-        $this->debug("=== setupChapterTiles for chapter $chapter ===");
-        
-        // Direct access to chapter 1 tiles - bypass potential $this->chapters issues
-        $tiles = [
-            // Cities
-            ['q' => 3, 'r' => 17, 'subtype' => 'aberlaas'],
-            ['q' => 3, 'r' => 11, 'subtype' => 'portchoon'],
-            // Villages
-            ['q' => 3, 'r' => 14, 'subtype' => 'village_green'],
-            ['q' => 1, 'r' => 16, 'subtype' => 'village_blue'],
-            ['q' => 5, 'r' => 12, 'subtype' => 'village_red'],
-            // Plains
-            ['q' => 2, 'r' => 17, 'subtype' => 'plain'],
-            ['q' => 1, 'r' => 17, 'subtype' => 'plain'],
-            ['q' => 4, 'r' => 15, 'subtype' => 'plain'],
-            ['q' => 5, 'r' => 14, 'subtype' => 'plain'],
-            ['q' => 5, 'r' => 13, 'subtype' => 'plain'],
-            ['q' => 4, 'r' => 12, 'subtype' => 'plain'],
-            ['q' => 1, 'r' => 15, 'subtype' => 'plain'],
-            ['q' => 2, 'r' => 13, 'subtype' => 'plain'],
-            // Huts
-            ['q' => 3, 'r' => 12, 'subtype' => 'hut'],
-            ['q' => 1, 'r' => 14, 'subtype' => 'hut'],
-            ['q' => 2, 'r' => 15, 'subtype' => 'hut'],
-            ['q' => 5, 'r' => 15, 'subtype' => 'hut'],
-            // Mountains
-            ['q' => 3, 'r' => 16, 'subtype' => 'mountain'],
-            ['q' => 2, 'r' => 16, 'subtype' => 'mountain'],
-            ['q' => 2, 'r' => 14, 'subtype' => 'mountain'],
-            ['q' => 3, 'r' => 13, 'subtype' => 'mountain'],
-            // Forests
-            ['q' => 4, 'r' => 13, 'subtype' => 'forest'],
-            ['q' => 4, 'r' => 14, 'subtype' => 'forest'],
-            ['q' => 3, 'r' => 15, 'subtype' => 'forest'],
-            ['q' => 4, 'r' => 16, 'subtype' => 'forest'],
-        ];
-        
-        $this->debug("Creating " . count($tiles) . " tiles directly");
-        $this->createTilesFromData($tiles, $chapter);
-        
-        // Verify tiles were created
-        $count = $this->getUniqueValueFromDB("SELECT COUNT(*) FROM tile WHERE tile_chapter = $chapter");
-        $this->debug("Total tiles in DB for chapter $chapter: $count");
-    }
-
-    /**
-     * Create tiles from chapter data array
-     */
-    function createTilesFromData($tiles, $chapter)
-    {
-        $values = [];
-        foreach ($tiles as $tile) {
-            $subtype = $tile['subtype'];
-            
-            // Determine tile type from subtype
-            if (isset($this->cities[$subtype])) {
-                $type = 'city';
-            } elseif (isset($this->village_types[$subtype])) {
-                $type = 'village';
-            } elseif (in_array($subtype, ['tourfontaine', 'portedhurle'])) {
-                $type = 'special';
-            } else {
-                $type = 'terrain';
-            }
-            
-            $terrain = $this->terrain_types[$subtype] ?? $this->terrain_types['plain'];
-            
-            $values[] = sprintf(
-                "(%d, %d, '%s', '%s', %d, %d, %d, %d, %d)", // NOI18N
-                $tile['q'],
-                $tile['r'],
-                $type,
-                $subtype,
-                $chapter,
-                $terrain['white_dice'] ?? 0,
-                $terrain['green_dice'] ?? 0,
-                $terrain['black_dice'] ?? 0,
-                $terrain['moral_effect'] ?? 0
-            );
-        }
-        
-        if (!empty($values)) {
-            // Use INSERT IGNORE to avoid duplicate coordinate errors if tiles already exist (e.g., studio replay safety)
-            $sql = "INSERT IGNORE INTO tile (tile_q, tile_r, tile_type, tile_subtype, tile_chapter, 
-                tile_white_dice, tile_green_dice, tile_black_dice, tile_moral_effect) 
-                VALUES " . implode(',', $values); // NOI18N
-            $this->DbQuery($sql);
-        }
-    }
-
-    /**
-     * Fallback: create default chapter 1 layout
-     */
-    function createDefaultChapter1()
-    {
-        // Basic linear layout for testing
-        $tiles = [
-            ['q' => 3, 'r' => 17, 'type' => 'city', 'subtype' => 'aberlaas'],
-            ['q' => 3, 'r' => 16, 'type' => 'terrain', 'subtype' => 'mountain'],
-            ['q' => 3, 'r' => 15, 'type' => 'terrain', 'subtype' => 'forest'],
-            ['q' => 3, 'r' => 14, 'type' => 'village', 'subtype' => 'village_green'],
-            ['q' => 3, 'r' => 13, 'type' => 'terrain', 'subtype' => 'plain'],
-            ['q' => 3, 'r' => 12, 'type' => 'terrain', 'subtype' => 'hut'],
-            ['q' => 3, 'r' => 11, 'type' => 'city', 'subtype' => 'portchoon'],
-        ];
-        
-        $values = [];
-        foreach ($tiles as $tile) {
-            $terrain = $this->terrain_types[$tile['subtype']] ?? $this->terrain_types['plain'];
-            $values[] = sprintf(
-                "(%d, %d, '%s', '%s', 1, %d, %d, %d, %d)", // NOI18N
-                $tile['q'],
-                $tile['r'],
-                $tile['type'],
-                $tile['subtype'],
-                $terrain['white_dice'] ?? 0,
-                $terrain['green_dice'] ?? 0,
-                $terrain['black_dice'] ?? 0,
-                $terrain['moral_effect'] ?? 0
-            );
-        }
-        
-        $sql = "INSERT IGNORE INTO tile (tile_q, tile_r, tile_type, tile_subtype, tile_chapter,
-            tile_white_dice, tile_green_dice, tile_black_dice, tile_moral_effect) 
-            VALUES " . implode(',', $values); // NOI18N
-        $this->DbQuery($sql);
-    }
-
-    /*
-     * getAllDatas: Gather all informations about current game situation
-     */
     protected function getAllDatas()
     {
         $result = [];
         $current_player_id = $this->getCurrentPlayerId();
 
-        // Get current chapter from player record (more reliable than game state)
-        $player_chapter = $this->getUniqueValueFromDB("SELECT player_chapter FROM player WHERE player_id = $current_player_id");
-        $chapter = (int)$player_chapter;
-        if ($chapter < 1) {
-            throw new BgaVisibleSystemException("Invalid chapter value ($chapter) for player $current_player_id - database may be corrupted");
-        }
+        // Get chapter from player record
+        $chapter = $this->getValidatedPlayerChapter($current_player_id);
         $result['current_chapter'] = $chapter;
         
-        // Ensure tiles exist for this chapter
-        $tile_count = (int)$this->getUniqueValueFromDB("SELECT COUNT(*) FROM tile WHERE tile_chapter = $chapter");
-        if ($tile_count == 0) {
-            $this->setupChapterTiles($chapter);
-        }
+        // Ensure tiles exist
+        $this->ensureTilesExist($chapter);
 
-        // Get players info
+        // Players info with enriched data
         $result['players'] = $this->loadPlayersBasicInfos();
-        
-        // Add moral and position info
+        $enriched = $this->enrichPlayerInfo(array_keys($result['players']));
         foreach ($result['players'] as $player_id => &$player) {
-            $p = $this->getObjectFromDB("SELECT player_moral moral, player_position_q pos_q, player_position_r pos_r, 
-                player_has_moved has_moved, player_surpass_count surpass_count, player_dice_count dice_count 
-                FROM player WHERE player_id = $player_id");
-            if ($p) {
-                $player['moral'] = $p['moral'];
-                $player['pos_q'] = $p['pos_q'];
-                $player['pos_r'] = $p['pos_r'];
-                $player['has_moved'] = $p['has_moved'];
-                $player['surpass'] = $p['surpass_count'];
-                $player['dice_count'] = $p['dice_count'];
+            if (isset($enriched[$player_id])) {
+                $player = array_merge($player, $enriched[$player_id]);
             }
         }
         unset($player);
 
-        // Get all tiles for current chapter
+        // Tiles for current chapter
         $result['tiles'] = $this->getCollectionFromDb(
             "SELECT tile_id id, tile_q q, tile_r r, tile_type type, tile_subtype subtype,
              tile_wind_force wind_force, tile_discovered discovered,
@@ -391,7 +186,7 @@ class Windwalkers extends Table
              FROM tile WHERE tile_chapter = $chapter"
         );
 
-        // Get player's horde (cards in hand)
+        // Player's horde
         $result['myHorde'] = [];
         try {
             $result['myHorde'] = $this->cards->getCardsInLocation('horde_' . $current_player_id);
@@ -399,679 +194,109 @@ class Windwalkers extends Table
             // Cards may not be set up yet
         }
 
-        // Get available characters for recruitment (if in city/village)
         $result['recruitPool'] = [];
 
-        // Material data - use empty arrays if not loaded
-        $result['characters'] = isset($this->characters) ? $this->characters : [];
-        $result['character_types'] = isset($this->character_types) ? $this->character_types : [];
-        $result['terrain_types'] = isset($this->terrain_types) ? $this->terrain_types : [];
+        // Material data
+        $result['characters'] = $this->characters ?? [];
+        $result['character_types'] = $this->character_types ?? [];
+        $result['terrain_types'] = $this->terrain_types ?? [];
 
         return $result;
     }
 
+    //////////////////////////////////////////////////////////////////////////////
+    //////////// Game Progression
+    //////////////////////////////////////////////////////////////////////////////
+
+    function getGameProgression()
+    {
+        $chapter = $this->getGameStateValue('current_chapter');
+        return min(100, ($chapter - 1) * 25);
+    }
+
+    //////////////////////////////////////////////////////////////////////////////
+    //////////// Recruitment
+    //////////////////////////////////////////////////////////////////////////////
+
     /**
      * Get characters available for recruitment at current location
-     * - Villages recruit only one type (green=pack, red=fer, blue=traine)
-     * - Cities recruit all types
-     * - Other terrains allow no recruitment
      */
     function getRecruitPool($player_id)
     {
         $player = $this->getObjectFromDB("SELECT * FROM player WHERE player_id = $player_id");
         $chapter = $this->getGameStateValue('current_chapter');
         
-        // Get current tile
-        $tile = $this->getObjectFromDB(
-            "SELECT * FROM tile WHERE tile_q = {$player['player_position_q']} AND tile_r = {$player['player_position_r']} AND tile_chapter = $chapter"
+        $tile = $this->getTileAt(
+            (int)$player['player_position_q'], 
+            (int)$player['player_position_r'], 
+            $chapter
         );
         
         if (!$tile) {
             return [];
         }
         
-        $available = [];
-        
-        // Cities recruit all hordier types
+        return $this->getRecruitableCharacters($tile);
+    }
+
+    /**
+     * Get recruitable characters based on tile type
+     */
+    private function getRecruitableCharacters(array $tile): array
+    {
         if ($tile['tile_type'] == 'city') {
-            $available = $this->getCollectionFromDb(
+            return $this->getCollectionFromDb(
                 "SELECT * FROM card WHERE card_type IN ('fer', 'pack', 'traine') AND card_location = 'deck' ORDER BY card_type_arg"
             );
-        } 
-        // Villages recruit based on their subtype
-        else if ($tile['tile_type'] == 'village') {
-            $subtype = $tile['tile_subtype'];
-            
-            if ($subtype == 'village_green') {
-                // Recruit pack
-                $available = $this->getCollectionFromDb(
+        }
+        
+        if ($tile['tile_type'] == 'village') {
+            return $this->getVillageRecruits($tile['tile_subtype']);
+        }
+        
+        return [];
+    }
+
+    /**
+     * Get village-specific recruits
+     */
+    private function getVillageRecruits(string $subtype): array
+    {
+        switch ($subtype) {
+            case 'village_green':
+                return $this->getCollectionFromDb(
                     "SELECT * FROM card WHERE card_type = 'pack' AND card_location = 'deck' ORDER BY card_type_arg"
                 );
-            } else if ($subtype == 'village_red') {
-                // Recruit fer (non-traceurs)
-                $available = $this->getCollectionFromDb(
+            case 'village_red':
+                return $this->getCollectionFromDb(
                     "SELECT * FROM card WHERE card_type = 'fer' AND card_is_leader = 0 AND card_location = 'deck' ORDER BY card_type_arg"
                 );
-            } else if ($subtype == 'village_blue') {
-                // Recruit traine
-                $available = $this->getCollectionFromDb(
+            case 'village_blue':
+                return $this->getCollectionFromDb(
                     "SELECT * FROM card WHERE card_type = 'traine' AND card_location = 'deck' ORDER BY card_type_arg"
                 );
-            }
+            default:
+                return [];
         }
-        
-        return $available;
-    }
-
-    /*
-     * getGameProgression: Compute and return the current game progression.
-     */
-    function getGameProgression()
-    {
-        // Progression based on chapters completed and tiles traversed
-        $chapter = $this->getGameStateValue('current_chapter');
-        $base_progress = ($chapter - 1) * 25; // 25% per chapter
-        
-        // Add progress within chapter based on player positions
-        // Simplified: just return chapter-based progress for now
-        return min(100, $base_progress);
     }
 
     //////////////////////////////////////////////////////////////////////////////
-    //////////// Utility functions
-    ////////////
-
-    /**
-     * Get adjacent tiles for a hex position (FLAT-TOP axial coordinates)
-     */
-    function getAdjacentTiles($q, $r, $chapter)
-    {
-        // Hex directions for FLAT-TOP layout (axial coordinates)
-        // See: https://www.redblobgames.com/grids/hexagons/#neighbors-axial
-        $directions = [
-            [+1, 0],  // East
-            [+1, -1], // North-East  
-            [0, -1],  // North-West
-            [-1, 0],  // West
-            [-1, +1], // South-West
-            [0, +1]   // South-East
-        ];
-        
-        // Ensure q and r are integers
-        $q = (int)$q;
-        $r = (int)$r;
-        
-        $adjacent = [];
-        foreach ($directions as $dir) {
-            $nq = $q + $dir[0];
-            $nr = $r + $dir[1];
-            
-            $tile = $this->getObjectFromDB(
-                "SELECT tile_id, tile_q, tile_r, tile_type, tile_subtype, tile_chapter,
-                        tile_wind_force, tile_discovered, tile_white_dice, tile_green_dice,
-                        tile_black_dice, tile_moral_effect
-                 FROM tile WHERE tile_q = $nq AND tile_r = $nr AND tile_chapter = $chapter"
-            );
-            if ($tile) {
-                $adjacent[] = $tile;
-            }
-        }
-        
-        $this->debug("getAdjacentTiles($q, $r, $chapter) found " . count($adjacent) . " tiles");
-        return $adjacent;
-    }
-
-    /**
-     * Draw a wind token from the bag
-     */
-    function drawWindToken()
-    {
-        $token = $this->getObjectFromDB(
-            "SELECT * FROM wind_token WHERE token_location = 'bag' ORDER BY RAND() LIMIT 1"
-        );
-        return $token;
-    }
-
-    /**
-     * Roll dice for confrontation
-     */
-    function rollDice($count, $type, $owner)
-    {
-        $results = [];
-        for ($i = 0; $i < $count; $i++) {
-            $value = bga_rand(1, 6);
-            $results[] = [
-                'type' => $type,
-                'value' => $value,
-                'owner' => $owner
-            ];
-        }
-        return $results;
-    }
-
-    /**
-     * Count occurrences of each face (1-6) in a dice array, with optional filters.
-     */
-    function countFaceOccurrences($dice_list, $filter_type = null, $filter_owner = null)
-    {
-        $counts = array_fill(1, 6, 0);
-        foreach ($dice_list as $d) {
-            if (($filter_type === null || $d['dice_type'] == $filter_type) &&
-                ($filter_owner === null || $d['dice_owner'] == $filter_owner)) {
-                $v = (int) $d['dice_value'];
-                if ($v >= 1 && $v <= 6) {
-                    $counts[$v]++;
-                }
-            }
-        }
-        return $counts;
-    }
-
-    /**
-     * Match challenge dice against an available pool of player dice counts, consuming used dice.
-     * The $available_counts array (face => count) is mutated to reflect dice spent on this dimension.
-     */
-    function matchAndConsumeDice($challenge_dice, &$available_counts, $dimension)
-    {
-        $challenge_counts = $this->countFaceOccurrences($challenge_dice, $dimension, 'challenge');
-        $player_before = $available_counts; // snapshot before consumption
-
-        $required = array_sum($challenge_counts);
-        $matched = 0;
-        $consumed = array_fill(1, 6, 0);
-
-        for ($v = 1; $v <= 6; $v++) {
-            $consumed[$v] = min($available_counts[$v], $challenge_counts[$v]);
-            $matched += $consumed[$v];
-            $available_counts[$v] -= $consumed[$v];
-        }
-
-        return [
-            'required' => $required,
-            'available_before' => array_sum($player_before),
-            'available_after' => array_sum($available_counts),
-            'matched' => $matched,
-            'ok' => ($matched >= $required),
-            'remainingPerFaceChallenge' => $challenge_counts,
-            'remainingPerFacePlayerBefore' => $player_before,
-            'remainingPerFacePlayerAfter' => $available_counts,
-            'consumed' => $consumed
-        ];
-    }
-
-    /**
-     * Track hordier selection statistics
-     */
-    function trackHordierSelection($card_id)
-    {
-        // Track total hordier selections with a predefined table stat
-        // Avoid dynamic stat names which are not supported by the analyzer
-        $this->incStat(1, 'hordier_selections');
-    }
-
+    //////////// Game State Actions
     //////////////////////////////////////////////////////////////////////////////
-    //////////// Player actions
-    ////////////
-
-    function actSelectTile(int $tile_id)
-    {
-        $this->checkAction('actSelectTile');
-        $player_id = $this->getActivePlayerId();
-        
-        // Validate tile is adjacent
-        $player = $this->getObjectFromDB("SELECT * FROM player WHERE player_id = $player_id");
-        $chapter = (int)($player['player_chapter'] ?? 0);
-        if ($chapter < 1) {
-            throw new BgaVisibleSystemException("Invalid chapter value ($chapter) for player $player_id - database may be corrupted");
-        }
-        $adjacent = $this->getAdjacentTiles($player['player_position_q'], $player['player_position_r'], $chapter);
-        
-        $valid = false;
-        foreach ($adjacent as $tile) {
-            if ($tile['tile_id'] == $tile_id) {
-                $valid = true;
-                break;
-            }
-        }
-        
-        if (!$valid) {
-            throw new BgaUserException($this->_("This tile is not adjacent to your position"));
-        }
-        
-        // Store selected tile
-        $this->setGameStateValue('selected_tile', $tile_id);
-        
-        // Increment movement counter
-        $this->DbQuery("UPDATE player SET player_has_moved = player_has_moved + 1 WHERE player_id = $player_id");
-        
-        $this->gamestate->nextState('moveToTile');
-    }
-
-    /**
-     * Toggle a card selection during draft
-     */
-    function actToggleDraftCard(int $card_id, bool $select)
-    {
-        $this->checkAction('actToggleDraftCard');
-        $player_id = $this->getActivePlayerId();
-        
-        $card = $this->cards->getCard($card_id);
-        if (!$card) {
-            throw new BgaUserException($this->_("Card not found"));
-        }
-        
-        if ($select) {
-            // Check if card is in deck (available)
-            if ($card['location'] != 'deck') {
-                throw new BgaUserException($this->_("This card is not available"));
-            }
-            
-            // Check horde limits
-            $horde = $this->cards->getCardsInLocation('horde_' . $player_id);
-            $char_info = $this->characters[$card['type_arg']] ?? [];
-            $card_type = $char_info['type'] ?? $card['type'];
-            $is_leader = !empty($char_info['is_leader']);
-            
-            $counts = $this->countHordeByType($horde);
-            
-            $requirements = [
-                'traceur' => 1,
-                'fer' => 2,
-                'pack' => 3,
-                'traine' => 2
-            ];
-            
-            $type_key = $is_leader ? 'traceur' : $card_type;
-            
-            if ($counts[$type_key] >= $requirements[$type_key]) {
-                throw new BgaUserException($this->_("You already have enough characters of this type"));
-            }
-            
-            // Move card to horde
-            $this->cards->moveCard($card_id, 'horde_' . $player_id);
-            $this->trackHordierSelection($card_id);
-            
-        } else {
-            // Check if card is in player's horde
-            if ($card['location'] != 'horde_' . $player_id) {
-                throw new BgaUserException($this->_("This card is not in your horde"));
-            }
-            
-            // Move card back to deck
-            $this->cards->moveCard($card_id, 'deck');
-        }
-        
-        // Get updated counts
-        $horde = $this->cards->getCardsInLocation('horde_' . $player_id);
-        $counts = $this->countHordeByType($horde);
-        
-        // Notify
-        $this->notify->all('cardToggled', '', [
-            'player_id' => $player_id,
-            'card_id' => $card_id,
-            'selected' => $select,
-            'counts' => $counts,
-            'requirements' => [
-                'traceur' => 1,
-                'fer' => 2,
-                'pack' => 3,
-                'traine' => 2
-            ]
-        ]);
-    }
-    
-    /**
-     * Confirm the drafted horde
-     */
-    function actConfirmDraft()
-    {
-        $this->checkAction('actConfirmDraft');
-        $player_id = $this->getActivePlayerId();
-        
-        // Check horde is complete
-        $horde = $this->cards->getCardsInLocation('horde_' . $player_id);
-        $counts = $this->countHordeByType($horde);
-        
-        $requirements = [
-            'traceur' => 1,
-            'fer' => 2,
-            'pack' => 3,
-            'traine' => 2
-        ];
-        
-        foreach ($requirements as $type => $required) {
-            if ($counts[$type] < $required) {
-                throw new BgaUserException(sprintf(
-                    $this->_("You need %d %s, but only have %d"),
-                    $required,
-                    $type,
-                    $counts[$type]
-                ));
-            }
-        }
-        
-        // Notify draft complete
-        $this->notify->all('draftComplete', clienttranslate('${player_name} has completed their horde'), [
-            'player_id' => $player_id,
-            'player_name' => $this->getActivePlayerName(),
-            'horde' => $horde
-        ]);
-        
-        $this->gamestate->nextState('hordeComplete');
-    }
-    
-    /**
-     * Count cards in horde by type
-     */
-    function countHordeByType($horde)
-    {
-        $counts = [
-            'traceur' => 0,
-            'fer' => 0,
-            'pack' => 0,
-            'traine' => 0
-        ];
-        
-        foreach ($horde as $card) {
-            $char_info = $this->characters[$card['type_arg']] ?? [];
-            $card_type = $char_info['type'] ?? $card['type'];
-            $is_leader = !empty($char_info['is_leader']);
-            
-            if ($is_leader) {
-                $counts['traceur']++;
-            } else if (isset($counts[$card_type])) {
-                $counts[$card_type]++;
-            }
-        }
-        
-        return $counts;
-    }
-
-    function actSurpassAndSelectTile(int $tile_id)
-    {
-        $this->checkAction('actSurpassAndSelectTile');
-        $player_id = $this->getActivePlayerId();
-        
-        // Check if player has already moved
-        $has_moved = $this->getUniqueValueFromDB("SELECT player_has_moved FROM player WHERE player_id = $player_id");
-        if ($has_moved == 0) {
-            throw new BgaUserException($this->_("You must move first before surpassing"));
-        }
-        
-        // Validate tile is adjacent
-        $player = $this->getObjectFromDB("SELECT * FROM player WHERE player_id = $player_id");
-        $chapter = (int)($player['player_chapter'] ?? 0);
-        if ($chapter < 1) {
-            throw new BgaVisibleSystemException("Invalid chapter value ($chapter) for player $player_id - database may be corrupted");
-        }
-        $adjacent = $this->getAdjacentTiles($player['player_position_q'], $player['player_position_r'], $chapter);
-        
-        $valid = false;
-        foreach ($adjacent as $tile) {
-            if ($tile['tile_id'] == $tile_id) {
-                $valid = true;
-                break;
-            }
-        }
-        
-        if (!$valid) {
-            throw new BgaUserException($this->_("This tile is not adjacent to your position"));
-        }
-        
-        // Store selected tile
-        $this->setGameStateValue('selected_tile', $tile_id);
-        
-        // Increment both: movement counter (for turn state) and surpass counter (for scoring)
-        $this->DbQuery("UPDATE player SET player_has_moved = player_has_moved + 1, player_surpass_count = player_surpass_count + 1 WHERE player_id = $player_id");
-        $this->incStat(1, 'surpass_count', $player_id);
-        
-        $this->notify->all('playerSurpasses', clienttranslate('${player_name} surpasses! (-1 die)'), [
-            'player_id' => $player_id,
-            'player_name' => $this->getActivePlayerName()
-        ]);
-        
-        $this->gamestate->nextState('moveToTile');
-    }
-
-    function actRollDice()
-    {
-        $this->checkAction('actRollDice');
-        $player_id = $this->getActivePlayerId();
-        
-        // Get player's dice count (base 6, minus any surpass dice)
-        $player = $this->getObjectFromDB("SELECT * FROM player WHERE player_id = $player_id");
-        $surpass_count = $player['player_surpass_count'];
-
-        $dice_count = $player['player_dice_count'] - $surpass_count;
-        
-        // Roll horde dice
-        $horde_dice = $this->rollDice($dice_count, 'blue', 'player');
-        
-        // Store in database
-        $this->DbQuery("DELETE FROM dice_roll");
-        foreach ($horde_dice as $dice) {
-            $this->DbQuery("INSERT INTO dice_roll (dice_type, dice_value, dice_owner) 
-                           VALUES ('{$dice['type']}', {$dice['value']}, '{$dice['owner']}')");
-        }
-        
-        // Notify players
-        $this->notify->all('diceRolled', clienttranslate('${player_name} rolls ${dice_count} dice'), [
-            'player_id' => $player_id,
-            'player_name' => $this->getActivePlayerName(),
-            'dice_count' => $dice_count,
-            'dice' => $horde_dice
-        ]);
-        
-        $this->gamestate->nextState('rollAgain');
-    }
-
-    function actUseMoral(int $dice_id, int $modifier)
-    {
-        $this->checkAction('actUseMoral');
-        $player_id = $this->getActivePlayerId();
-        
-        // Check player has moral
-        $moral = $this->getUniqueValueFromDB("SELECT player_moral FROM player WHERE player_id = $player_id");
-        if ($moral <= 1) {
-            throw new BgaUserException($this->_("You don't have enough moral"));
-        }
-        
-        // Validate modifier (-1 or +1)
-        // TODO: Not necessarily, if we do -2 then moral cost is 2, but for now keep it simple
-        if ($modifier != -1 && $modifier != 1) {
-            throw new BgaUserException($this->_("Invalid modifier"));
-        }
-        
-        // Update dice value
-        $dice = $this->getObjectFromDB("SELECT * FROM dice_roll WHERE dice_id = $dice_id");
-        if (!$dice || $dice['dice_owner'] != 'player') {
-            throw new BgaUserException($this->_("Invalid dice"));
-        }
-        
-        $new_value = max(1, min(6, $dice['dice_value'] + $modifier));
-        $this->DbQuery("UPDATE dice_roll SET dice_value = $new_value WHERE dice_id = $dice_id");
-        
-        // Reduce moral
-        $this->DbQuery("UPDATE player SET player_moral = player_moral - 1 WHERE player_id = $player_id");
-        $this->incStat(1, 'moral_spent', $player_id);
-        
-        // Notify
-        $this->notify->all('moralUsed', clienttranslate('${player_name} spends 1 moral to modify a die'), [
-            'player_id' => $player_id,
-            'player_name' => $this->getActivePlayerName(),
-            'dice_id' => $dice_id,
-            'new_value' => $new_value,
-            'new_moral' => $moral - 1
-        ]);
-    }
-
-    function actConfirmRoll()
-    {
-        $this->checkAction('actConfirmRoll');
-        $this->gamestate->nextState('checkResult');
-    }
-
-    function actRest()
-    {
-        $this->checkAction('actRest');
-        $player_id = $this->getActivePlayerId();
-        
-        // Reset movement counter for next day and reset surpass counter
-        $this->DbQuery("UPDATE player SET player_has_moved = 0, player_surpass_count = 0 WHERE player_id = $player_id");
-        
-        $this->notify->all('playerRests', clienttranslate('${player_name} rests and resets surpass counter'), [
-            'player_id' => $player_id,
-            'player_name' => $this->getActivePlayerName()
-        ]);
-        
-        $this->incStat(1, 'rest_count', $player_id);
-        // Move immediately to rest processing state
-        $this->gamestate->nextState('rest');
-    }
-
-    //////////////////////////////////////////////////////////////////////////////
-    //////////// Game state arguments
-    ////////////
-
-    function argDraftHorde()
-    {
-        $player_id = $this->getActivePlayerId();
-        
-        // Get available characters from deck
-        $available = [];
-        $selected = [];
-        try {
-            $rawAvailable = $this->cards->getCardsInLocation('deck');
-            $rawSelected = $this->cards->getCardsInLocation('horde_' . $player_id);
-            
-            // Enrich cards with character info
-            foreach ($rawAvailable as $card) {
-                $charInfo = $this->characters[$card['type_arg']] ?? [];
-                $card['name'] = $charInfo['name'] ?? 'Unknown';
-                $card['char_type'] = $charInfo['type'] ?? $card['type'];
-                $card['is_leader'] = !empty($charInfo['is_leader']);
-                $card['power'] = $charInfo['power'] ?? '';
-                $available[$card['id']] = $card;
-            }
-            
-            foreach ($rawSelected as $card) {
-                $charInfo = $this->characters[$card['type_arg']] ?? [];
-                $card['name'] = $charInfo['name'] ?? 'Unknown';
-                $card['char_type'] = $charInfo['type'] ?? $card['type'];
-                $card['is_leader'] = !empty($charInfo['is_leader']);
-                $card['power'] = $charInfo['power'] ?? '';
-                $selected[$card['id']] = $card;
-            }
-        } catch (Exception $e) {
-            // Cards may not be initialized yet
-        }
-        
-        // Count by type
-        $counts = [
-            'traceur' => 0,
-            'fer' => 0,
-            'pack' => 0,
-            'traine' => 0
-        ];
-        foreach ($selected as $card) {
-            if (!empty($card['is_leader'])) {
-                $counts['traceur']++;
-            } else {
-                $type = $card['char_type'] ?? 'fer';
-                if (isset($counts[$type])) {
-                    $counts[$type]++;
-                }
-            }
-        }
-        
-        return [
-            'available' => $available,
-            'selected' => $selected,
-            'counts' => $counts,
-            'requirements' => [
-                'traceur' => 1,
-                'fer' => 2,
-                'pack' => 3,
-                'traine' => 2
-            ]
-        ];
-    }
-
-    function argPlayerTurn()
-    {
-        $player_id = $this->getActivePlayerId();
-        $player = $this->getObjectFromDB("SELECT * FROM player WHERE player_id = $player_id");
-        
-        // Get chapter from player record (most reliable for mid-game state)
-        $chapter = (int)($player['player_chapter'] ?? 0);
-        if ($chapter < 1) {
-            throw new BgaVisibleSystemException("Invalid chapter value ($chapter) for player $player_id - database may be corrupted");
-        }
-        
-        // Ensure tiles exist for this chapter (handles studio resets/game recovery)
-        $tile_count = (int)$this->getUniqueValueFromDB("SELECT COUNT(*) FROM tile WHERE tile_chapter = $chapter");
-        if ($tile_count == 0) {
-            $this->setupChapterTiles($chapter);
-            $tile_count = (int)$this->getUniqueValueFromDB("SELECT COUNT(*) FROM tile WHERE tile_chapter = $chapter");
-        }
-        
-        $q = (int)$player['player_position_q'];
-        $r = (int)$player['player_position_r'];
-        $adjacent = $this->getAdjacentTiles($q, $r, $chapter);
-        
-        // Debug: list all tiles to check coordinates
-        $all_tiles = $this->getCollectionFromDb("SELECT tile_id, tile_q, tile_r, tile_subtype FROM tile WHERE tile_chapter = $chapter LIMIT 10");
-        
-        return [
-            'position' => ['q' => $q, 'r' => $r],
-            'adjacent' => $adjacent,
-            'moral' => $player['player_moral'],
-            'has_moved' => $player['player_has_moved'],
-            'can_surpass' => $player['player_has_moved'] > 0,
-            '_debug_chapter' => $chapter,
-            '_debug_tile_count' => $tile_count,
-            '_debug_player_pos' => "q=$q, r=$r",
-            '_debug_adjacent_count' => count($adjacent),
-            '_debug_sample_tiles' => $all_tiles
-        ];
-    }
-
-    function argConfrontation()
-    {
-        $tile_id = $this->getGameStateValue('selected_tile');
-        $tile = $this->getObjectFromDB("SELECT * FROM tile WHERE tile_id = $tile_id");
-        
-        $horde_dice = $this->getCollectionFromDb("SELECT * FROM dice_roll WHERE dice_owner = 'player'");
-        $challenge_dice = $this->getCollectionFromDb("SELECT * FROM dice_roll WHERE dice_owner = 'challenge'");
-        
-        return [
-            'tile' => $tile,
-            'wind_force' => $tile['tile_wind_force'],
-            'horde_dice' => $horde_dice,
-            'challenge_dice' => $challenge_dice
-        ];
-    }
-
-    //////////////////////////////////////////////////////////////////////////////
-    //////////// Game state actions
-    ////////////
 
     function stNextDraft()
     {
         $player_id = $this->getActivePlayerId();
         
-        // Check if current player has completed their horde
         $horde = $this->cards->getCardsInLocation('horde_' . $player_id);
         if (count($horde) < 8) {
             $this->gamestate->nextState('nextPlayer');
             return;
         }
         
-        // Move to next player or start game
         $this->activeNextPlayer();
         $next_player = $this->getActivePlayerId();
         
-        // Check if back to first player (all drafted)
         if ($next_player == $this->getPlayerAfter($this->getPlayerBefore($player_id))) {
             $this->gamestate->nextState('allDrafted');
         } else {
@@ -1079,180 +304,28 @@ class Windwalkers extends Table
         }
     }
 
-    /**
-     * Process rest (non-interactive for now): finalize rest and pass to next player
-     */
     function stRest()
     {
-        // Active player already reset in actRest; ensure dice and temporary effects are cleared if needed
-        // Future: implement interactive rest (restore hordier power) when power flags are tracked
-
         $this->gamestate->nextState('restComplete');
-    }
-
-    function stRevealWind()
-    {
-        $tile_id = $this->getGameStateValue('selected_tile');
-        $tile = $this->getObjectFromDB("SELECT * FROM tile WHERE tile_id = $tile_id");
-        
-        // Cities have no wind
-        if ($tile['tile_type'] == 'city' || isset($this->terrain_types[$tile['tile_subtype']]['no_wind'])) {
-            $this->gamestate->nextState('noWind');
-            return;
-        }
-        
-        // Draw wind token if not already revealed
-        if ($tile['tile_wind_force'] === null) {
-            $token = $this->drawWindToken();
-            $force = $token['token_force'];
-            
-            $this->DbQuery("UPDATE tile SET tile_wind_force = $force, tile_discovered = 1 WHERE tile_id = $tile_id");
-            $this->DbQuery("UPDATE wind_token SET token_location = 'tile', token_tile_id = $tile_id WHERE token_id = {$token['token_id']}");
-            
-            // Roll wind dice (rolled ones)
-            $green_dice = $this->rollDice($tile['tile_green_dice'], 'green', 'challenge');
-            $white_dice = $this->rollDice($tile['tile_white_dice'], 'white', 'challenge');
-            $black_dice = $this->rollDice($tile['tile_black_dice'], 'black', 'challenge');
-
-            // Add missing white dice as fixed 6 (not rolled) to reach wind force
-            $missing_white = max(0, $force - (count($white_dice) + count($green_dice)));
-            $added_white_dice = [];
-            for ($i = 0; $i < $missing_white; $i++) {
-                $added_white_dice[] = [
-                    'type' => 'white',
-                    'value' => 6,
-                    'owner' => 'challenge'
-                ];
-            }
-
-            $white_dice_final = array_merge($white_dice, $added_white_dice);
-            $all_challenge_dice = array_merge($white_dice_final, $green_dice, $black_dice);
-            
-            // Store wind dice
-            foreach ($all_challenge_dice as $dice) {
-                $this->DbQuery("INSERT INTO dice_roll (dice_type, dice_value, dice_owner) 
-                               VALUES ('{$dice['type']}', {$dice['value']}, '{$dice['owner']}')");
-            }
-            
-            $this->notify->all('windRevealed', clienttranslate('Wind force ${force} revealed!'), [
-                'tile_id' => $tile_id,
-                'force' => $force,
-                'white_dice' => $white_dice_final,
-                'green_dice' => $green_dice,
-                'black_dice' => $black_dice,
-                'added_white_dice' => $added_white_dice
-            ]);
-        }
-        
-        $this->gamestate->nextState('windRevealed');
-    }
-
-    function stResolveConfrontation()
-    {
-        $player_id = $this->getActivePlayerId();
-        
-        // Get all dice (player vs challenge)
-        $horde_dice = $this->getCollectionFromDb("SELECT * FROM dice_roll WHERE dice_owner = 'player'");
-        $wind_dice = $this->getCollectionFromDb("SELECT * FROM dice_roll WHERE dice_owner = 'challenge'");
-        
-        // Calculate sums
-        $horde_sum = array_sum(array_column($horde_dice, 'dice_value'));
-        $wind_sum = array_sum(array_column($wind_dice, 'dice_value'));
-        
-        // Check wind force constraint (matching dice)
-        $tile_id = $this->getGameStateValue('selected_tile');
-        $tile = $this->getObjectFromDB("SELECT * FROM tile WHERE tile_id = $tile_id");
-        $wind_force = $tile['tile_wind_force'] ?? 0;
-
-        // Pre-compute value counts for notifications/debug
-        $wind_value_counts = $this->countFaceOccurrences($wind_dice, null, 'challenge');
-        $player_value_counts = $this->countFaceOccurrences($horde_dice, null, 'player');
-
-        // Available player dice counts (will be consumed dimension by dimension)
-        $available_counts = $player_value_counts;
-        
-        // Check matching by dimension (terrain first, then wind, then fate)
-        // Greens: must ALL be matched, each match reduces wind force requirement for whites
-        $green_match = $this->matchAndConsumeDice($wind_dice, $available_counts, 'green');
-        $greens_ok = ($green_match['matched'] >= $green_match['required'] || $green_match['matched'] >= $wind_force); // all greens must match
-        $wind_force = max(0, $wind_force - $green_match['matched']); // reduce wind force by matched greens
-
-        // Whites: must meet reduced wind force after greens are consumed
-        $white_match = $this->matchAndConsumeDice($wind_dice, $available_counts, 'white');
-        $whites_ok = ($white_match['matched'] >= $wind_force); // wind force defines the required white pressure
-
-        // Blacks: all black dice must be matched
-        $black_match = $this->matchAndConsumeDice($wind_dice, $available_counts, 'black');
-        $blacks_ok = ($black_match['matched'] >= $black_match['required']);
-
-        // Success conditions:
-        // 1. Horde sum >= Wind sum (global pressure)
-        // 2. All green (terrain) dice matched
-        // 3. Whites satisfy reduced wind force (greens reduce it)
-        // 4. All black (fate) dice matched
-        $success = ($horde_sum >= $wind_sum) && $greens_ok && $whites_ok && $blacks_ok;
-        
-        if ($success) {
-            $this->incStat(1, 'confrontations_won', $player_id);
-            $this->incStat(1, 'tiles_traversed', $player_id);
-            
-            if ($wind_force == 6) {
-                $this->incStat(1, 'furevents_defeated', $player_id);
-                $this->incStat(1, 'furevents_defeated');
-            }
-            
-            // Add surpass count to score
-            $surpass_count = $this->getUniqueValueFromDB("SELECT player_surpass_count FROM player WHERE player_id = $player_id");
-            $this->DbQuery("UPDATE player SET player_score = player_score + $surpass_count WHERE player_id = $player_id");
-            
-            $this->notify->all('confrontationSuccess', clienttranslate('${player_name} overcomes the wind! (+${surpass_points} points for surpass)'), [
-                'player_id' => $player_id,
-                'player_name' => $this->getActivePlayerName(),
-                'horde_sum' => $horde_sum,
-                'wind_sum' => $wind_sum,
-                'surpass_points' => $surpass_count,
-                'wind_value_counts' => $wind_value_counts,
-                'player_value_counts' => $player_value_counts
-            ]);
-            
-            // Move player to new tile
-            $this->DbQuery("UPDATE player SET player_position_q = {$tile['tile_q']}, player_position_r = {$tile['tile_r']} WHERE player_id = $player_id");
-            
-            $this->gamestate->nextState('success');
-        } else {
-            $this->incStat(1, 'confrontations_lost', $player_id);
-            
-            $this->notify->all('confrontationFailure', clienttranslate('${player_name} is pushed back by the wind!'), [
-                'player_id' => $player_id,
-                'player_name' => $this->getActivePlayerName(),
-                'horde_sum' => $horde_sum,
-                'wind_sum' => $wind_sum,
-                'wind_value_counts' => $wind_value_counts,
-                'player_value_counts' => $player_value_counts
-            ]);
-            
-            $this->gamestate->nextState('failure');
-        }
     }
 
     function stApplyTileEffect()
     {
         $player_id = $this->getActivePlayerId();
         $tile_id = $this->getGameStateValue('selected_tile');
-        $tile = $this->getObjectFromDB("SELECT * FROM tile WHERE tile_id = $tile_id");
+        $tile = $this->getTileById($tile_id);
         
         // Apply moral effect
         if ($tile['tile_moral_effect'] != 0) {
-            $this->DbQuery("UPDATE player SET player_moral = GREATEST(0, LEAST(9, player_moral + {$tile['tile_moral_effect']})) WHERE player_id = $player_id");
+            $this->modifyPlayerMoral($player_id, $tile['tile_moral_effect']);
         }
         
-        // Check for recruitment (village or city)
+        // Check for recruitment or special
         if ($tile['tile_type'] == 'village' || $tile['tile_type'] == 'city') {
             $this->gamestate->nextState('recruit');
             return;
         }
         
-        // Check for special tiles (tour fontaine, porte d'hurle, etc.)
         if ($tile['tile_type'] == 'special') {
             $this->gamestate->nextState('special_tile');
             return;
@@ -1279,14 +352,11 @@ class Windwalkers extends Table
         // Award moral for completing chapter
         $players = $this->loadPlayersBasicInfos();
         foreach ($players as $player_id => $player) {
-            $this->DbQuery("UPDATE player SET player_moral = LEAST(9, player_moral + 1) WHERE player_id = $player_id");
+            $this->modifyPlayerMoral($player_id, 1);
         }
         
-        // Check if game end (chapter 4 complete)
         if ($chapter >= 4) {
             $this->calculateFinalScores();
-            $this->gamestate->nextState('nextChapter');
-            return;
         }
         
         $this->gamestate->nextState('nextChapter');
@@ -1294,48 +364,39 @@ class Windwalkers extends Table
 
     function stSetupNextChapter()
     {
-        $chapter = $this->getGameStateValue('current_chapter') + 1;
-        $this->setGameStateValue('current_chapter', $chapter);
-        
-        // Setup new chapter tiles
-        $this->setupChapterTiles($chapter);
-        
-        // Reset wind tokens
-        $this->DbQuery("UPDATE wind_token SET token_location = 'bag', token_tile_id = NULL");
-        
-        // Reset player positions to new starting city
-        // (Implementation depends on chapter layout)
-        
+        $this->transitionToNextChapter();
         $this->gamestate->nextState('chapterReady');
     }
 
-    /**
-     * Calculate final scores
-     */
+    //////////////////////////////////////////////////////////////////////////////
+    //////////// Final Scoring
+    //////////////////////////////////////////////////////////////////////////////
+
     function calculateFinalScores()
     {
         $players = $this->loadPlayersBasicInfos();
         
         foreach ($players as $player_id => $player) {
-            $stats = $this->getObjectFromDB("SELECT * FROM player WHERE player_id = $player_id");
-            
-            $score = 0;
-            $score += $this->getStat('tiles_traversed', $player_id); // 1pt per tile
-            $score += $stats['player_moral']; // 1pt per remaining moral
-            $score += $this->getStat('furevents_defeated', $player_id) * 3; // 3pt per furevent
-            
-            // Hordiers alive (2pt each)
-            $horde_count = count($this->cards->getCardsInLocation('horde_' . $player_id));
-            $score += $horde_count * 2;
-            
+            $score = $this->calculatePlayerScore($player_id);
             $this->DbQuery("UPDATE player SET player_score = $score WHERE player_id = $player_id");
             $this->setStat($score, 'total_score', $player_id);
         }
     }
 
+    private function calculatePlayerScore(int $player_id): int
+    {
+        $score = 0;
+        $score += $this->getStat('tiles_traversed', $player_id);
+        $score += $this->getPlayerMoral($player_id);
+        $score += $this->getStat('furevents_defeated', $player_id) * 3;
+        $score += count($this->cards->getCardsInLocation('horde_' . $player_id)) * 2;
+        
+        return $score;
+    }
+
     //////////////////////////////////////////////////////////////////////////////
-    //////////// Zombie
-    ////////////
+    //////////// Zombie Mode
+    //////////////////////////////////////////////////////////////////////////////
 
     function zombieTurn($state, $active_player)
     {
@@ -1344,15 +405,12 @@ class Windwalkers extends Table
         if ($state['type'] === "activeplayer") {
             switch ($statename) {
                 case 'draftHorde':
-                    // Auto-complete horde with random characters
                     $this->zombieCompleteDraft($active_player);
                     break;
                 case 'playerTurn':
-                    // Rest
                     $this->gamestate->nextState('rest');
                     break;
                 case 'confrontation':
-                    // Just confirm
                     $this->gamestate->nextState('checkResult');
                     break;
                 default:
@@ -1365,65 +423,9 @@ class Windwalkers extends Table
         throw new BgaVisibleSystemException("Zombie mode error: unexpected state type");
     }
 
-    function zombieCompleteDraft($player_id)
-    {
-        // Get current horde
-        $horde = $this->cards->getCardsInLocation('horde_' . $player_id);
-        $counts = ['traceur' => 0, 'fer' => 0, 'pack' => 0, 'traine' => 0];
-        foreach ($horde as $card) {
-            if ($card['card_type'] == 'fer' && $card['card_is_leader']) {
-                $counts['traceur']++;
-            } else {
-                $counts[$card['card_type']]++;
-            }
-        }
-        
-        // Fill missing slots
-        $requirements = ['traceur' => 1, 'fer' => 2, 'pack' => 3, 'traine' => 2];
-        
-        // First, recruit traceur (fer with is_leader)
-        if ($counts['traceur'] < $requirements['traceur']) {
-            $traceurs = $this->getCollectionFromDb(
-                "SELECT * FROM card WHERE card_type = 'fer' AND card_is_leader = 1 AND card_location = 'deck'"
-            );
-            if (!empty($traceurs)) {
-                $card = array_shift($traceurs);
-                $this->cards->moveCard($card['card_id'], 'horde_' . $player_id);
-                $this->trackHordierSelection($card['card_id']);
-                $counts['traceur']++;
-            }
-        }
-        
-        // Then recruit other types
-        $other_requirements = ['fer' => 2, 'pack' => 3, 'traine' => 2];
-        foreach ($other_requirements as $type => $needed) {
-            while ($counts[$type] < $needed) {
-                // For fer type, get only fers that are NOT leaders
-                if ($type == 'fer') {
-                    $cards = $this->getCollectionFromDb(
-                        "SELECT * FROM card WHERE card_type = 'fer' AND card_is_leader = 0 AND card_location = 'deck' LIMIT 1"
-                    );
-                } else {
-                    $cards = $this->cards->getCardsOfTypeInLocation($type, null, 'deck');
-                }
-                
-                if (!empty($cards)) {
-                    $card = array_shift($cards);
-                    $this->cards->moveCard($card['card_id'], 'horde_' . $player_id);
-                    $this->trackHordierSelection($card['card_id']);
-                    $counts[$type]++;
-                } else {
-                    break;  // Pas assez de cartes
-                }
-            }
-        }
-        
-        $this->gamestate->nextState('hordeComplete');
-    }
-
     //////////////////////////////////////////////////////////////////////////////
     //////////// Debug
-    ////////////
+    //////////////////////////////////////////////////////////////////////////////
 
     function debug_setMoral($moral)
     {
