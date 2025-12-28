@@ -11,9 +11,6 @@
 
 $gameinfos = [
     'game_name' => 'Windwalkers',
-    'designer' => 'David Saban',
-    'artist' => 'David Saban',
-    'year' => 2025,
     'publisher' => 'Self-published',
     'publisher_website' => '',
     'publisher_bgg_id' => 0,
@@ -38,27 +35,8 @@ $gameinfos = [
     'solo_mode_ranked' => false,
 
     'is_coop' => 0,
-    'is_beta' => 1,
 
     'language_dependency' => false,
-
-    'complexity' => 3,
-    'luck' => 3,
-    'strategy' => 4,
-    'diplomacy' => 1,
-
-    'tags' => [2, 11, 200],
-
-    'presentation' => [
-        totranslate("Guidez votre Horde à travers un monde balayé par des vents mortels."),
-        totranslate("Inspiré de La Horde du Contrevent d'Alain Damasio."),
-        totranslate("Affrontez les épreuves du vent avec vos dés et les pouvoirs uniques de vos Hordiers.")
-    ],
-
-    'custom_buy_button' => [
-        'url' => '',
-        'label' => ''
-    ],
 
     'db_undo_support' => true,
 ];
