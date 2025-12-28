@@ -21,3 +21,9 @@ backup*/
 *.xcf
 src/resources/box/
 .gen_images/
+# BGA Credentials
+.env
+.env.local
+.env.*.local
+vendor/
+bga-windwalkers/vendor/

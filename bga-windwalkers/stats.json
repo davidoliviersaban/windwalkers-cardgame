@@ -1,0 +1,81 @@
+{
+  "table": {
+    "turns_number": {
+      "id": 10,
+      "name": "Number of turns",
+      "type": "int"
+    },
+    "chapters_completed": {
+      "id": 11,
+      "name": "Chapters completed",
+      "type": "int"
+    },
+    "total_wind_faced": {
+      "id": 12,
+      "name": "Total wind force faced",
+      "type": "int"
+    },
+    "furevents_defeated": {
+      "id": 13,
+      "name": "Furevents (Force 6) defeated",
+      "type": "int"
+    }
+  },
+  "player": {
+    "turns_number": {
+      "id": 10,
+      "name": "Number of turns",
+      "type": "int"
+    },
+    "tiles_traversed": {
+      "id": 11,
+      "name": "Tiles traversed",
+      "type": "int"
+    },
+    "hordiers_lost": {
+      "id": 12,
+      "name": "Hordiers lost",
+      "type": "int"
+    },
+    "moral_spent": {
+      "id": 13,
+      "name": "Moral points spent",
+      "type": "int"
+    },
+    "powers_used": {
+      "id": 14,
+      "name": "Powers used",
+      "type": "int"
+    },
+    "surpass_count": {
+      "id": 15,
+      "name": "Surpass attempts",
+      "type": "int"
+    },
+    "surpass_success": {
+      "id": 16,
+      "name": "Successful surpass",
+      "type": "int"
+    },
+    "furevents_defeated": {
+      "id": 17,
+      "name": "Furevents defeated",
+      "type": "int"
+    },
+    "confrontations_won": {
+      "id": 18,
+      "name": "Confrontations won",
+      "type": "int"
+    },
+    "confrontations_lost": {
+      "id": 19,
+      "name": "Confrontations lost",
+      "type": "int"
+    },
+    "total_score": {
+      "id": 20,
+      "name": "Final score",
+      "type": "int"
+    }
+  }
+}

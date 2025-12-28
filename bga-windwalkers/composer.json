@@ -1,0 +1,17 @@
+{
+  "name": "windwalkers/bga-game",
+  "description": "Windwalkers - BGA implementation",
+  "require-dev": {
+    "phpunit/phpunit": "^9"
+  },
+  "autoload": {
+    "psr-4": {
+      "Windwalkers\\": ""
+    }
+  },
+  "config": {
+    "allow-plugins": {
+      "phpunit/phpunit": true
+    }
+  }
+}

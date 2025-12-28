@@ -1,0 +1,164 @@
+{
+  "title": "Windwalker - Chapter 1",
+  "start_city": "aberlaas",
+  "end_city": "portchoon",
+  "grid": [
+    {
+      "q": 3,
+      "r": 17,
+      "type": "building",
+      "name": "aberlaas",
+      "city": true,
+      "start": true
+    },
+    {
+      "q": 3,
+      "r": 16,
+      "type": "terrain",
+      "name": "mountain"
+    },
+    {
+      "q": 3,
+      "r": 14,
+      "type": "building",
+      "name": "village_green",
+      "village": true
+    },
+    {
+      "q": 1,
+      "r": 16,
+      "type": "building",
+      "name": "village_blue",
+      "village": true
+    },
+    {
+      "q": 5,
+      "r": 12,
+      "type": "building",
+      "name": "village_brown",
+      "village": true
+    },
+    {
+      "q": 2,
+      "r": 17,
+      "type": "terrain",
+      "name": "plain"
+    },
+    {
+      "q": 1,
+      "r": 17,
+      "type": "terrain",
+      "name": "plain"
+    },
+    {
+      "q": 4,
+      "r": 15,
+      "type": "terrain",
+      "name": "plain"
+    },
+    {
+      "q": 5,
+      "r": 14,
+      "type": "terrain",
+      "name": "plain"
+    },
+    {
+      "q": 5,
+      "r": 13,
+      "type": "terrain",
+      "name": "plain"
+    },
+    {
+      "q": 4,
+      "r": 12,
+      "type": "terrain",
+      "name": "plain"
+    },
+    {
+      "q": 1,
+      "r": 15,
+      "type": "terrain",
+      "name": "plain"
+    },
+    {
+      "q": 2,
+      "r": 13,
+      "type": "terrain",
+      "name": "plain"
+    },
+    {
+      "q": 3,
+      "r": 12,
+      "type": "terrain",
+      "name": "hut"
+    },
+    {
+      "q": 1,
+      "r": 14,
+      "type": "terrain",
+      "name": "hut"
+    },
+    {
+      "q": 2,
+      "r": 15,
+      "type": "terrain",
+      "name": "hut"
+    },
+    {
+      "q": 5,
+      "r": 15,
+      "type": "terrain",
+      "name": "hut"
+    },
+    {
+      "q": 2,
+      "r": 16,
+      "type": "terrain",
+      "name": "mountain"
+    },
+    {
+      "q": 2,
+      "r": 14,
+      "type": "terrain",
+      "name": "mountain"
+    },
+    {
+      "q": 3,
+      "r": 13,
+      "type": "terrain",
+      "name": "mountain"
+    },
+    {
+      "q": 4,
+      "r": 13,
+      "type": "terrain",
+      "name": "forest"
+    },
+    {
+      "q": 4,
+      "r": 14,
+      "type": "terrain",
+      "name": "forest"
+    },
+    {
+      "q": 3,
+      "r": 15,
+      "type": "terrain",
+      "name": "forest"
+    },
+    {
+      "q": 4,
+      "r": 16,
+      "type": "terrain",
+      "name": "forest"
+    },
+    {
+      "q": 3,
+      "r": 11,
+      "type": "building",
+      "name": "portchoon",
+      "city": true,
+      "end": true
+    }
+  ]
+}
