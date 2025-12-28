@@ -27,3 +27,4 @@ src/resources/box/
 .env.*.local
 vendor/
 bga-windwalkers/vendor/
+bga-windwalkers-remote/
