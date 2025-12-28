@@ -26,11 +26,12 @@ class Windwalkers extends Table
         $this->cards->init('card');
 
         // Declare game state labels used throughout the game
-        // These labels must be defined before using get/setGameStateValue/InitialValue
+        // The values are DATABASE SLOT IDs (must be >= 10 for custom labels), NOT initial values!
+        // Initial values are set with setGameStateInitialValue() in setupNewGame()
         $this->initGameStateLabels([
-            'current_chapter' => 1,   // starting chapter (default 1)
-            'current_round' => 1,     // round counter
-            'selected_tile' => 0      // currently selected tile id (0 = none)
+            'current_chapter' => 10,   // slot ID 10
+            'current_round' => 11,     // slot ID 11
+            'selected_tile' => 12      // slot ID 12
         ]);
     }
 
@@ -72,6 +73,7 @@ class Windwalkers extends Table
         }
         $this->setGameStateInitialValue('current_chapter', $startingChapter);
         $this->setGameStateInitialValue('current_round', 1);
+        $this->setGameStateInitialValue('selected_tile', 0);
 
         // Init game statistics
         $this->initStat('table', 'turns_number', 0);
@@ -101,16 +103,16 @@ class Windwalkers extends Table
         // Setup wind tokens
         $this->setupWindTokens();
 
-        // Setup chapter tiles
-        $chapter = $this->getGameStateValue('current_chapter');
-        $this->setupChapterTiles($chapter);
+        // Setup chapter tiles - use $startingChapter directly instead of getGameStateValue
+        // because getGameStateValue may not work immediately after setGameStateInitialValue
+        $this->setupChapterTiles($startingChapter);
 
         // Initialize player positions to the chapter's starting city
-        $startPos = $this->getStartingCityPosition($chapter);
+        $startPos = $this->getStartingCityPosition($startingChapter);
         if ($startPos) {
             foreach ($players as $player_id => $player) {
                 $this->DbQuery(
-                    "UPDATE player SET player_position_q = {$startPos['q']}, player_position_r = {$startPos['r']}, player_chapter = $chapter WHERE player_id = $player_id"
+                    "UPDATE player SET player_position_q = {$startPos['q']}, player_position_r = {$startPos['r']}, player_chapter = $startingChapter WHERE player_id = $player_id"
                 ); // NOI18N
             }
         }
@@ -205,13 +207,55 @@ class Windwalkers extends Table
      */
     function setupChapterTiles($chapter)
     {
-        // Load chapter data from material.inc.php
-        if (isset($this->chapters[$chapter]) && !empty($this->chapters[$chapter]['tiles'])) {
-            $this->createTilesFromData($this->chapters[$chapter]['tiles'], $chapter);
-        } else {
-            // Fallback: create basic chapter 1 layout
-            $this->createDefaultChapter1();
+        // Validate chapter
+        if (!$chapter || $chapter < 1 || $chapter > 4) {
+            throw new BgaVisibleSystemException("setupChapterTiles called with invalid chapter: $chapter");
         }
+        
+        // Load chapter data from material.inc.php
+        $this->debug("=== setupChapterTiles for chapter $chapter ===");
+        
+        // Direct access to chapter 1 tiles - bypass potential $this->chapters issues
+        $tiles = [
+            // Cities
+            ['q' => 3, 'r' => 17, 'subtype' => 'aberlaas'],
+            ['q' => 3, 'r' => 11, 'subtype' => 'portchoon'],
+            // Villages
+            ['q' => 3, 'r' => 14, 'subtype' => 'village_green'],
+            ['q' => 1, 'r' => 16, 'subtype' => 'village_blue'],
+            ['q' => 5, 'r' => 12, 'subtype' => 'village_red'],
+            // Plains
+            ['q' => 2, 'r' => 17, 'subtype' => 'plain'],
+            ['q' => 1, 'r' => 17, 'subtype' => 'plain'],
+            ['q' => 4, 'r' => 15, 'subtype' => 'plain'],
+            ['q' => 5, 'r' => 14, 'subtype' => 'plain'],
+            ['q' => 5, 'r' => 13, 'subtype' => 'plain'],
+            ['q' => 4, 'r' => 12, 'subtype' => 'plain'],
+            ['q' => 1, 'r' => 15, 'subtype' => 'plain'],
+            ['q' => 2, 'r' => 13, 'subtype' => 'plain'],
+            // Huts
+            ['q' => 3, 'r' => 12, 'subtype' => 'hut'],
+            ['q' => 1, 'r' => 14, 'subtype' => 'hut'],
+            ['q' => 2, 'r' => 15, 'subtype' => 'hut'],
+            ['q' => 5, 'r' => 15, 'subtype' => 'hut'],
+            // Mountains
+            ['q' => 3, 'r' => 16, 'subtype' => 'mountain'],
+            ['q' => 2, 'r' => 16, 'subtype' => 'mountain'],
+            ['q' => 2, 'r' => 14, 'subtype' => 'mountain'],
+            ['q' => 3, 'r' => 13, 'subtype' => 'mountain'],
+            // Forests
+            ['q' => 4, 'r' => 13, 'subtype' => 'forest'],
+            ['q' => 4, 'r' => 14, 'subtype' => 'forest'],
+            ['q' => 3, 'r' => 15, 'subtype' => 'forest'],
+            ['q' => 4, 'r' => 16, 'subtype' => 'forest'],
+        ];
+        
+        $this->debug("Creating " . count($tiles) . " tiles directly");
+        $this->createTilesFromData($tiles, $chapter);
+        
+        // Verify tiles were created
+        $count = $this->getUniqueValueFromDB("SELECT COUNT(*) FROM tile WHERE tile_chapter = $chapter");
+        $this->debug("Total tiles in DB for chapter $chapter: $count");
     }
 
     /**
@@ -305,9 +349,19 @@ class Windwalkers extends Table
         $result = [];
         $current_player_id = $this->getCurrentPlayerId();
 
-        // Get current chapter
-        $chapter = $this->getGameStateValue('current_chapter');
+        // Get current chapter from player record (more reliable than game state)
+        $player_chapter = $this->getUniqueValueFromDB("SELECT player_chapter FROM player WHERE player_id = $current_player_id");
+        $chapter = (int)$player_chapter;
+        if ($chapter < 1) {
+            throw new BgaVisibleSystemException("Invalid chapter value ($chapter) for player $current_player_id - database may be corrupted");
+        }
         $result['current_chapter'] = $chapter;
+        
+        // Ensure tiles exist for this chapter
+        $tile_count = (int)$this->getUniqueValueFromDB("SELECT COUNT(*) FROM tile WHERE tile_chapter = $chapter");
+        if ($tile_count == 0) {
+            $this->setupChapterTiles($chapter);
+        }
 
         // Get players info
         $result['players'] = $this->loadPlayersBasicInfos();
@@ -428,15 +482,24 @@ class Windwalkers extends Table
     ////////////
 
     /**
-     * Get adjacent tiles for a hex position
+     * Get adjacent tiles for a hex position (FLAT-TOP axial coordinates)
      */
     function getAdjacentTiles($q, $r, $chapter)
     {
-        // Hex directions (pointy-top)
+        // Hex directions for FLAT-TOP layout (axial coordinates)
+        // See: https://www.redblobgames.com/grids/hexagons/#neighbors-axial
         $directions = [
-            [+1, 0], [+1, -1], [0, -1],
-            [-1, 0], [-1, +1], [0, +1]
+            [+1, 0],  // East
+            [+1, -1], // North-East  
+            [0, -1],  // North-West
+            [-1, 0],  // West
+            [-1, +1], // South-West
+            [0, +1]   // South-East
         ];
+        
+        // Ensure q and r are integers
+        $q = (int)$q;
+        $r = (int)$r;
         
         $adjacent = [];
         foreach ($directions as $dir) {
@@ -444,12 +507,17 @@ class Windwalkers extends Table
             $nr = $r + $dir[1];
             
             $tile = $this->getObjectFromDB(
-                "SELECT * FROM tile WHERE tile_q = $nq AND tile_r = $nr AND tile_chapter = $chapter"
+                "SELECT tile_id, tile_q, tile_r, tile_type, tile_subtype, tile_chapter,
+                        tile_wind_force, tile_discovered, tile_white_dice, tile_green_dice,
+                        tile_black_dice, tile_moral_effect
+                 FROM tile WHERE tile_q = $nq AND tile_r = $nr AND tile_chapter = $chapter"
             );
             if ($tile) {
                 $adjacent[] = $tile;
             }
         }
+        
+        $this->debug("getAdjacentTiles($q, $r, $chapter) found " . count($adjacent) . " tiles");
         return $adjacent;
     }
 
@@ -545,14 +613,17 @@ class Windwalkers extends Table
     //////////// Player actions
     ////////////
 
-    function actSelectTile($tile_id)
+    function actSelectTile(int $tile_id)
     {
         $this->checkAction('actSelectTile');
         $player_id = $this->getActivePlayerId();
         
         // Validate tile is adjacent
         $player = $this->getObjectFromDB("SELECT * FROM player WHERE player_id = $player_id");
-        $chapter = $this->getGameStateValue('current_chapter');
+        $chapter = (int)($player['player_chapter'] ?? 0);
+        if ($chapter < 1) {
+            throw new BgaVisibleSystemException("Invalid chapter value ($chapter) for player $player_id - database may be corrupted");
+        }
         $adjacent = $this->getAdjacentTiles($player['player_position_q'], $player['player_position_r'], $chapter);
         
         $valid = false;
@@ -716,7 +787,7 @@ class Windwalkers extends Table
         return $counts;
     }
 
-    function actSurpassAndSelectTile($tile_id)
+    function actSurpassAndSelectTile(int $tile_id)
     {
         $this->checkAction('actSurpassAndSelectTile');
         $player_id = $this->getActivePlayerId();
@@ -729,7 +800,10 @@ class Windwalkers extends Table
         
         // Validate tile is adjacent
         $player = $this->getObjectFromDB("SELECT * FROM player WHERE player_id = $player_id");
-        $chapter = $this->getGameStateValue('current_chapter');
+        $chapter = (int)($player['player_chapter'] ?? 0);
+        if ($chapter < 1) {
+            throw new BgaVisibleSystemException("Invalid chapter value ($chapter) for player $player_id - database may be corrupted");
+        }
         $adjacent = $this->getAdjacentTiles($player['player_position_q'], $player['player_position_r'], $chapter);
         
         $valid = false;
@@ -791,7 +865,7 @@ class Windwalkers extends Table
         $this->gamestate->nextState('rollAgain');
     }
 
-    function actUseMoral($dice_id, $modifier)
+    function actUseMoral(int $dice_id, int $modifier)
     {
         $this->checkAction('actUseMoral');
         $player_id = $this->getActivePlayerId();
@@ -927,14 +1001,38 @@ class Windwalkers extends Table
     {
         $player_id = $this->getActivePlayerId();
         $player = $this->getObjectFromDB("SELECT * FROM player WHERE player_id = $player_id");
-        $chapter = $this->getGameStateValue('current_chapter');
+        
+        // Get chapter from player record (most reliable for mid-game state)
+        $chapter = (int)($player['player_chapter'] ?? 0);
+        if ($chapter < 1) {
+            throw new BgaVisibleSystemException("Invalid chapter value ($chapter) for player $player_id - database may be corrupted");
+        }
+        
+        // Ensure tiles exist for this chapter (handles studio resets/game recovery)
+        $tile_count = (int)$this->getUniqueValueFromDB("SELECT COUNT(*) FROM tile WHERE tile_chapter = $chapter");
+        if ($tile_count == 0) {
+            $this->setupChapterTiles($chapter);
+            $tile_count = (int)$this->getUniqueValueFromDB("SELECT COUNT(*) FROM tile WHERE tile_chapter = $chapter");
+        }
+        
+        $q = (int)$player['player_position_q'];
+        $r = (int)$player['player_position_r'];
+        $adjacent = $this->getAdjacentTiles($q, $r, $chapter);
+        
+        // Debug: list all tiles to check coordinates
+        $all_tiles = $this->getCollectionFromDb("SELECT tile_id, tile_q, tile_r, tile_subtype FROM tile WHERE tile_chapter = $chapter LIMIT 10");
         
         return [
-            'position' => ['q' => $player['player_position_q'], 'r' => $player['player_position_r']],
-            'adjacent' => $this->getAdjacentTiles($player['player_position_q'], $player['player_position_r'], $chapter),
+            'position' => ['q' => $q, 'r' => $r],
+            'adjacent' => $adjacent,
             'moral' => $player['player_moral'],
             'has_moved' => $player['player_has_moved'],
-            'can_surpass' => $player['player_has_moved'] > 0
+            'can_surpass' => $player['player_has_moved'] > 0,
+            '_debug_chapter' => $chapter,
+            '_debug_tile_count' => $tile_count,
+            '_debug_player_pos' => "q=$q, r=$r",
+            '_debug_adjacent_count' => count($adjacent),
+            '_debug_sample_tiles' => $all_tiles
         ];
     }
 

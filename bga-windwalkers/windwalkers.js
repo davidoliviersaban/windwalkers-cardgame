@@ -22,11 +22,10 @@ function (dojo, declare) {
         constructor: function(){
             console.log('windwalkers constructor');
             
-            // Hex grid settings
-            this.hexWidth = 100;
-            this.hexHeight = 86;
-            this.hexVerticalSpacing = 64; // For pointy-top hexes
-            this.hexHorizontalOffset = 50;
+            // Hex grid settings - FLAT-TOP orientation
+            this.hexSize = 50; // Distance from center to corner
+            this.hexWidth = this.hexSize * 2; // 100px
+            this.hexHeight = Math.sqrt(3) * this.hexSize; // ~86.6px
             
             // Dice display
             this.diceSize = 50;
@@ -52,6 +51,9 @@ function (dojo, declare) {
         {
             console.log("Starting game setup");
             console.log("Game data:", gamedatas);
+            console.log("Current chapter:", gamedatas.current_chapter);
+            console.log("Tiles received:", gamedatas.tiles);
+            console.log("Number of tiles:", Object.keys(gamedatas.tiles || {}).length);
             
             // Setting up player boards
             for (var player_id in gamedatas.players) {
@@ -132,6 +134,10 @@ function (dojo, declare) {
             );
             
             this.scrollmap.setupOnScreenArrows(150);
+            
+            // Center the scrollmap on the middle of the map
+            // Scroll to show the center area where tiles are placed
+            this.scrollmap.scrollto(-100, -100);
         },
         
         /**
@@ -139,10 +145,15 @@ function (dojo, declare) {
          */
         setupTiles: function(tiles)
         {
+            console.log('Setting up tiles:', tiles);
+            var tileCount = 0;
             for (var tile_id in tiles) {
                 var tile = tiles[tile_id];
+                console.log('Creating tile:', tile_id, tile);
                 this.createTile(tile);
+                tileCount++;
             }
+            console.log('Total tiles created:', tileCount);
         },
         
         /**
@@ -176,17 +187,28 @@ function (dojo, declare) {
         },
         
         /**
-         * Convert hex coordinates to pixel position
+         * Convert hex coordinates to pixel position (FLAT-TOP axial coordinates)
          */
         hexToPixel: function(q, r)
         {
-            // Pointy-top hex layout
-            var x = this.hexWidth * (Math.sqrt(3) * q + Math.sqrt(3)/2 * r);
-            var y = this.hexHeight * (3/2 * r);
+            // Ensure q and r are numbers
+            q = parseInt(q);
+            r = parseInt(r);
             
-            // Offset to center the map
-            x += 500;
-            y += 500;
+            // FLAT-TOP hex layout using axial coordinates
+            // Offset to center around q=3, r=14 (middle of chapter 1)
+            var qOffset = q - 3;
+            var rOffset = r - 14;
+            
+            // Flat-top formulas:
+            // x = size * (3/2 * q)
+            // y = size * (sqrt(3)/2 * q + sqrt(3) * r)
+            var x = this.hexSize * (3/2 * qOffset);
+            var y = this.hexSize * (Math.sqrt(3)/2 * qOffset + Math.sqrt(3) * rOffset);
+            
+            // Center in the map area
+            x += 400;
+            y += 350;
             
             return {x: Math.round(x), y: Math.round(y)};
         },
@@ -530,9 +552,18 @@ function (dojo, declare) {
          */
         highlightAdjacentTiles: function(tiles)
         {
+            console.log('Highlighting adjacent tiles:', tiles);
             for (var i = 0; i < tiles.length; i++) {
                 var tile = tiles[i];
-                dojo.addClass('tile_' + tile.tile_id, 'ww_selectable');
+                // Handle both tile_id and id properties
+                var tileId = tile.tile_id || tile.id;
+                console.log('Adding selectable to tile_' + tileId);
+                var tileEl = $('tile_' + tileId);
+                if (tileEl) {
+                    dojo.addClass(tileEl, 'ww_selectable');
+                } else {
+                    console.warn('Tile element not found: tile_' + tileId);
+                }
             }
         },
         
@@ -678,8 +709,10 @@ function (dojo, declare) {
             dojo.stopEvent(evt);
             
             var tile_id = evt.currentTarget.id.split('_')[1];
+            console.log('Tile clicked:', tile_id, 'selectable:', dojo.hasClass(evt.currentTarget, 'ww_selectable'));
             
             if (!dojo.hasClass(evt.currentTarget, 'ww_selectable')) {
+                this.showMessage(_("You cannot move to this tile"), "info");
                 return;
             }
             
@@ -827,17 +860,17 @@ function (dojo, declare) {
             
             this.revealWindToken(notif.args.tile_id, notif.args.force);
             
-            // Show wind dice
+            // Show wind dice (white_dice from PHP)
             var self = this;
-            notif.args.wind_dice.forEach(function(dice, index) {
+            (notif.args.white_dice || []).forEach(function(dice, index) {
                 self.createDice({
-                    dice_id: 'wind_' + index,
+                    dice_id: 'white_' + index,
                     dice_type: 'white',
                     dice_value: dice.value
                 }, 'ww_wind_dice');
             });
             
-            notif.args.green_dice.forEach(function(dice, index) {
+            (notif.args.green_dice || []).forEach(function(dice, index) {
                 self.createDice({
                     dice_id: 'green_' + index,
                     dice_type: 'green',
@@ -845,7 +878,7 @@ function (dojo, declare) {
                 }, 'ww_wind_dice');
             });
             
-            notif.args.black_dice.forEach(function(dice, index) {
+            (notif.args.black_dice || []).forEach(function(dice, index) {
                 self.createDice({
                     dice_id: 'black_' + index,
                     dice_type: 'black',

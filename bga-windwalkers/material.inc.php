@@ -575,13 +575,42 @@ $this->chapters = [
     1 => [
         'name' => clienttranslate('Chapter 1: The Journey Begins'),
         'tiles' => [
+            // Cities
             ['q' => 3, 'r' => 17, 'subtype' => 'aberlaas'],
-            ['q' => 3, 'r' => 16, 'subtype' => 'mountain'],
-            ['q' => 3, 'r' => 15, 'subtype' => 'forest'],
-            ['q' => 3, 'r' => 14, 'subtype' => 'village_green'],
-            ['q' => 3, 'r' => 13, 'subtype' => 'plain'],
-            ['q' => 3, 'r' => 12, 'subtype' => 'hut'],
             ['q' => 3, 'r' => 11, 'subtype' => 'portchoon'],
+            
+            // Villages
+            ['q' => 3, 'r' => 14, 'subtype' => 'village_green'],
+            ['q' => 1, 'r' => 16, 'subtype' => 'village_blue'],
+            ['q' => 5, 'r' => 12, 'subtype' => 'village_red'],
+            
+            // Plains
+            ['q' => 2, 'r' => 17, 'subtype' => 'plain'],
+            ['q' => 1, 'r' => 17, 'subtype' => 'plain'],
+            ['q' => 4, 'r' => 15, 'subtype' => 'plain'],
+            ['q' => 5, 'r' => 14, 'subtype' => 'plain'],
+            ['q' => 5, 'r' => 13, 'subtype' => 'plain'],
+            ['q' => 4, 'r' => 12, 'subtype' => 'plain'],
+            ['q' => 1, 'r' => 15, 'subtype' => 'plain'],
+            ['q' => 2, 'r' => 13, 'subtype' => 'plain'],
+            
+            // Huts
+            ['q' => 3, 'r' => 12, 'subtype' => 'hut'],
+            ['q' => 1, 'r' => 14, 'subtype' => 'hut'],
+            ['q' => 2, 'r' => 15, 'subtype' => 'hut'],
+            ['q' => 5, 'r' => 15, 'subtype' => 'hut'],
+            
+            // Mountains
+            ['q' => 3, 'r' => 16, 'subtype' => 'mountain'],
+            ['q' => 2, 'r' => 16, 'subtype' => 'mountain'],
+            ['q' => 2, 'r' => 14, 'subtype' => 'mountain'],
+            ['q' => 3, 'r' => 13, 'subtype' => 'mountain'],
+            
+            // Forests
+            ['q' => 4, 'r' => 13, 'subtype' => 'forest'],
+            ['q' => 4, 'r' => 14, 'subtype' => 'forest'],
+            ['q' => 3, 'r' => 15, 'subtype' => 'forest'],
+            ['q' => 4, 'r' => 16, 'subtype' => 'forest'],
         ]
     ],
     2 => [
