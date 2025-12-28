@@ -26,8 +26,8 @@ fi
 : "${BGA_SFTP_PASSWORD:?BGA_SFTP_PASSWORD is required}"
 : "${BGA_SFTP_REMOTE_DIR:?BGA_SFTP_REMOTE_DIR is required}"
 
-DEPLOY_SOURCE="${DEPLOY_SOURCE:-bga-windwalkers}"
-LOCAL_PATH="$ROOT_DIR/$DEPLOY_SOURCE"
+# Always deploy the BGA game folder only
+LOCAL_PATH="$ROOT_DIR/bga-windwalkers"
 
 if [[ ! -d "$LOCAL_PATH" ]]; then
   echo "Local deploy source not found: $LOCAL_PATH" >&2
@@ -61,7 +61,7 @@ if [[ "${1:-}" == "--dry-run" ]]; then
   DRY_RUN_FLAG="--dry-run"
 fi
 
-echo "Deploying '$DEPLOY_SOURCE' from '$LOCAL_PATH' to '$BGA_SFTP_USER@$BGA_SFTP_HOST:$BGA_SFTP_REMOTE_DIR' (port $BGA_SFTP_PORT)"
+echo "Deploying 'bga-windwalkers' from '$LOCAL_PATH' to '$BGA_SFTP_USER@$BGA_SFTP_HOST:$BGA_SFTP_REMOTE_DIR' (port $BGA_SFTP_PORT)"
 
 # Execute lftp mirror reverse (upload)
 lftp -u "$BGA_SFTP_USER","$BGA_SFTP_PASSWORD" "sftp://$BGA_SFTP_HOST:$BGA_SFTP_PORT" <<EOF
