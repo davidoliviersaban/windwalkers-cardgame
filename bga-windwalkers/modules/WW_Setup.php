@@ -77,45 +77,21 @@ trait WW_Setup
     }
 
     /**
-     * Get tile data for a chapter from JSON file
+     * Get tile data for a chapter from embedded material (no filesystem access)
      */
     function getChapterTilesData(int $chapter): array
     {
-        $jsonPath = __DIR__ . "/chapters/chapter{$chapter}.json";
-        
-        // Check if file exists
-        if (!file_exists($jsonPath)) {
+        if (!isset($this->chapters[$chapter]) || !isset($this->chapters[$chapter]['grid'])) {
             throw new BgaVisibleSystemException(
-                "Chapter $chapter JSON file not found at: $jsonPath"
+                "Chapter $chapter tile data not found in material."
             );
         }
         
-        // Read file contents
-        $jsonContent = file_get_contents($jsonPath);
-        if ($jsonContent === false) {
-            throw new BgaVisibleSystemException(
-                "Failed to read chapter $chapter JSON file at: $jsonPath"
-            );
-        }
+        $grid = $this->chapters[$chapter]['grid'];
         
-        // Parse JSON
-        $data = json_decode($jsonContent, true);
-        if ($data === null) {
-            throw new BgaVisibleSystemException(
-                "Invalid JSON in chapter $chapter file: " . json_last_error_msg()
-            );
-        }
-        
-        // Validate structure
-        if (!isset($data['grid']) || !is_array($data['grid'])) {
-            throw new BgaVisibleSystemException(
-                "Chapter $chapter JSON missing 'grid' array"
-            );
-        }
-        
-        // Convert JSON format to internal format
+        // Convert material format to internal format
         $tiles = [];
-        foreach ($data['grid'] as $index => $tile) {
+        foreach ($grid as $index => $tile) {
             if (!isset($tile['q']) || !isset($tile['r']) || !isset($tile['name'])) {
                 throw new BgaVisibleSystemException(
                     "Chapter $chapter tile #$index missing q, r, or name"
@@ -128,7 +104,7 @@ trait WW_Setup
             ];
         }
         
-        $this->debug("Loaded " . count($tiles) . " tiles from $jsonPath");
+        $this->debug("Loaded " . count($tiles) . " tiles from embedded material for chapter $chapter");
         return $tiles;
     }
 
@@ -141,7 +117,9 @@ trait WW_Setup
         foreach ($tiles as $tile) {
             $subtype = $tile['subtype'];
             $type = $this->determineTileType($subtype);
-            $terrain = $this->terrain_types[$subtype] ?? $this->terrain_types['plain'];
+            
+            // Get tile data from the appropriate source based on type
+            $tileData = $this->getTileDataBySubtype($subtype, $type);
             
             $values[] = sprintf(
                 "(%d, %d, '%s', '%s', %d, %d, %d, %d, %d)",
@@ -150,10 +128,10 @@ trait WW_Setup
                 $type,
                 $subtype,
                 $chapter,
-                $terrain['white_dice'] ?? 0,
-                $terrain['green_dice'] ?? 0,
-                $terrain['black_dice'] ?? 0,
-                $terrain['moral_effect'] ?? 0
+                $tileData['white_dice'],
+                $tileData['green_dice'],
+                $tileData['black_dice'],
+                $tileData['moral_effect']
             );
         }
         
@@ -163,6 +141,74 @@ trait WW_Setup
                 VALUES " . implode(',', $values);
             $this->DbQuery($sql);
         }
+    }
+    
+    /**
+     * Get tile data (dice values, moral effect) from the appropriate source array
+     */
+    function getTileDataBySubtype(string $subtype, string $type): array
+    {
+        // Default values
+        $defaults = [
+            'white_dice' => 0,
+            'green_dice' => 0,
+            'black_dice' => 0,
+            'moral_effect' => 0
+        ];
+        
+        switch ($type) {
+            case 'village':
+                // Villages are defined in village_types
+                if (isset($this->village_types[$subtype])) {
+                    return [
+                        'white_dice' => $this->village_types[$subtype]['white_dice'] ?? 0,
+                        'green_dice' => $this->village_types[$subtype]['green_dice'] ?? 0,
+                        'black_dice' => $this->village_types[$subtype]['black_dice'] ?? 0,
+                        'moral_effect' => $this->village_types[$subtype]['moral_effect'] ?? 0
+                    ];
+                }
+                break;
+                
+            case 'city':
+                // Cities have no dice (players rest there)
+                return $defaults;
+                
+            case 'special':
+                // Special locations (tourfontaine, portedhurle) might be in terrain_types
+                if (isset($this->terrain_types[$subtype])) {
+                    return [
+                        'white_dice' => $this->terrain_types[$subtype]['white_dice'] ?? 0,
+                        'green_dice' => $this->terrain_types[$subtype]['green_dice'] ?? 0,
+                        'black_dice' => $this->terrain_types[$subtype]['black_dice'] ?? 0,
+                        'moral_effect' => $this->terrain_types[$subtype]['moral_effect'] ?? 0
+                    ];
+                }
+                break;
+                
+            case 'terrain':
+            default:
+                // Regular terrains are in terrain_types
+                if (isset($this->terrain_types[$subtype])) {
+                    return [
+                        'white_dice' => $this->terrain_types[$subtype]['white_dice'] ?? 0,
+                        'green_dice' => $this->terrain_types[$subtype]['green_dice'] ?? 0,
+                        'black_dice' => $this->terrain_types[$subtype]['black_dice'] ?? 0,
+                        'moral_effect' => $this->terrain_types[$subtype]['moral_effect'] ?? 0
+                    ];
+                }
+                // Fallback to 'plain' terrain
+                if (isset($this->terrain_types['plain'])) {
+                    return [
+                        'white_dice' => $this->terrain_types['plain']['white_dice'] ?? 0,
+                        'green_dice' => $this->terrain_types['plain']['green_dice'] ?? 0,
+                        'black_dice' => $this->terrain_types['plain']['black_dice'] ?? 0,
+                        'moral_effect' => $this->terrain_types['plain']['moral_effect'] ?? 0
+                    ];
+                }
+                break;
+        }
+        
+        return $defaults;
     }
 
     /**
@@ -194,7 +240,7 @@ trait WW_Setup
         // Determine start city subtype for chapter
         $startSubtype = null;
         foreach ($this->cities as $subtype => $city) {
-            if (($city['chapter'] ?? null) == $chapter && !empty($city['is_start'])) {
+            if (($city['start_chapter'] ?? null) == $chapter) {
                 $startSubtype = $subtype;
                 break;
             }

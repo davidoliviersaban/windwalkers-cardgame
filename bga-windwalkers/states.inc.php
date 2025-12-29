@@ -40,13 +40,13 @@ $machinestates = [
 
     // ==================== MAIN GAME LOOP ====================
 
-    // Player's turn: must move if first action, can surpass or rest if already moved
+    // Player's turn: select tile to move (surpass is automatic if already moved)
     10 => [
         "name" => "playerTurn",
         "description" => clienttranslate('${actplayer} must choose an action'),
-        "descriptionmyturn" => clienttranslate('${you} must select a tile to move (or surpass and move, or rest if already moved)'),
+        "descriptionmyturn" => clienttranslate('${you} must select a tile to move, or rest'),
         "type" => "activeplayer",
-        "possibleactions" => ["actSelectTile", "actRest", "actSurpassAndSelectTile", "actUsePower"],
+        "possibleactions" => ["actSelectTile", "actRest", "actUsePower"],
         "args" => "argPlayerTurn",
         "transitions" => [
             "moveToTile" => 20,

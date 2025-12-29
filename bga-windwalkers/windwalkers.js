@@ -7,10 +7,18 @@
  * windwalkers.js
  *
  * Windwalkers user interface script
+ * 
+ * Architecture (internal modules):
+ * - WW_DOM    : Technical layer for DOM manipulation
+ * - WW_State  : Client-side state management
+ * - WW_Hex    : Hex grid utilities
+ * - WW_Dice   : Dice display and confrontation logic
+ * - WW_Cards  : Card and horde management
+ * - WW_Player : Player UI management
  */
 
 define([
-    "dojo","dojo/_base/declare",
+    "dojo", "dojo/_base/declare",
     "ebg/core/gamegui",
     "ebg/counter",
     "ebg/scrollmap",
@@ -18,531 +26,211 @@ define([
     "ebg/zone"
 ],
 function (dojo, declare) {
-    return declare("bgagame.windwalkers", ebg.core.gamegui, {
-        constructor: function(){
-            console.log('windwalkers constructor');
-            
-            // Hex grid settings - FLAT-TOP orientation
-            this.hexSize = 50; // Distance from center to corner
-            this.hexWidth = this.hexSize * 2; // 100px
-            this.hexHeight = Math.sqrt(3) * this.hexSize; // ~86.6px
-            
-            // Dice display
-            this.diceSize = 50;
-            
-            // Animation speeds
-            this.animationSpeed = 500;
-            this.diceRollSpeed = 150;
-            
-            // Current game state
-            this.selectedTile = null;
-            this.selectedDice = [];
-            
-            // Player info
-            this.playerMoral = {};
-            this.playerDice = {};
-
-            // Surpass flow: when true, next tile click will trigger surpass-and-move
-            this.awaitingSurpassSelection = false;
+    
+    // ============================================================
+    // WW_DOM - Technical layer for DOM manipulation
+    // ============================================================
+    var WW_DOM = {
+        get: function(id) {
+            return $(id);
         },
         
-        /*
-         * setup:
-         * Called on page load, initialize game components
-         */
-        setup: function(gamedatas)
-        {
-            console.log("Starting game setup");
-            console.log("Game data:", gamedatas);
-            console.log("Current chapter:", gamedatas.current_chapter);
-            console.log("Tiles received:", gamedatas.tiles);
-            console.log("Number of tiles:", Object.keys(gamedatas.tiles || {}).length);
-            
-            // Setting up player boards
-            for (var player_id in gamedatas.players) {
-                var player = gamedatas.players[player_id];
-                
-                // Setup player panel
-                this.setupPlayerPanel(player_id, player);
-                
-                // Store moral value
-                this.playerMoral[player_id] = player.moral;
-                this.playerDice[player_id] = player.dice_count;
-            }
-            
-            // Setup hex map using scrollmap
-            this.setupHexMap();
-            
-            // Place tiles on map
-            this.setupTiles(gamedatas.tiles);
-            
-            // Place player tokens
-            this.setupPlayerTokens(gamedatas.players);
-            
-            // Setup horde display
-            this.setupHorde(gamedatas.myHorde);
-            
-            // Setup dice zone
-            this.setupDiceZone();
-            
-            // Store material data
-            this.characters = gamedatas.characters;
-            this.characterTypes = gamedatas.character_types;
-            this.terrainTypes = gamedatas.terrain_types;
-            
-            // Setup notifications
-            this.setupNotifications();
-            
-            console.log("Game setup complete");
+        setHtml: function(id, html) {
+            var el = typeof id === 'string' ? $(id) : id;
+            if (el) el.innerHTML = html;
+            return el;
         },
         
-        /**
-         * Setup player panel with moral counter and info
-         */
-        setupPlayerPanel: function(player_id, player)
-        {
-            var panel = $('player_board_' + player_id);
-            
-            // Add moral display
-            var moralHtml = '<div class="ww_player_info">' +
-                '<div class="ww_moral_container">' +
-                    '<span class="ww_moral_icon"></span>' +
-                    '<span id="moral_counter_' + player_id + '" class="ww_moral_value">' + player.moral + '</span>' +
-                '</div>' +
-                '<div class="ww_dice_container">' +
-                    '<span class="ww_dice_icon"></span>' +
-                    '<span id="dice_counter_' + player_id + '" class="ww_dice_value">' + 
-                        (player.dice_count - player.surpass) + '</span>' +
-                '</div>' +
-                '<div class="ww_position">' +
-                    '<span>Position: </span>' +
-                    '<span id="position_' + player_id + '">(' + player.pos_q + ',' + player.pos_r + ')</span>' +
-                '</div>' +
-            '</div>';
-            
-            dojo.place(moralHtml, panel);
+        getHtml: function(id) {
+            var el = typeof id === 'string' ? $(id) : id;
+            return el ? el.innerHTML : '';
         },
         
-        /**
-         * Setup scrollable hex map
-         */
-        setupHexMap: function()
-        {
-            this.scrollmap = new ebg.scrollmap();
-            this.scrollmap.create(
-                $('ww_map_container'),
-                $('ww_map_scrollable'),
-                $('ww_map_surface'),
-                $('ww_map_scrollable_oversurface')
-            );
-            
-            this.scrollmap.setupOnScreenArrows(150);
-            
-            // Center the scrollmap on the middle of the map
-            // Scroll to show the center area where tiles are placed
-            this.scrollmap.scrollto(-100, -100);
+        place: function(html, containerId, position) {
+            return dojo.place(html, containerId, position || 'last');
         },
         
-        /**
-         * Setup tiles on the hex map
-         */
-        setupTiles: function(tiles)
-        {
-            console.log('Setting up tiles:', tiles);
-            var tileCount = 0;
-            for (var tile_id in tiles) {
-                var tile = tiles[tile_id];
-                console.log('Creating tile:', tile_id, tile);
-                this.createTile(tile);
-                tileCount++;
-            }
-            console.log('Total tiles created:', tileCount);
+        destroy: function(id) {
+            var el = typeof id === 'string' ? $(id) : id;
+            if (el) dojo.destroy(el);
         },
         
-        /**
-         * Create a single tile on the map
-         */
-        createTile: function(tile)
-        {
-            var pos = this.hexToPixel(tile.q, tile.r);
-            
-            var tileClass = 'ww_tile ww_tile_' + tile.type + ' ww_tile_' + tile.subtype;
-            if (tile.discovered) {
-                tileClass += ' ww_discovered';
-            }
-            
-            var windHtml = '';
-            if (tile.wind_force !== null && tile.discovered) {
-                windHtml = '<div class="ww_wind_token ww_wind_' + tile.wind_force + '">' + 
-                           (tile.wind_force == 6 ? 'F' : tile.wind_force) + '</div>';
-            }
-            
-            var tileHtml = '<div id="tile_' + tile.id + '" class="' + tileClass + '" ' +
-                           'style="left:' + pos.x + 'px; top:' + pos.y + 'px;">' +
-                           '<div class="ww_tile_name">' + this.getTerrainName(tile.subtype) + '</div>' +
-                           windHtml +
-                           '</div>';
-            
-            dojo.place(tileHtml, 'ww_map_scrollable');
-            
-            // Add click handler
-            dojo.connect($('tile_' + tile.id), 'onclick', this, 'onTileClick');
+        clear: function(id) {
+            this.setHtml(id, '');
         },
         
-        /**
-         * Convert hex coordinates to pixel position (FLAT-TOP axial coordinates)
-         */
-        hexToPixel: function(q, r)
-        {
-            // Ensure q and r are numbers
-            q = parseInt(q);
-            r = parseInt(r);
-            
-            // FLAT-TOP hex layout using axial coordinates
-            // Offset to center around q=3, r=14 (middle of chapter 1)
-            var qOffset = q - 3;
-            var rOffset = r - 14;
-            
-            // Flat-top formulas:
-            // x = size * (3/2 * q)
-            // y = size * (sqrt(3)/2 * q + sqrt(3) * r)
-            var x = this.hexSize * (3/2 * qOffset);
-            var y = this.hexSize * (Math.sqrt(3)/2 * qOffset + Math.sqrt(3) * rOffset);
-            
-            // Center in the map area
-            x += 400;
-            y += 350;
-            
-            return {x: Math.round(x), y: Math.round(y)};
+        addClass: function(id, className) {
+            var el = typeof id === 'string' ? $(id) : id;
+            if (el) dojo.addClass(el, className);
+            return el;
         },
         
-        /**
-         * Setup player tokens on map
-         */
-        setupPlayerTokens: function(players)
-        {
-            for (var player_id in players) {
-                var player = players[player_id];
-                this.createPlayerToken(player_id, player);
-            }
+        removeClass: function(id, className) {
+            var el = typeof id === 'string' ? $(id) : id;
+            if (el) dojo.removeClass(el, className);
+            return el;
         },
         
-        /**
-         * Create a player token
-         */
-        createPlayerToken: function(player_id, player)
-        {
-            var pos = this.hexToPixel(player.pos_q, player.pos_r);
-            
-            var tokenHtml = '<div id="player_token_' + player_id + '" class="ww_player_token" ' +
-                            'style="left:' + pos.x + 'px; top:' + pos.y + 'px; background-color:#' + player.color + ';">' +
-                            '</div>';
-            
-            dojo.place(tokenHtml, 'ww_map_scrollable_oversurface');
+        toggleClass: function(id, className, condition) {
+            var el = typeof id === 'string' ? $(id) : id;
+            if (el) dojo.toggleClass(el, className, condition);
+            return el;
         },
         
-        /**
-         * Setup the horde display (player's characters)
-         */
-        setupHorde: function(horde)
-        {
-            this.hordeStock = new ebg.stock();
-            this.hordeStock.create(this, $('ww_horde'), 80, 120);
-            this.hordeStock.setSelectionMode(0); // No selection by default
-            this.hordeStock.setSelectionAppearance('class');
-            
-            // Add character card types
-            for (var char_id in this.characters) {
-                var char = this.characters[char_id];
-                var typeId = parseInt(char_id);
-                this.hordeStock.addItemType(typeId, typeId, 
-                    g_gamethemeurl + 'img/characters.png', typeId - 1);
-            }
-            
-            // Add player's cards
-            for (var card_id in horde) {
-                var card = horde[card_id];
-                this.hordeStock.addToStockWithId(card.type_arg, card.id);
-            }
+        hasClass: function(id, className) {
+            var el = typeof id === 'string' ? $(id) : id;
+            return el ? dojo.hasClass(el, className) : false;
         },
         
-        /**
-         * Setup dice display zone
-         * Note: We're not using ebg.zone anymore because it causes stacking issues
-         * Instead, we use simple flexbox layout defined in CSS
-         */
-        setupDiceZone: function()
-        {
-            // Just clear the containers - CSS handles the layout
-            $('ww_horde_dice').innerHTML = '';
-            $('ww_wind_dice').innerHTML = '';
+        setStyle: function(id, prop, value) {
+            var el = typeof id === 'string' ? $(id) : id;
+            if (el) dojo.style(el, prop, value);
+            return el;
         },
         
-        ///////////////////////////////////////////////////
-        //// Game & client states
-        
-        onEnteringState: function(stateName, args)
-        {
-            console.log('Entering state: ' + stateName, args);
-            
-            switch (stateName) {
-                case 'draftHorde':
-                    // Hide other panels during draft
-                    dojo.style('ww_map_container', 'display', 'none');
-                    dojo.style('ww_dice_panel', 'display', 'none');
-                    this.showDraftInterface(args.args);
-                    break;
-                    
-                case 'playerTurn':
-                    // Show game panels
-                    dojo.style('ww_map_container', 'display', 'block');
-                    dojo.style('ww_dice_panel', 'display', 'block');
-                    dojo.style('ww_draft_panel', 'display', 'none');
-                    
-                    // Clear dice from previous turn
-                    this.clearDice();
-                    
-                    // Reset wind force display
-                    $('ww_wind_force').innerHTML = '-';
-                    
-                    if (this.isCurrentPlayerActive()) {
-                        this.highlightAdjacentTiles(args.args.adjacent);
-                    }
-                    break;
-                    
-                case 'confrontation':
-                    this.showConfrontation(args.args);
-                    break;
-                    
-                case 'diceResult':
-                    // Keep dice visible, they were already created by notification
-                    // Just update wind force if needed
-                    if (args.args && args.args.wind_force !== null && args.args.wind_force !== undefined) {
-                        $('ww_wind_force').innerHTML = args.args.wind_force;
-                    }
-                    break;
-                    
-                case 'continueOrSurpass':
-                    this.showSurpassChoice(args.args);
-                    break;
-                    
-                case 'loseHordier':
-                    this.showLoseHordierChoice(args.args);
-                    break;
-            }
-        },
-
-        onLeavingState: function(stateName)
-        {
-            console.log('Leaving state: ' + stateName);
-            
-            switch (stateName) {
-                case 'playerTurn':
-                    this.clearTileHighlights();
-                    break;
-                    
-                // Note: We don't clear dice when leaving confrontation
-                // because we might be rolling again (staying in same state)
-                // Dice are cleared at the start of a new confrontation instead
-            }
+        show: function(id) {
+            return this.setStyle(id, 'display', 'block');
         },
         
-        onUpdateActionButtons: function(stateName, args)
-        {
-            console.log('onUpdateActionButtons: ' + stateName);
-            
-            if (this.isCurrentPlayerActive()) {
-                switch (stateName) {
-                    case 'draftHorde':
-                        this.addActionButton('btn_confirm_draft', _('Confirm Horde'), 'onConfirmDraft');
-                        break;
-                        
-                    case 'playerTurn':
-                        this.addActionButton('btn_rest', _('Rest'), 'onRest', null, false, 'gray');
-                        if (args.can_surpass) {
-                            this.addActionButton('btn_surpass', _('Surpass (-1 die)'), 'onSurpass');
-                        }
-                        break;
-
-                    case 'confrontation':
-                        this.addActionButton('btn_roll', _('Roll Dice'), 'onRollDice');
-                        break;
-                        
-                    case 'diceResult':
-                        this.addActionButton('btn_moral_plus', _('+1 (spend moral)'), 'onMoralPlus');
-                        this.addActionButton('btn_moral_minus', _('-1 (spend moral)'), 'onMoralMinus');
-                        this.addActionButton('btn_confirm_roll', _('Confirm'), 'onConfirmRoll');
-                        break;
-
-                    case 'loseHordier':
-                        // Buttons are created dynamically in showLoseHordierChoice
-                        break;
-                }
-            }
+        hide: function(id) {
+            return this.setStyle(id, 'display', 'none');
         },
         
-        ///////////////////////////////////////////////////
-        //// Utility methods
-        
-        /**
-         * Show draft interface
-         */
-        showDraftInterface: function(args)
-        {
-            console.log('Draft interface:', args);
-            
-            if (!args) {
-                console.error('No draft args provided');
-                return;
-            }
-            
-            // Show draft panel
-            dojo.style('ww_draft_panel', 'display', 'block');
-            
-            // Clear previous content
-            var poolContainer = $('ww_available_characters');
-            if (poolContainer) {
-                poolContainer.innerHTML = '';
-            }
-            
-            // Store draft state
-            this.draftArgs = args;
-            this.draftSelected = args.selected || {};
-            
-            // Create character cards for each available character
-            if (args.available) {
-                for (var cardId in args.available) {
-                    var card = args.available[cardId];
-                    this.createDraftCard(card, 'ww_available_characters');
-                }
-            }
-            
-            // Display already selected cards in the horde panel
-            if (args.selected) {
-                for (var cardId in args.selected) {
-                    var card = args.selected[cardId];
-                    this.createDraftCard(card, 'ww_horde', true);
-                }
-            }
-            
-            // Update counts
-            this.updateDraftCounts(args.counts, args.requirements);
+        setAttr: function(id, attr, value) {
+            var el = typeof id === 'string' ? $(id) : id;
+            if (el) dojo.attr(el, attr, value);
+            return el;
         },
         
-        /**
-         * Create a card element for draft
-         */
-        createDraftCard: function(card, containerId, isSelected)
-        {
-            // Use enriched data from server if available, fallback to local characters data
-            var charType = card.char_type || card.type;
-            var isLeader = card.is_leader || false;
-            var charName = card.name || 'Card ' + card.id;
-            var charPower = card.power || '';
-            
-            // Fallback: try to get info from local characters data
-            if (this.characters && this.characters[card.type_arg]) {
-                var charInfo = this.characters[card.type_arg];
-                charType = charInfo.type || charType;
-                isLeader = charInfo.is_leader || isLeader;
-                charName = charInfo.name || charName;
-                charPower = charInfo.power || charPower;
-            }
-            
-            // Determine display type
-            var displayType = isLeader ? 'traceur' : charType;
-            
-            var cardHtml = '<div id="draft_card_' + card.id + '" ' +
-                           'class="ww_draft_card' + (isSelected ? ' ww_selected' : '') + '" ' +
-                           'data-card-id="' + card.id + '" ' +
-                           'data-type="' + displayType + '" ' +
-                           'data-type-arg="' + card.type_arg + '">' +
-                           '<div class="ww_draft_card_name">' + charName + '</div>' +
-                           '<div class="ww_draft_card_type">' + this.capitalizeFirst(displayType) + '</div>' +
-                           '<div class="ww_draft_card_power">' + charPower + '</div>' +
-                           '</div>';
-            
-            dojo.place(cardHtml, containerId);
-            
-            // Add click handler
+        getAttr: function(id, attr) {
+            var el = typeof id === 'string' ? $(id) : id;
+            return el ? dojo.attr(el, attr) : null;
+        },
+        
+        getData: function(id, dataName) {
+            return this.getAttr(id, 'data-' + dataName);
+        },
+        
+        setData: function(id, dataName, value) {
+            return this.setAttr(id, 'data-' + dataName, value);
+        },
+        
+        connect: function(id, event, scope, handler) {
+            var el = typeof id === 'string' ? $(id) : id;
+            if (el) return dojo.connect(el, event, scope, handler);
+            return null;
+        },
+        
+        stopEvent: function(evt) {
+            dojo.stopEvent(evt);
+        },
+        
+        animateClass: function(id, className, duration) {
             var self = this;
-            dojo.connect($('draft_card_' + card.id), 'onclick', function(evt) {
-                dojo.stopEvent(evt);
-                self.onDraftCardClick(card.id);
-            });
-        },
-        
-        /**
-         * Update draft requirement counts display
-         */
-        updateDraftCounts: function(counts, requirements)
-        {
-            if (!counts || !requirements) return;
-            
-            var types = ['traceur', 'fer', 'pack', 'traine'];
-            for (var i = 0; i < types.length; i++) {
-                var type = types[i];
-                var countEl = $('count_' + type);
-                if (countEl) {
-                    countEl.innerHTML = counts[type] || 0;
-                }
-                
-                var reqEl = $('req_' + type);
-                if (reqEl) {
-                    var current = counts[type] || 0;
-                    var required = requirements[type] || 0;
-                    
-                    dojo.removeClass(reqEl, 'ww_complete ww_incomplete');
-                    dojo.addClass(reqEl, current >= required ? 'ww_complete' : 'ww_incomplete');
-                }
+            var el = this.addClass(id, className);
+            if (el) {
+                setTimeout(function() {
+                    self.removeClass(el, className);
+                }, duration || 500);
             }
+            return el;
         },
         
-        /**
-         * Handle draft card click
-         */
-        onDraftCardClick: function(cardId)
-        {
-            console.log('Draft card clicked:', cardId);
-            
-            if (!this.isCurrentPlayerActive()) {
-                return;
-            }
-            
-            var cardEl = $('draft_card_' + cardId);
-            if (!cardEl) return;
-            
-            var isSelected = dojo.hasClass(cardEl, 'ww_selected');
-            
-            if (isSelected) {
-                // Deselect - remove from horde
-                this.bgaPerformAction('actToggleDraftCard', {
-                    card_id: cardId,
-                    select: false
-                });
-            } else {
-                // Select - add to horde
-                this.bgaPerformAction('actToggleDraftCard', {
-                    card_id: cardId,
-                    select: true
-                });
-            }
+        forEach: function(selector, callback) {
+            dojo.query(selector).forEach(callback);
         },
         
-        /**
-         * Capitalize first letter
-         */
-        capitalizeFirst: function(str)
-        {
-            if (!str) return '';
-            return str.charAt(0).toUpperCase() + str.slice(1);
+        removeClassFromAll: function(selector, className) {
+            dojo.query(selector).removeClass(className);
+        }
+    };
+    
+    // ============================================================
+    // WW_State - Client-side state management
+    // ============================================================
+    var WW_State = {
+        // Private state
+        _data: {
+            characters: {},
+            playerMoral: {},
+            playerDice: {},
+            selectedTile: null,
+            selectedDice: [],
+            hordeCards: {},
+            currentState: null
         },
         
-        /**
-         * Get localized terrain name
-         */
-        getTerrainName: function(subtype)
-        {
+        init: function(gamedatas) {
+            this._data.characters = gamedatas.characters || {};
+        },
+        
+        // Characters
+        getCharacter: function(typeArg) {
+            return this._data.characters[typeArg] || { name: 'Unknown', type: 'pack' };
+        },
+        
+        getCharacters: function() {
+            return this._data.characters;
+        },
+        
+        // Player data
+        setPlayerMoral: function(playerId, moral) {
+            this._data.playerMoral[playerId] = moral;
+        },
+        
+        setPlayerDice: function(playerId, count) {
+            this._data.playerDice[playerId] = count;
+        },
+        
+        // Selection
+        setSelectedTile: function(tileId) {
+            this._data.selectedTile = tileId;
+        },
+        
+        getSelectedTile: function() {
+            return this._data.selectedTile;
+        },
+        
+        setSelectedDice: function(diceIds) {
+            this._data.selectedDice = diceIds || [];
+        },
+        
+        getSelectedDice: function() {
+            return this._data.selectedDice;
+        },
+        
+        clearSelectedDice: function() {
+            this._data.selectedDice = [];
+        },
+        
+        hasSelectedDice: function() {
+            return this._data.selectedDice.length > 0;
+        },
+        
+        getFirstSelectedDice: function() {
+            return this._data.selectedDice[0] || null;
+        },
+        
+        // Horde
+        setHordeCards: function(cards) {
+            this._data.hordeCards = cards || {};
+        },
+        
+        addHordeCard: function(cardId, cardData) {
+            this._data.hordeCards[cardId] = cardData;
+        },
+        
+        removeHordeCard: function(cardId) {
+            delete this._data.hordeCards[cardId];
+        },
+        
+        // State
+        setCurrentState: function(stateName) {
+            this._data.currentState = stateName;
+        },
+        
+        // Utilities
+        getTerrainName: function(subtype) {
             var names = {
                 'plain': _('Plain'),
                 'forest': _('Forest'),
@@ -554,7 +242,8 @@ function (dojo, declare) {
                 'cliff': _('Cliff'),
                 'village_green': _('Village'),
                 'village_blue': _('Village'),
-                'village_brown': _('Village'),
+                'village_red': _('Village'),
+                'city': _('City'),
                 'aberlaas': _('Aberlaas'),
                 'portchoon': _('Port-Choon'),
                 'carthago': _('Carthago'),
@@ -564,78 +253,135 @@ function (dojo, declare) {
             return names[subtype] || subtype;
         },
         
+        capitalizeFirst: function(str) {
+            if (!str) return '';
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        },
+        
+        getDisplayType: function(typeArg) {
+            var charInfo = this.getCharacter(typeArg);
+            return charInfo.is_leader ? 'traceur' : (charInfo.type || 'pack');
+        }
+    };
+    
+    // ============================================================
+    // WW_Hex - Hex grid utilities
+    // ============================================================
+    var WW_Hex = {
+        HEX_SIZE: 50,
+        HEX_WIDTH: 100,
+        HEX_HEIGHT: 86.6,
+        Q_OFFSET: 3,
+        R_OFFSET: 14,
+        MAP_CENTER_X: 0,
+        MAP_CENTER_Y: 0,
+        
         /**
-         * Highlight tiles that can be selected
+         * Create HTML for a wind token (always shows number, never 'F')
          */
-        highlightAdjacentTiles: function(tiles)
-        {
-            console.log('Highlighting adjacent tiles:', tiles);
+        createWindTokenHtml: function(force, extraClass) {
+            var cls = 'ww_wind_token ww_wind_' + force;
+            if (extraClass) cls += ' ' + extraClass;
+            return '<div class="' + cls + '">' + force + '</div>';
+        },
+        
+        hexToPixel: function(q, r) {
+            q = parseInt(q);
+            r = parseInt(r);
+            
+            var qOffset = q - this.Q_OFFSET;
+            var rOffset = r - this.R_OFFSET;
+            
+            var x = this.HEX_SIZE * (3/2 * qOffset);
+            var y = this.HEX_SIZE * (Math.sqrt(3)/2 * qOffset + Math.sqrt(3) * rOffset);
+            
+            x += this.MAP_CENTER_X;
+            y += this.MAP_CENTER_Y;
+            
+            return { x: Math.round(x), y: Math.round(y) };
+        },
+        
+        hexToPixelCenter: function(q, r) {
+            var pos = this.hexToPixel(q, r);
+            pos.x += this.HEX_WIDTH / 2;
+            pos.y += this.HEX_HEIGHT / 2;
+            return pos;
+        },
+        
+        createTile: function(tile) {
+            var pos = this.hexToPixel(tile.q, tile.r);
+            
+            var tileClass = 'ww_tile ww_tile_' + tile.type + ' ww_tile_' + tile.subtype;
+            if (tile.discovered) tileClass += ' ww_discovered';
+            
+            var windHtml = '';
+            if (tile.wind_force !== null && tile.discovered) {
+                windHtml = this.createWindTokenHtml(tile.wind_force);
+            }
+            
+            var terrainName = WW_State.getTerrainName(tile.subtype);
+            
+            var tileHtml = '<div id="tile_' + tile.id + '" class="' + tileClass + '" ' +
+                           'style="left:' + pos.x + 'px; top:' + pos.y + 'px;">' +
+                           '<div class="ww_tile_name">' + terrainName + '</div>' +
+                           windHtml + '</div>';
+            
+            WW_DOM.place(tileHtml, 'ww_map_scrollable');
+            return $('tile_' + tile.id);
+        },
+        
+        createPlayerToken: function(playerId, player) {
+            var pos = this.hexToPixelCenter(player.pos_q, player.pos_r);
+            
+            var tokenHtml = '<div id="player_token_' + playerId + '" class="ww_player_token" ' +
+                            'style="left:' + pos.x + 'px; top:' + pos.y + 'px; background-color:#' + player.color + ';">' +
+                            '</div>';
+            
+            WW_DOM.place(tokenHtml, 'ww_map_scrollable_oversurface');
+            return $('player_token_' + playerId);
+        },
+        
+        movePlayerToken: function(gameGui, playerId, q, r) {
+            var pos = this.hexToPixelCenter(q, r);
+            var token = $('player_token_' + playerId);
+            
+            if (token && gameGui.slideToObjectPos) {
+                gameGui.slideToObjectPos(token, 'ww_map_scrollable', pos.x, pos.y, 500);
+            }
+        },
+        
+        highlightTiles: function(tiles) {
             for (var i = 0; i < tiles.length; i++) {
-                var tile = tiles[i];
-                // Handle both tile_id and id properties
-                var tileId = tile.tile_id || tile.id;
-                console.log('Adding selectable to tile_' + tileId);
-                var tileEl = $('tile_' + tileId);
-                if (tileEl) {
-                    dojo.addClass(tileEl, 'ww_selectable');
-                } else {
-                    console.warn('Tile element not found: tile_' + tileId);
-                }
+                var tileId = tiles[i].tile_id || tiles[i].id;
+                WW_DOM.addClass('tile_' + tileId, 'ww_selectable');
             }
         },
         
-        /**
-         * Clear all tile highlights
-         */
-        clearTileHighlights: function()
-        {
-            dojo.query('.ww_selectable').removeClass('ww_selectable');
+        clearHighlights: function() {
+            WW_DOM.removeClassFromAll('.ww_selectable', 'ww_selectable');
         },
         
-        /**
-         * Show dice for confrontation
-         * This is called when entering the confrontation state
-         * It displays any dice that were already rolled and stored in the database
-         */
-        showConfrontation: function(args)
-        {
-            // Clear existing dice first to avoid duplicates
-            // (in case we're re-entering the state after rollAgain)
-            this.clearDice('horde');
-            this.clearDice('wind');
+        revealWindToken: function(tileId, force) {
+            var tile = $('tile_' + tileId);
+            if (!tile) return;
             
-            // Display horde dice from database
-            if (args.horde_dice) {
-                for (var dice_id in args.horde_dice) {
-                    var dice = args.horde_dice[dice_id];
-                    this.createDice(dice, 'ww_horde_dice');
-                }
-            }
-            
-            // Display challenge dice from database
-            if (args.challenge_dice) {
-                for (var dice_id in args.challenge_dice) {
-                    var dice = args.challenge_dice[dice_id];
-                    this.createDice(dice, 'ww_wind_dice');
-                }
-            }
-            
-            // Show wind force
-            if (args.wind_force !== null && args.wind_force !== undefined) {
-                $('ww_wind_force').innerHTML = args.wind_force;
-            }
+            WW_DOM.place(this.createWindTokenHtml(force, 'ww_wind_reveal'), tile);
+            WW_DOM.addClass(tile, 'ww_discovered');
         },
         
-        /**
-         * Create a dice element
-         * @param {Object} dice - Dice data with id, type, and value
-         *        Can use either 'dice_id'/'dice_type'/'dice_value' (from DB)
-         *        or 'id'/'type'/'value' (from notifications)
-         * @param {string} container - Container element ID
-         */
-        createDice: function(dice, container)
-        {
-            // Normalize dice properties (handle both DB format and notification format)
+        showConfrontationResult: function(tileId, success) {
+            var className = success ? 'ww_confrontation_success' : 'ww_confrontation_failure';
+            WW_DOM.animateClass('tile_' + tileId, className, 1000);
+        }
+    };
+    
+    // ============================================================
+    // WW_Dice - Dice display and confrontation logic
+    // ============================================================
+    var WW_Dice = {
+        ROLL_SPEED: 150,
+        
+        createDice: function(dice, containerId, onClick) {
             var diceId = dice.dice_id || dice.id || ('dice_' + Math.random().toString(36).substr(2, 9));
             var diceType = dice.dice_type || dice.type || 'blue';
             var diceValue = dice.dice_value || dice.value || '?';
@@ -644,288 +390,887 @@ function (dojo, declare) {
                            'class="ww_dice ww_dice_' + diceType + '" ' +
                            'data-dice-id="' + diceId + '" ' +
                            'data-value="' + diceValue + '">' +
-                           diceValue +
-                           '</div>';
+                           diceValue + '</div>';
             
-            dojo.place(diceHtml, container);
+            WW_DOM.place(diceHtml, containerId);
             
-            // Add click handler for horde dice (player can select them to modify)
-            if (container === 'ww_horde_dice') {
-                var self = this;
-                dojo.connect($('dice_' + diceId), 'onclick', function(evt) {
-                    dojo.stopEvent(evt);
-                    self.onDiceClick(diceId);
+            if (onClick) {
+                WW_DOM.connect('dice_' + diceId, 'onclick', null, function(evt) {
+                    WW_DOM.stopEvent(evt);
+                    onClick(diceId);
                 });
             }
+            
+            return $('dice_' + diceId);
         },
         
-        /**
-         * Handle dice click - select/deselect for modification
-         */
-        onDiceClick: function(diceId)
-        {
-            console.log('Dice clicked:', diceId);
+        createDiceSorted: function(diceArray, containerId, onClick) {
+            var self = this;
+            var arr = Array.isArray(diceArray) ? diceArray : Object.values(diceArray);
             
-            var diceEl = $('dice_' + diceId);
-            if (!diceEl) return;
+            arr.sort(function(a, b) {
+                var valA = parseInt(a.dice_value || a.value) || 0;
+                var valB = parseInt(b.dice_value || b.value) || 0;
+                return valA - valB;
+            });
             
-            // Deselect all other dice
-            dojo.query('#ww_horde_dice .ww_dice').removeClass('ww_selected');
-            
-            // Select this dice
-            dojo.addClass(diceEl, 'ww_selected');
-            this.selectedDice = [diceId];
-            
-            console.log('Selected dice:', this.selectedDice);
+            arr.forEach(function(dice) {
+                self.createDice(dice, containerId, onClick);
+            });
         },
         
-        /**
-         * Clear dice from a specific container or all dice
-         * @param {string|null} container - 'horde', 'wind', or null for all
-         */
-        clearDice: function(container)
-        {
-            if (container === 'horde') {
-                $('ww_horde_dice').innerHTML = '';
-                this.selectedDice = [];
-            } else if (container === 'wind') {
-                $('ww_wind_dice').innerHTML = '';
+        clearDice: function(type) {
+            if (type === 'horde') {
+                WW_DOM.clear('ww_horde_dice');
+                WW_State.clearSelectedDice();
+            } else if (type === 'wind') {
+                WW_DOM.clear('ww_wind_dice');
             } else {
-                // Clear all dice
-                $('ww_horde_dice').innerHTML = '';
-                $('ww_wind_dice').innerHTML = '';
-                this.selectedDice = [];
+                WW_DOM.clear('ww_horde_dice');
+                WW_DOM.clear('ww_wind_dice');
+                WW_State.clearSelectedDice();
             }
         },
         
-        /**
-         * Animate dice roll
-         */
-        animateDiceRoll: function(dice)
-        {
-            var self = this;
+        selectDice: function(diceId) {
+            WW_DOM.removeClassFromAll('#ww_horde_dice .ww_dice', 'ww_selected');
+            WW_DOM.addClass('dice_' + diceId, 'ww_selected');
+            WW_State.setSelectedDice([diceId]);
+        },
+        
+        updateDiceValue: function(diceId, newValue) {
+            var diceEl = $('dice_' + diceId);
+            if (diceEl) {
+                WW_DOM.setData(diceEl, 'value', newValue);
+                WW_DOM.setHtml(diceEl, newValue);
+                WW_DOM.addClass(diceEl, 'ww_dice_modified');
+            }
+        },
+        
+        animateDiceRoll: function(diceEl, finalValue) {
             var iterations = 10;
             var count = 0;
+            var speed = this.ROLL_SPEED;
             
             var rollInterval = setInterval(function() {
-                var randomValue = Math.floor(Math.random() * 6) + 1;
-                dice.innerHTML = randomValue;
+                diceEl.innerHTML = Math.floor(Math.random() * 6) + 1;
                 count++;
-                
                 if (count >= iterations) {
                     clearInterval(rollInterval);
-                    dice.innerHTML = dojo.attr(dice, 'data-value');
+                    diceEl.innerHTML = finalValue || WW_DOM.getData(diceEl, 'value');
                 }
-            }, this.diceRollSpeed);
+            }, speed);
         },
         
-        /**
-         * Move player token to new position
-         */
-        movePlayerToken: function(player_id, q, r)
-        {
-            var pos = this.hexToPixel(q, r);
-            var token = $('player_token_' + player_id);
-            
-            this.slideToObjectPos(token, 'ww_map_scrollable', pos.x, pos.y, this.animationSpeed);
-            
-            // Update position display
-            $('position_' + player_id).innerHTML = '(' + q + ',' + r + ')';
+        getHordeDice: function() {
+            var dice = [];
+            WW_DOM.forEach('#ww_horde_dice .ww_dice', function(diceEl) {
+                dice.push({
+                    value: parseInt(WW_DOM.getAttr(diceEl, 'data-value')) || 0,
+                    type: 'blue'
+                });
+            });
+            return dice;
         },
         
-        /**
-         * Update moral display
-         */
-        updateMoral: function(player_id, new_moral)
-        {
-            this.playerMoral[player_id] = new_moral;
-            $('moral_counter_' + player_id).innerHTML = new_moral;
-            
-            // Add animation class
-            var counter = $('moral_counter_' + player_id);
-            dojo.addClass(counter, 'ww_value_changed');
-            setTimeout(function() {
-                dojo.removeClass(counter, 'ww_value_changed');
-            }, 500);
+        getWindDice: function() {
+            var dice = [];
+            WW_DOM.forEach('#ww_wind_dice .ww_dice', function(diceEl) {
+                var value = parseInt(WW_DOM.getAttr(diceEl, 'data-value')) || 0;
+                var type = 'white';
+                if (WW_DOM.hasClass(diceEl, 'ww_dice_green')) type = 'green';
+                else if (WW_DOM.hasClass(diceEl, 'ww_dice_black')) type = 'black';
+                dice.push({ value: value, type: type });
+            });
+            return dice;
         },
         
-        /**
-         * Update dice count display
-         */
-        updateDiceCount: function(player_id, new_count)
-        {
-            this.playerDice[player_id] = new_count;
-            $('dice_counter_' + player_id).innerHTML = new_count;
+        calculateConfrontationResult: function(hordeDice, windDice, windForce) {
+            var hordeSum = hordeDice.reduce(function(sum, d) { return sum + d.value; }, 0);
+            var windSum = windDice.reduce(function(sum, d) { return sum + d.value; }, 0);
+            
+            var hordeCounts = {};
+            for (var i = 1; i <= 6; i++) hordeCounts[i] = 0;
+            hordeDice.forEach(function(d) { hordeCounts[d.value] = (hordeCounts[d.value] || 0) + 1; });
+            
+            var availableCounts = Object.assign({}, hordeCounts);
+            
+            var windByType = { green: [], white: [], black: [] };
+            windDice.forEach(function(d) {
+                if (windByType[d.type]) windByType[d.type].push(d.value);
+            });
+            
+            var greenResult = this._matchDice(windByType.green, availableCounts);
+            var greenOk = greenResult.matched >= greenResult.required || greenResult.matched >= windForce;
+            var reducedForce = Math.max(0, windForce - greenResult.matched);
+            
+            var whiteResult = this._matchDice(windByType.white, availableCounts);
+            var whiteOk = whiteResult.matched >= reducedForce;
+            
+            var blackResult = this._matchDice(windByType.black, availableCounts);
+            var blackOk = blackResult.matched >= blackResult.required;
+            
+            return {
+                success: (hordeSum >= windSum) && greenOk && whiteOk && blackOk,
+                hordeSum: hordeSum,
+                windSum: windSum,
+                greenRequired: greenResult.required,
+                greenMatched: greenResult.matched,
+                greenOk: greenOk,
+                whiteRequired: reducedForce,
+                whiteMatched: whiteResult.matched,
+                whiteOk: whiteOk,
+                blackRequired: blackResult.required,
+                blackMatched: blackResult.matched,
+                blackOk: blackOk
+            };
         },
         
-        /**
-         * Show wind token reveal animation
-         */
-        revealWindToken: function(tile_id, force)
-        {
-            var tile = $('tile_' + tile_id);
-            
-            var windHtml = '<div class="ww_wind_token ww_wind_' + force + ' ww_wind_reveal">' +
-                           (force == 6 ? 'F' : force) + '</div>';
-            
-            dojo.place(windHtml, tile);
-            dojo.addClass(tile, 'ww_discovered');
+        _matchDice: function(challengeValues, availableCounts) {
+            var matched = 0;
+            challengeValues.forEach(function(value) {
+                if (availableCounts[value] > 0) {
+                    availableCounts[value]--;
+                    matched++;
+                }
+            });
+            return { required: challengeValues.length, matched: matched };
         },
         
-        /**
-         * Show surpass choice interface
-         */
-        showSurpassChoice: function(args)
-        {
-            // Interface is handled by action buttons
-            console.log('Surpass choice:', args);
-        },
-        
-        /**
-         * Show lose hordier choice interface
-         */
-        showLoseHordierChoice: function(args)
-        {
-            console.log('Lose hordier choice:', args);
+        updateConfrontationPreview: function() {
+            var preview = $('ww_confrontation_preview');
+            if (!preview) return;
             
-            if (!args || !args.horde) {
+            var hordeDice = this.getHordeDice();
+            var windDice = this.getWindDice();
+            
+            if (hordeDice.length === 0 || windDice.length === 0) {
+                WW_DOM.hide(preview);
+                WW_DOM.setHtml('ww_horde_sum', '');
+                WW_DOM.setHtml('ww_wind_sum', '');
                 return;
             }
             
-            // Make horde cards selectable
-            var self = this;
-            for (var card_id in args.horde) {
-                var cardEl = $('horde_card_' + card_id);
+            var hordeSum = hordeDice.reduce(function(sum, d) { return sum + d.value; }, 0);
+            var windSum = windDice.reduce(function(sum, d) { return sum + d.value; }, 0);
+            
+            WW_DOM.setHtml('ww_horde_sum', '= ' + hordeSum);
+            WW_DOM.setHtml('ww_wind_sum', '= ' + windSum);
+            
+            WW_DOM.removeClass('ww_horde_sum', 'ww_sum_winning ww_sum_losing');
+            WW_DOM.removeClass('ww_wind_sum', 'ww_sum_winning ww_sum_losing');
+            
+            if (hordeSum >= windSum) {
+                WW_DOM.addClass('ww_horde_sum', 'ww_sum_winning');
+                WW_DOM.addClass('ww_wind_sum', 'ww_sum_losing');
+            } else {
+                WW_DOM.addClass('ww_horde_sum', 'ww_sum_losing');
+                WW_DOM.addClass('ww_wind_sum', 'ww_sum_winning');
+            }
+            
+            var windForce = parseInt(WW_DOM.getHtml('ww_wind_force')) || 0;
+            var result = this.calculateConfrontationResult(hordeDice, windDice, windForce);
+            
+            WW_DOM.show(preview);
+            WW_DOM.removeClass(preview, 'ww_preview_success ww_preview_failure');
+            WW_DOM.addClass(preview, result.success ? 'ww_preview_success' : 'ww_preview_failure');
+            
+            var statusEl = $('ww_preview_status');
+            WW_DOM.setHtml(statusEl, result.success ? '✓ SUCCESS' : '✗ FAILURE');
+            WW_DOM.removeClass(statusEl, 'ww_status_success ww_status_failure');
+            WW_DOM.addClass(statusEl, result.success ? 'ww_status_success' : 'ww_status_failure');
+            
+            var detailsHtml = '<div class="ww_match_row"><span>Sum: ' + hordeSum + ' vs ' + windSum + '</span>' +
+                              '<span class="' + (hordeSum >= windSum ? 'ww_match_ok' : 'ww_match_fail') + '">' +
+                              (hordeSum >= windSum ? '✓' : '✗') + '</span></div>';
+            
+            if (result.greenRequired > 0) {
+                detailsHtml += '<div class="ww_match_row"><span>Green: ' + result.greenMatched + '/' + result.greenRequired + '</span>' +
+                               '<span class="' + (result.greenOk ? 'ww_match_ok' : 'ww_match_fail') + '">' +
+                               (result.greenOk ? '✓' : '✗') + '</span></div>';
+            }
+            if (result.whiteRequired > 0) {
+                detailsHtml += '<div class="ww_match_row"><span>White: ' + result.whiteMatched + '/' + result.whiteRequired + '</span>' +
+                               '<span class="' + (result.whiteOk ? 'ww_match_ok' : 'ww_match_fail') + '">' +
+                               (result.whiteOk ? '✓' : '✗') + '</span></div>';
+            }
+            if (result.blackRequired > 0) {
+                detailsHtml += '<div class="ww_match_row"><span>Black: ' + result.blackMatched + '/' + result.blackRequired + '</span>' +
+                               '<span class="' + (result.blackOk ? 'ww_match_ok' : 'ww_match_fail') + '">' +
+                               (result.blackOk ? '✓' : '✗') + '</span></div>';
+            }
+            
+            WW_DOM.setHtml('ww_matching_details', detailsHtml);
+        },
+        
+        restoreDice: function(gamedatas, onDiceClick) {
+            if (gamedatas.horde_dice && Object.keys(gamedatas.horde_dice).length > 0) {
+                this.createDiceSorted(gamedatas.horde_dice, 'ww_horde_dice', onDiceClick);
+            }
+            if (gamedatas.challenge_dice && Object.keys(gamedatas.challenge_dice).length > 0) {
+                this.createDiceSorted(gamedatas.challenge_dice, 'ww_wind_dice');
+            }
+            if (gamedatas.selected_tile && gamedatas.selected_tile.tile_wind_force !== null) {
+                WW_DOM.setHtml('ww_wind_force', gamedatas.selected_tile.tile_wind_force);
+            }
+        }
+    };
+    
+    // ============================================================
+    // WW_Cards - Card and Horde management
+    // ============================================================
+    var WW_Cards = {
+        createCard: function(options) {
+            var card = options.card;
+            var typeArg = card.card_type_arg || card.type_arg;
+            var cardId = card.card_id || card.id;
+            
+            var charInfo = WW_State.getCharacter(typeArg);
+            var displayType = WW_State.getDisplayType(typeArg);
+            
+            var cardHtml = '<div id="' + options.prefix + '_' + cardId + '" ' +
+                           'class="ww_draft_card ' + (options.extraClass || '') + '" ' +
+                           'data-card-id="' + cardId + '" ' +
+                           'data-type="' + displayType + '" ' +
+                           'data-type-arg="' + typeArg + '">' +
+                           '<div class="ww_draft_card_name">' + (charInfo.name || 'Unknown') + '</div>' +
+                           '<div class="ww_draft_card_type">' + WW_State.capitalizeFirst(displayType) + '</div>' +
+                           '<div class="ww_draft_card_power">' + (charInfo.power || '') + '</div>' +
+                           '</div>';
+            
+            WW_DOM.place(cardHtml, options.containerId);
+            
+            if (options.onClick) {
+                WW_DOM.connect(options.prefix + '_' + cardId, 'onclick', null, function(evt) {
+                    WW_DOM.stopEvent(evt);
+                    options.onClick(cardId, card);
+                });
+            }
+            
+            return $(options.prefix + '_' + cardId);
+        },
+        
+        // Horde Management
+        setupHorde: function(hordeData, onCardClick) {
+            WW_DOM.clear('ww_horde');
+            WW_State.setHordeCards({});
+            
+            for (var cardId in hordeData) {
+                this.addHordeCard(hordeData[cardId], onCardClick);
+            }
+        },
+        
+        addHordeCard: function(card, onCardClick) {
+            var cardId = card.card_id || card.id;
+            var typeArg = card.card_type_arg || card.type_arg;
+            
+            this.createCard({
+                prefix: 'ww_horde_item',
+                card: card,
+                containerId: 'ww_horde',
+                extraClass: 'ww_horde_card_item',
+                onClick: onCardClick
+            });
+            
+            WW_State.addHordeCard(cardId, { id: cardId, type: typeArg });
+        },
+        
+        removeHordeCard: function(cardId, animate) {
+            var cardEl = $('ww_horde_item_' + cardId);
+            if (!cardEl) return;
+            
+            if (animate) {
+                WW_DOM.addClass(cardEl, 'ww_card_lost');
+                setTimeout(function() {
+                    WW_DOM.destroy(cardEl);
+                }, 500);
+            } else {
+                WW_DOM.destroy(cardEl);
+            }
+            
+            WW_State.removeHordeCard(cardId);
+        },
+        
+        makeHordeSelectable: function(hordeData, onSelectCard) {
+            for (var cardId in hordeData) {
+                var cardEl = $('ww_horde_item_' + cardId);
                 if (cardEl) {
-                    dojo.addClass(cardEl, 'ww_selectable_card');
+                    WW_DOM.addClass(cardEl, 'ww_selectable_card');
                     
-                    // Add click handler
                     (function(cid) {
-                        dojo.connect(cardEl, 'onclick', function(evt) {
-                            dojo.stopEvent(evt);
-                            self.onAbandonHordier(cid);
+                        WW_DOM.connect(cardEl, 'onclick', null, function(evt) {
+                            WW_DOM.stopEvent(evt);
+                            onSelectCard(cid);
                         });
-                    })(card_id);
+                    })(cardId);
                 }
             }
+        },
+        
+        clearHordeSelectable: function() {
+            WW_DOM.removeClassFromAll('.ww_horde_card_item', 'ww_selectable_card');
+        },
+        
+        // Draft Management
+        showDraftInterface: function(args, onCardClick) {
+            if (!args) return;
+            
+            WW_DOM.show('ww_draft_panel');
+            WW_DOM.clear('ww_available_characters');
+            WW_DOM.clear('ww_draft_selected');
+            
+            var self = this;
+            if (args.available) {
+                for (var cardId in args.available) {
+                    this.createCard({
+                        prefix: 'draft_card',
+                        card: args.available[cardId],
+                        containerId: 'ww_available_characters',
+                        onClick: function(cid) { onCardClick(cid); }
+                    });
+                }
+            }
+            
+            if (args.selected) {
+                for (var cardId in args.selected) {
+                    this.createCard({
+                        prefix: 'draft_card',
+                        card: args.selected[cardId],
+                        containerId: 'ww_draft_selected',
+                        extraClass: 'ww_selected',
+                        onClick: function(cid) { onCardClick(cid); }
+                    });
+                }
+            }
+            
+            this.updateDraftCounts(args.counts, args.requirements);
+        },
+        
+        toggleDraftCardSelection: function(cardId, selected) {
+            WW_DOM.toggleClass('draft_card_' + cardId, 'ww_selected', selected);
+        },
+        
+        updateDraftCounts: function(counts, requirements) {
+            if (!counts || !requirements) return;
+            
+            var types = ['traceur', 'fer', 'pack', 'traine'];
+            for (var i = 0; i < types.length; i++) {
+                var type = types[i];
+                var countEl = $('count_' + type);
+                if (countEl) WW_DOM.setHtml(countEl, counts[type] || 0);
+                
+                var reqEl = $('req_' + type);
+                if (reqEl) {
+                    var current = counts[type] || 0;
+                    var required = requirements[type] || 0;
+                    WW_DOM.removeClass(reqEl, 'ww_complete ww_incomplete');
+                    WW_DOM.addClass(reqEl, current >= required ? 'ww_complete' : 'ww_incomplete');
+                }
+            }
+        },
+        
+        hideDraftPanel: function() {
+            WW_DOM.hide('ww_draft_panel');
+        },
+        
+        // Recruitment Management
+        showRecruitmentInterface: function(args, onRecruitClick) {
+            if (!args) return { isEmpty: true };
+            
+            var recruitPool = args.recruitPool || {};
+            // Handle both array and object formats from PHP
+            var poolSize = Array.isArray(recruitPool) ? recruitPool.length : Object.keys(recruitPool).length;
+            
+            // If pool is empty, don't show the panel
+            if (poolSize === 0) {
+                WW_DOM.hide('ww_draft_panel');
+                return { isEmpty: true };
+            }
+            
+            WW_DOM.show('ww_draft_panel');
+            WW_DOM.clear('ww_available_characters');
+            
+            var titleEl = dojo.query('#ww_draft_panel h3')[0];
+            if (titleEl) WW_DOM.setHtml(titleEl, _('Recruitment - Click a character to recruit'));
+            
+            WW_DOM.hide('ww_draft_selected');
+            WW_DOM.forEach('.ww_draft_requirements', function(el) {
+                WW_DOM.hide(el);
+            });
+            
+            for (var cardId in recruitPool) {
+                this.createCard({
+                    prefix: 'recruit_card',
+                    card: recruitPool[cardId],
+                    containerId: 'ww_available_characters',
+                    extraClass: 'ww_recruit_card',
+                    onClick: function(cid) {
+                        onRecruitClick(parseInt(cid, 10));
+                    }
+                });
+            }
+            
+            return { isEmpty: false, count: poolSize };
+        },
+        
+        hideRecruitmentInterface: function() {
+            WW_DOM.hide('ww_draft_panel');
+            WW_DOM.setStyle('ww_draft_selected', 'display', 'flex');
+            WW_DOM.forEach('.ww_draft_requirements', function(el) {
+                WW_DOM.setStyle(el, 'display', 'flex');
+            });
+        },
+        
+        refreshHorde: function(hordeData) {
+            WW_DOM.clear('ww_horde');
+            WW_State.setHordeCards({});
+            
+            for (var cardId in hordeData) {
+                this.addHordeCard(hordeData[cardId]);
+            }
+        }
+    };
+    
+    // ============================================================
+    // WW_Player - Player UI management
+    // ============================================================
+    var WW_Player = {
+        setupPlayerPanel: function(playerId, player) {
+            var panel = $('player_board_' + playerId);
+            if (!panel) return;
+            
+            var moralHtml = '<div class="ww_player_info">' +
+                '<div class="ww_moral_container">' +
+                    '<span class="ww_moral_icon"></span>' +
+                    '<span id="moral_counter_' + playerId + '" class="ww_moral_value">' + player.moral + '</span>' +
+                '</div>' +
+                '<div class="ww_dice_container">' +
+                    '<span class="ww_dice_icon"></span>' +
+                    '<span id="dice_counter_' + playerId + '" class="ww_dice_value">' + 
+                        (player.dice_count - player.surpass) + '</span>' +
+                '</div>' +
+                '<div class="ww_position">' +
+                    '<span>Position: </span>' +
+                    '<span id="position_' + playerId + '">(' + player.pos_q + ',' + player.pos_r + ')</span>' +
+                '</div>' +
+            '</div>';
+            
+            WW_DOM.place(moralHtml, panel);
+            
+            WW_State.setPlayerMoral(playerId, player.moral);
+            WW_State.setPlayerDice(playerId, player.dice_count);
+        },
+        
+        updateMoral: function(playerId, newMoral) {
+            WW_State.setPlayerMoral(playerId, newMoral);
+            WW_DOM.setHtml('moral_counter_' + playerId, newMoral);
+            WW_DOM.animateClass('moral_counter_' + playerId, 'ww_value_changed', 500);
+        },
+        
+        updateDiceCount: function(playerId, newCount) {
+            WW_State.setPlayerDice(playerId, newCount);
+            WW_DOM.setHtml('dice_counter_' + playerId, newCount);
+        },
+        
+        updatePosition: function(playerId, q, r) {
+            WW_DOM.setHtml('position_' + playerId, '(' + q + ',' + r + ')');
+        },
+        
+        getCurrentDiceCount: function(playerId) {
+            var countEl = $('dice_counter_' + playerId);
+            return countEl ? parseInt(WW_DOM.getHtml(countEl)) : 0;
+        }
+    };
+    
+    // ============================================================
+    // MAIN GAME CLASS
+    // ============================================================
+    return declare("bgagame.windwalkers", ebg.core.gamegui, {
+        
+        constructor: function() {
+            console.log('windwalkers constructor');
+            this.animationSpeed = 500;
+        },
+        
+        /*
+         * setup: Called on page load
+         */
+        setup: function(gamedatas) {
+            console.log("Starting game setup", gamedatas);
+            
+            // Initialize state
+            WW_State.init(gamedatas);
+            
+            // Setup player boards
+            for (var player_id in gamedatas.players) {
+                WW_Player.setupPlayerPanel(player_id, gamedatas.players[player_id]);
+            }
+            
+            // Setup hex map
+            this.setupHexMap();
+            
+            // Place tiles and player tokens
+            this.setupTiles(gamedatas.tiles);
+            this.setupPlayerTokens(gamedatas.players);
+            
+            // Setup horde display
+            WW_Cards.setupHorde(gamedatas.myHorde);
+            
+            // Setup dice zone
+            WW_DOM.clear('ww_horde_dice');
+            WW_DOM.clear('ww_wind_dice');
+            
+            // Restore dice if in confrontation
+            var self = this;
+            WW_Dice.restoreDice(gamedatas, function(diceId) {
+                self.onDiceClick(diceId);
+            });
+            
+            // Setup notifications
+            this.setupNotifications();
+            
+            console.log("Game setup complete");
+        },
+        
+        setupHexMap: function() {
+            this.scrollmap = new ebg.scrollmap();
+            this.scrollmap.create(
+                $('ww_map_container'),
+                $('ww_map_scrollable'),
+                $('ww_map_surface'),
+                $('ww_map_scrollable_oversurface')
+            );
+            this.scrollmap.setupOnScreenArrows(150);
+        },
+        
+        centerMapOnTiles: function(tiles) {
+            if (!tiles || Object.keys(tiles).length === 0) {
+                this.scrollmap.scrollto(-100, -100);
+                return;
+            }
+            
+            // Calculate bounding box of all tiles
+            var minX = Infinity, maxX = -Infinity;
+            var minY = Infinity, maxY = -Infinity;
+            
+            for (var tile_id in tiles) {
+                var tile = tiles[tile_id];
+                var pos = WW_Hex.hexToPixel(tile.q, tile.r);
+                minX = Math.min(minX, pos.x);
+                maxX = Math.max(maxX, pos.x + WW_Hex.HEX_WIDTH);
+                minY = Math.min(minY, pos.y);
+                maxY = Math.max(maxY, pos.y + WW_Hex.HEX_HEIGHT);
+            }
+            
+            // Calculate center of tiles
+            var centerX = (minX + maxX) / 2;
+            var centerY = (minY + maxY) / 2;
+            
+            // Get container dimensions
+            var container = $('ww_map_container');
+            var containerWidth = container.offsetWidth || 800;
+            var containerHeight = container.offsetHeight || 600;
+            
+            // Scroll so center of tiles is in center of viewport
+            var scrollX = -(centerX - containerWidth / 2);
+            var scrollY = -(centerY - containerHeight / 2);
+            
+            this.scrollmap.scrollto(scrollX, scrollY);
+        },
+        
+        setupTiles: function(tiles) {
+            var self = this;
+            for (var tile_id in tiles) {
+                var tileEl = WW_Hex.createTile(tiles[tile_id]);
+                WW_DOM.connect(tileEl, 'onclick', this, 'onTileClick');
+            }
+            
+            // Center map on tiles after creating them
+            this.centerMapOnTiles(tiles);
+        },
+        
+        setupPlayerTokens: function(players) {
+            for (var player_id in players) {
+                WW_Hex.createPlayerToken(player_id, players[player_id]);
+            }
+        },
+        
+        ///////////////////////////////////////////////////
+        //// Game & client states
+        
+        onEnteringState: function(stateName, args) {
+            console.log('Entering state: ' + stateName, args);
+            
+            WW_State.setCurrentState(stateName);
+            
+            if (stateName !== 'playerTurn') {
+                WW_Hex.clearHighlights();
+            }
+            
+            switch (stateName) {
+                case 'draftHorde':
+                    this.enterDraftState(args.args);
+                    break;
+                case 'playerTurn':
+                    this.enterPlayerTurnState(args.args);
+                    break;
+                case 'confrontation':
+                    this.enterConfrontationState(args.args);
+                    break;
+                case 'diceResult':
+                    this.enterDiceResultState(args.args);
+                    break;
+                case 'loseHordier':
+                    this.enterLoseHordierState(args.args);
+                    break;
+                case 'recruitment':
+                    this.enterRecruitmentState(args.args);
+                    break;
+            }
+        },
+        
+        onLeavingState: function(stateName) {
+            console.log('Leaving state: ' + stateName);
+            
+            switch (stateName) {
+                case 'playerTurn':
+                    WW_Hex.clearHighlights();
+                    break;
+                case 'loseHordier':
+                    WW_Cards.clearHordeSelectable();
+                    break;
+                case 'recruitment':
+                    WW_Cards.hideRecruitmentInterface();
+                    break;
+            }
+        },
+        
+        onUpdateActionButtons: function(stateName, args) {
+            console.log('onUpdateActionButtons: ' + stateName);
+            
+            if (!this.isCurrentPlayerActive()) return;
+            
+            switch (stateName) {
+                case 'draftHorde':
+                    this.addActionButton('btn_confirm_draft', _('Confirm Horde'), 'onConfirmDraft');
+                    break;
+                case 'playerTurn':
+                    if (args && args.has_moved > 0) {
+                        this.addActionButton('btn_surpass_info', 
+                            _('Next move = Surpass (-1 die)'), null, null, false, 'bgabutton_gray');
+                        dojo.addClass('btn_surpass_info', 'disabled');
+                    }
+                    this.addActionButton('btn_rest', _('Rest (end turn)'), 'onRest', null, false, 'gray');
+                    break;
+                case 'confrontation':
+                    this.addActionButton('btn_roll', _('Roll Dice'), 'onRollDice');
+                    break;
+                case 'diceResult':
+                    this.addActionButton('btn_moral_plus', _('+1 (spend moral)'), 'onMoralPlus');
+                    this.addActionButton('btn_moral_minus', _('-1 (spend moral)'), 'onMoralMinus');
+                    this.addActionButton('btn_confirm_roll', _('Confirm'), 'onConfirmRoll');
+                    break;
+                case 'recruitment':
+                    this.addActionButton('btn_skip_recruit', _('Skip Recruitment'), 'onSkipRecruitment', null, false, 'gray');
+                    break;
+            }
+        },
+        
+        ///////////////////////////////////////////////////
+        //// State Entry Methods
+        
+        enterDraftState: function(args) {
+            WW_DOM.hide('ww_map_container');
+            WW_DOM.hide('ww_dice_panel');
+            
+            var self = this;
+            WW_Cards.showDraftInterface(args, function(cardId) {
+                self.onDraftCardClick(cardId);
+            });
+        },
+        
+        enterPlayerTurnState: function(args) {
+            WW_DOM.show('ww_map_container');
+            WW_DOM.show('ww_dice_panel');
+            WW_DOM.hide('ww_draft_panel');
+            
+            WW_Dice.clearDice();
+            WW_DOM.setHtml('ww_wind_force', '-');
+            
+            if (this.isCurrentPlayerActive() && args && args.adjacent) {
+                WW_Hex.highlightTiles(args.adjacent);
+            }
+        },
+        
+        enterConfrontationState: function(args) {
+            WW_Dice.clearDice('horde');
+            WW_Dice.clearDice('wind');
+            
+            var self = this;
+            
+            if (args.horde_dice) {
+                WW_Dice.createDiceSorted(args.horde_dice, 'ww_horde_dice', function(diceId) {
+                    self.onDiceClick(diceId);
+                });
+            }
+            
+            if (args.challenge_dice) {
+                WW_Dice.createDiceSorted(args.challenge_dice, 'ww_wind_dice');
+            }
+            
+            if (args.wind_force !== null && args.wind_force !== undefined) {
+                WW_DOM.setHtml('ww_wind_force', args.wind_force);
+            }
+        },
+        
+        enterDiceResultState: function(args) {
+            if (args && args.wind_force !== null && args.wind_force !== undefined) {
+                WW_DOM.setHtml('ww_wind_force', args.wind_force);
+            }
+        },
+        
+        enterLoseHordierState: function(args) {
+            console.log('Lose hordier state:', args);
+            
+            if (!args || !args.horde) return;
+            
+            var self = this;
+            WW_Cards.makeHordeSelectable(args.horde, function(cardId) {
+                self.onAbandonHordier(cardId);
+            });
             
             this.showMessage(_("You must abandon a Hordier! Click on a card to abandon it."), "info");
         },
         
-        /**
-         * Handle abandoning a hordier
-         */
-        onAbandonHordier: function(card_id)
-        {
-            console.log('Abandoning hordier:', card_id);
+        enterRecruitmentState: function(args) {
+            console.log('Recruitment state:', args);
             
-            this.bgaPerformAction('actAbandonHordier', {
-                card_id: parseInt(card_id)
+            var self = this;
+            var result = WW_Cards.showRecruitmentInterface(args, function(cardId) {
+                self.onRecruitCard(cardId);
             });
+            
+            if (result && result.isEmpty) {
+                this.showMessage(_("No characters available for recruitment at this location."), "info");
+            } else {
+                this.showMessage(_("You may recruit new characters. Click on a card to recruit or Skip."), "info");
+            }
         },
         
         ///////////////////////////////////////////////////
-        //// Player's action handlers
+        //// Click Handlers
         
-        onTileClick: function(evt)
-        {
-            dojo.stopEvent(evt);
+        onTileClick: function(evt) {
+            WW_DOM.stopEvent(evt);
             
-            var tile_id = evt.currentTarget.id.split('_')[1];
-            console.log('Tile clicked:', tile_id, 'selectable:', dojo.hasClass(evt.currentTarget, 'ww_selectable'));
+            var tileId = evt.currentTarget.id.split('_')[1];
             
-            if (!dojo.hasClass(evt.currentTarget, 'ww_selectable')) {
+            if (!this.checkAction('actSelectTile', true)) return;
+            
+            if (!WW_DOM.hasClass(evt.currentTarget, 'ww_selectable')) {
                 this.showMessage(_("You cannot move to this tile"), "info");
                 return;
             }
             
-            this.selectedTile = tile_id;
-            
-            // If player has chosen to surpass, use the dedicated server action
-            if (this.awaitingSurpassSelection) {
-                this.awaitingSurpassSelection = false;
-                this.bgaPerformAction('actSurpassAndSelectTile', {
-                    tile_id: tile_id
-                });
-            } else {
-                this.bgaPerformAction('actSelectTile', {
-                    tile_id: tile_id
-                });
-            }
+            WW_State.setSelectedTile(tileId);
+            this.bgaPerformAction('actSelectTile', { tile_id: tileId });
         },
         
-        onRollDice: function(evt)
-        {
-            dojo.stopEvent(evt);
+        onDiceClick: function(diceId) {
+            console.log('Dice clicked:', diceId);
+            WW_Dice.selectDice(diceId);
+        },
+        
+        onDraftCardClick: function(cardId) {
+            console.log('Draft card clicked:', cardId);
             
+            if (!this.isCurrentPlayerActive()) return;
+            
+            var cardEl = $('draft_card_' + cardId);
+            if (!cardEl) return;
+            
+            var isSelected = WW_DOM.hasClass(cardEl, 'ww_selected');
+            this.bgaPerformAction('actToggleDraftCard', {
+                card_id: cardId,
+                select: !isSelected
+            });
+        },
+        
+        ///////////////////////////////////////////////////
+        //// Action Handlers
+        
+        onRollDice: function(evt) {
+            WW_DOM.stopEvent(evt);
             this.bgaPerformAction('actRollDice', {});
         },
         
-        onMoralPlus: function(evt)
-        {
-            dojo.stopEvent(evt);
+        onMoralPlus: function(evt) {
+            WW_DOM.stopEvent(evt);
             
-            if (this.selectedDice.length == 0) {
+            if (!WW_State.hasSelectedDice()) {
                 this.showMessage(_("Please select a die first"), "error");
                 return;
             }
             
             this.bgaPerformAction('actUseMoral', {
-                dice_id: parseInt(this.selectedDice[0]),
+                dice_id: parseInt(WW_State.getFirstSelectedDice()),
                 modifier: 1
             });
         },
         
-        onMoralMinus: function(evt)
-        {
-            dojo.stopEvent(evt);
+        onMoralMinus: function(evt) {
+            WW_DOM.stopEvent(evt);
             
-            if (this.selectedDice.length == 0) {
+            if (!WW_State.hasSelectedDice()) {
                 this.showMessage(_("Please select a die first"), "error");
                 return;
             }
             
             this.bgaPerformAction('actUseMoral', {
-                dice_id: parseInt(this.selectedDice[0]),
+                dice_id: parseInt(WW_State.getFirstSelectedDice()),
                 modifier: -1
             });
         },
         
-        onConfirmRoll: function(evt)
-        {
-            dojo.stopEvent(evt);
-            
+        onConfirmRoll: function(evt) {
+            WW_DOM.stopEvent(evt);
             this.bgaPerformAction('actConfirmRoll', {});
         },
         
-        onSurpass: function(evt)
-        {
-            dojo.stopEvent(evt);
-            
-            // Toggle surpass mode: next tile click will perform surpass-and-move
-            this.awaitingSurpassSelection = true;
-            this.showMessage(_("Select a tile to surpass and move (you will roll with -1 die)"), "info");
-        },
-        
-        onRest: function(evt)
-        {
-            dojo.stopEvent(evt);
-            
+        onRest: function(evt) {
+            WW_DOM.stopEvent(evt);
             this.bgaPerformAction('actRest', {});
         },
         
-        onConfirmDraft: function(evt)
-        {
-            dojo.stopEvent(evt);
-            
+        onConfirmDraft: function(evt) {
+            WW_DOM.stopEvent(evt);
             this.bgaPerformAction('actConfirmDraft', {});
         },
         
+        onAbandonHordier: function(cardId) {
+            console.log('Abandoning hordier:', cardId);
+            this.bgaPerformAction('actAbandonHordier', {
+                card_id: parseInt(cardId)
+            });
+        },
+        
+        onRecruitCard: function(cardId) {
+            console.log('Recruiting card:', cardId);
+            this.bgaPerformAction('actRecruit', {
+                card_id: parseInt(cardId)
+            });
+        },
+        
+        onSkipRecruitment: function(evt) {
+            WW_DOM.stopEvent(evt);
+            WW_Cards.hideRecruitmentInterface();
+            this.bgaPerformAction('actSkipRecruitment', {});
+        },
+        
         ///////////////////////////////////////////////////
-        //// Reaction to cometD notifications
+        //// Notifications
 
-        setupNotifications: function()
-        {
+        setupNotifications: function() {
             console.log('Setting up notifications');
             
             dojo.subscribe('diceRolled', this, "notif_diceRolled");
@@ -944,267 +1289,135 @@ function (dojo, declare) {
             this.notifqueue.setSynchronous('moralUsed', 300);
             
             dojo.subscribe('playerSurpasses', this, "notif_playerSurpasses");
-            
             dojo.subscribe('playerRests', this, "notif_playerRests");
             
             dojo.subscribe('playerMoves', this, "notif_playerMoves");
             this.notifqueue.setSynchronous('playerMoves', 500);
             
-            // Draft notifications
             dojo.subscribe('cardToggled', this, "notif_cardToggled");
             this.notifqueue.setSynchronous('cardToggled', 300);
             
             dojo.subscribe('draftComplete', this, "notif_draftComplete");
             this.notifqueue.setSynchronous('draftComplete', 500);
             
-            // Hordier lost notification
+            dojo.subscribe('autoSelectTeam', this, "notif_autoSelectTeam");
+            
             dojo.subscribe('hordierLost', this, "notif_hordierLost");
             this.notifqueue.setSynchronous('hordierLost', 500);
         },
         
-        notif_diceRolled: function(notif)
-        {
+        notif_diceRolled: function(notif) {
             console.log('notif_diceRolled', notif);
             
-            // Clear only horde dice, keep wind dice visible
-            this.clearDice('horde');
+            WW_Dice.clearDice('horde');
             
-            // Sort dice by value (smallest to largest)
+            var self = this;
             var sortedDice = notif.args.dice.slice().sort(function(a, b) {
                 return (a.value || 0) - (b.value || 0);
             });
             
-            // Create all sorted dice immediately (without setTimeout)
-            var self = this;
             sortedDice.forEach(function(dice) {
-                self.createDice({
+                WW_Dice.createDice({
                     dice_id: dice.id,
                     dice_type: dice.type,
                     dice_value: dice.value
-                }, 'ww_horde_dice');
+                }, 'ww_horde_dice', function(diceId) {
+                    self.onDiceClick(diceId);
+                });
             });
             
-            // Animate all dice with staggered timing
+            WW_Dice.updateConfrontationPreview();
+            
             var animationDelay = 0;
             sortedDice.forEach(function(dice) {
                 setTimeout(function() {
                     var diceEl = $('dice_' + dice.id);
-                    if (diceEl) {
-                        self.animateDiceRoll(diceEl);
-                    }
+                    if (diceEl) WW_Dice.animateDiceRoll(diceEl, dice.value);
                 }, animationDelay);
                 animationDelay += 100;
             });
         },
         
-        notif_windRevealed: function(notif)
-        {
+        notif_windRevealed: function(notif) {
             console.log('notif_windRevealed', notif);
             
-            this.revealWindToken(notif.args.tile_id, notif.args.force);
+            WW_Hex.revealWindToken(notif.args.tile_id, notif.args.force);
+            WW_Dice.clearDice('wind');
             
-            // Clear only wind dice before adding new ones
-            this.clearDice('wind');
-            
-            // Separate white/green from black dice
-            var windForceDice = [];
-            var blackDice = [];
-            
-            // Collect white dice
+            var allWindDice = [];
             (notif.args.white_dice || []).forEach(function(dice, index) {
-                windForceDice.push({
-                    type: 'white',
-                    value: dice.value,
-                    originalIndex: index
-                });
+                allWindDice.push({ type: 'white', value: dice.value, dice_id: 'white_' + index });
             });
-            
-            // Collect green dice
             (notif.args.green_dice || []).forEach(function(dice, index) {
-                windForceDice.push({
-                    type: 'green',
-                    value: dice.value,
-                    originalIndex: index
-                });
+                allWindDice.push({ type: 'green', value: dice.value, dice_id: 'green_' + index });
             });
-            
-            // Collect black dice (separate, not sorted with white/green)
             (notif.args.black_dice || []).forEach(function(dice, index) {
-                blackDice.push({
-                    type: 'black',
-                    value: dice.value,
-                    originalIndex: index
-                });
+                allWindDice.push({ type: 'black', value: dice.value, dice_id: 'black_' + index });
             });
             
-            // Sort wind force dice (white + green) by value
-            windForceDice.sort(function(a, b) {
-                return (a.value || 0) - (b.value || 0);
-            });
-            
-            // Combine: sorted wind force dice, then black dice
-            var allWindDice = windForceDice.concat(blackDice);
-            
-            // Create all wind dice
-            var self = this;
-            allWindDice.forEach(function(dice) {
-                self.createDice({
-                    dice_id: dice.type + '_' + dice.originalIndex,
-                    dice_type: dice.type,
-                    dice_value: dice.value
-                }, 'ww_wind_dice');
-            });
+            WW_Dice.createDiceSorted(allWindDice, 'ww_wind_dice');
+            WW_Dice.updateConfrontationPreview();
         },
         
-        notif_confrontationSuccess: function(notif)
-        {
+        notif_confrontationSuccess: function(notif) {
             console.log('notif_confrontationSuccess', notif);
-            
-            // Show success animation
-            var tile = $('tile_' + this.selectedTile);
-            if (tile) {
-                dojo.addClass(tile, 'ww_confrontation_success');
-                setTimeout(function() {
-                    dojo.removeClass(tile, 'ww_confrontation_success');
-                }, 1000);
-            }
+            WW_Hex.showConfrontationResult(WW_State.getSelectedTile(), true);
         },
         
-        notif_confrontationFailure: function(notif)
-        {
+        notif_confrontationFailure: function(notif) {
             console.log('notif_confrontationFailure', notif);
-            
-            // Show failure animation
-            var tile = $('tile_' + this.selectedTile);
-            if (tile) {
-                dojo.addClass(tile, 'ww_confrontation_failure');
-                setTimeout(function() {
-                    dojo.removeClass(tile, 'ww_confrontation_failure');
-                }, 1000);
-            }
+            WW_Hex.showConfrontationResult(WW_State.getSelectedTile(), false);
         },
         
-        notif_moralUsed: function(notif)
-        {
+        notif_moralUsed: function(notif) {
             console.log('notif_moralUsed', notif);
             
-            // Update moral counter
-            this.updateMoral(notif.args.player_id, notif.args.new_moral);
-            
-            // Update dice value
-            var dice = $('dice_' + notif.args.dice_id);
-            if (dice) {
-                dojo.attr(dice, 'data-value', notif.args.new_value);
-                dice.innerHTML = notif.args.new_value;
-                
-                dojo.addClass(dice, 'ww_dice_modified');
-            }
+            WW_Player.updateMoral(notif.args.player_id, notif.args.new_moral);
+            WW_Dice.updateDiceValue(notif.args.dice_id, notif.args.new_value);
+            WW_Dice.updateConfrontationPreview();
         },
         
-        notif_playerSurpasses: function(notif)
-        {
+        notif_playerSurpasses: function(notif) {
             console.log('notif_playerSurpasses', notif);
-            
-            // Update dice count
-            var current = parseInt($('dice_counter_' + notif.args.player_id).innerHTML);
-            this.updateDiceCount(notif.args.player_id, current - 1);
+            var current = WW_Player.getCurrentDiceCount(notif.args.player_id);
+            WW_Player.updateDiceCount(notif.args.player_id, current - 1);
         },
         
-        notif_playerRests: function(notif)
-        {
+        notif_playerRests: function(notif) {
             console.log('notif_playerRests', notif);
-            
-            // Reset dice count to base value (surpass count reset to 0)
-            var player_id = notif.args.player_id;
-            var baseDice = this.gamedatas.players[player_id].dice_count || 6;
-            this.updateDiceCount(player_id, baseDice);
+            var diceCount = notif.args.dice_count - notif.args.surpass_count;
+            WW_Player.updateDiceCount(notif.args.player_id, diceCount);
         },
         
-        notif_playerMoves: function(notif)
-        {
+        notif_playerMoves: function(notif) {
             console.log('notif_playerMoves', notif);
-            
-            this.movePlayerToken(notif.args.player_id, notif.args.q, notif.args.r);
+            WW_Hex.movePlayerToken(this, notif.args.player_id, notif.args.q, notif.args.r);
+            WW_Player.updatePosition(notif.args.player_id, notif.args.q, notif.args.r);
         },
         
-        notif_cardToggled: function(notif)
-        {
+        notif_cardToggled: function(notif) {
             console.log('notif_cardToggled', notif);
-            
-            var cardEl = $('draft_card_' + notif.args.card_id);
-            if (!cardEl) return;
-            
-            if (notif.args.selected) {
-                dojo.addClass(cardEl, 'ww_selected');
-            } else {
-                dojo.removeClass(cardEl, 'ww_selected');
-            }
-            
-            // Update counts
+            WW_Cards.toggleDraftCardSelection(notif.args.card_id, notif.args.selected);
             if (notif.args.counts && notif.args.requirements) {
-                this.updateDraftCounts(notif.args.counts, notif.args.requirements);
+                WW_Cards.updateDraftCounts(notif.args.counts, notif.args.requirements);
             }
         },
         
-        notif_draftComplete: function(notif)
-        {
+        notif_draftComplete: function(notif) {
             console.log('notif_draftComplete', notif);
-            
-            // Hide draft panel
-            dojo.style('ww_draft_panel', 'display', 'none');
-            
-            // Refresh horde display
+            WW_Cards.hideDraftPanel();
             if (notif.args.horde) {
-                this.refreshHorde(notif.args.horde);
+                WW_Cards.refreshHorde(notif.args.horde);
             }
         },
         
-        /**
-         * Refresh horde display with new cards
-         */
-        refreshHorde: function(horde)
-        {
-            // Clear current horde
-            var hordeEl = $('ww_horde');
-            if (hordeEl) {
-                hordeEl.innerHTML = '';
-            }
-            
-            // Add new cards
-            for (var cardId in horde) {
-                var card = horde[cardId];
-                var charInfo = this.characters[card.type_arg] || {};
-                var charType = charInfo.type || card.type;
-                var isLeader = charInfo.is_leader;
-                var displayType = isLeader ? 'traceur' : charType;
-                
-                var cardHtml = '<div id="horde_card_' + card.id + '" ' +
-                               'class="ww_character_card" ' +
-                               'data-type="' + displayType + '">' +
-                               '<div class="ww_card_name">' + (charInfo.name || '') + '</div>' +
-                               '</div>';
-                
-                dojo.place(cardHtml, hordeEl);
-            }
+        notif_autoSelectTeam: function(notif) {
+            console.log('notif_autoSelectTeam', notif);
         },
         
-        /**
-         * Handle hordier lost notification
-         */
-        notif_hordierLost: function(notif)
-        {
+        notif_hordierLost: function(notif) {
             console.log('notif_hordierLost', notif);
-            
-            // Remove the card from horde display
-            var cardEl = $('horde_card_' + notif.args.card_id);
-            if (cardEl) {
-                // Animate card removal
-                dojo.addClass(cardEl, 'ww_card_lost');
-                var self = this;
-                setTimeout(function() {
-                    dojo.destroy(cardEl);
-                }, 500);
-            }
+            WW_Cards.removeHordeCard(notif.args.card_id, true);
         }
    });
 });

@@ -29,7 +29,7 @@ trait WW_Confrontation
         // Store in database and get dice with their DB IDs
         $stored_dice = $this->storeDiceRolls($horde_dice);
         
-        $this->notify->all('diceRolled', clienttranslate('${player_name} rolls ${dice_count} dice'), [
+        $this->notifyAllPlayers('diceRolled', clienttranslate('${player_name} rolls ${dice_count} dice'), [
             'player_id' => $player_id,
             'player_name' => $this->getActivePlayerName(),
             'dice_count' => $dice_count,
@@ -68,7 +68,7 @@ trait WW_Confrontation
         $this->DbQuery("UPDATE player SET player_moral = player_moral - 1 WHERE player_id = $player_id");
         $this->incStat(1, 'moral_spent', $player_id);
         
-        $this->notify->all('moralUsed', clienttranslate('${player_name} spends 1 moral to modify a die'), [
+        $this->notifyAllPlayers('moralUsed', clienttranslate('${player_name} spends 1 moral to modify a die'), [
             'player_id' => $player_id,
             'player_name' => $this->getActivePlayerName(),
             'dice_id' => $dice_id,
@@ -77,6 +77,47 @@ trait WW_Confrontation
         ]);
         
         // Stay in diceResult state
+        $this->gamestate->nextState('modified');
+    }
+
+    /**
+     * Reroll all dice (costs moral)
+     */
+    function actRerollAll(): void
+    {
+        $this->checkAction('actRerollAll');
+        $moral_cost = 1;
+        $player_id = $this->getActivePlayerId();
+        
+        $moral = $this->getUniqueValueFromDB("SELECT player_moral FROM player WHERE player_id = $player_id");
+        if ($moral <= $moral_cost) {
+            throw new BgaUserException($this->_("You don't have enough moral to reroll all dice"));
+        }
+        
+        // Spend 1 moral
+        $this->DbQuery("UPDATE player SET player_moral = player_moral - $moral_cost WHERE player_id = $player_id");
+        $this->incStat($moral_cost, 'moral_spent', $player_id);
+        
+        // Clear current dice
+        $this->DbQuery("DELETE FROM dice_roll WHERE dice_owner = 'player'");
+        
+        // Roll new dice
+        $player = $this->getObjectFromDB("SELECT * FROM player WHERE player_id = $player_id");
+        $surpass_count = (int)$player['player_surpass_count'];
+        $base_dice = (int)$player['player_dice_count'];
+        $dice_count = max(0, $base_dice - $surpass_count);
+        
+        $horde_dice = $this->rollDice($dice_count, 'blue', 'player');
+        $stored_dice = $this->storeDiceRolls($horde_dice);
+        
+        $this->notifyAllPlayers('diceRolled', clienttranslate('${player_name} rerolls all dice (costs 2 moral)'), [
+            'player_id' => $player_id,
+            'player_name' => $this->getActivePlayerName(),
+            'dice_count' => $dice_count,
+            'dice' => $stored_dice,
+            'new_moral' => $moral - $moral_cost
+        ]);
+        
         $this->gamestate->nextState('modified');
     }
 
@@ -156,7 +197,7 @@ trait WW_Confrontation
         $black_dice = array_filter($challenge_dice, fn($d) => $d['type'] == 'black');
         $added_white = array_filter($white_dice, fn($d) => !isset($d['rolled']) || !$d['rolled']);
         
-        $this->notify->all('windRevealed', clienttranslate('Wind force ${force} revealed!'), [
+        $this->notifyAllPlayers('windRevealed', clienttranslate('Wind force ${force} revealed!'), [
             'tile_id' => $tile_id,
             'force' => $force,
             'white_dice' => array_values($white_dice),
@@ -187,7 +228,7 @@ trait WW_Confrontation
         $green_dice = array_filter($challenge_dice, fn($d) => $d['type'] == 'green');
         $black_dice = array_filter($challenge_dice, fn($d) => $d['type'] == 'black');
         
-        $this->notify->all('windRevealed', clienttranslate('Wind force ${force} - challenge dice rolled'), [
+        $this->notifyAllPlayers('windRevealed', clienttranslate('Wind force ${force} - challenge dice rolled'), [
             'tile_id' => $tile_id,
             'force' => $force,
             'white_dice' => array_values($white_dice),
@@ -313,7 +354,7 @@ trait WW_Confrontation
         $surpass_count = $this->getUniqueValueFromDB("SELECT player_surpass_count FROM player WHERE player_id = $player_id");
         $this->DbQuery("UPDATE player SET player_score = player_score + $surpass_count WHERE player_id = $player_id");
         
-        $this->notify->all('confrontationSuccess', clienttranslate('${player_name} overcomes the wind! (+${surpass_points} points for surpass)'), [
+        $this->notifyAllPlayers('confrontationSuccess', clienttranslate('${player_name} overcomes the wind! (+${surpass_points} points for surpass)'), [
             'player_id' => $player_id,
             'player_name' => $this->getActivePlayerName(),
             'horde_sum' => $result['horde_sum'],
@@ -325,6 +366,14 @@ trait WW_Confrontation
         
         // Move player
         $this->DbQuery("UPDATE player SET player_position_q = {$tile['tile_q']}, player_position_r = {$tile['tile_r']} WHERE player_id = $player_id");
+
+        // Notify clients to refresh player position
+        $this->notifyAllPlayers('playerMoves', clienttranslate('${player_name} moves to (${q}, ${r})'), [
+            'player_id' => $player_id,
+            'player_name' => $this->getActivePlayerName(),
+            'q' => (int)$tile['tile_q'],
+            'r' => (int)$tile['tile_r']
+        ]);
         
         $this->gamestate->nextState('success');
     }
@@ -336,7 +385,7 @@ trait WW_Confrontation
     {
         $this->incStat(1, 'confrontations_lost', $player_id);
         
-        $this->notify->all('confrontationFailure', clienttranslate('${player_name} is pushed back by the wind!'), [
+        $this->notifyAllPlayers('confrontationFailure', clienttranslate('${player_name} is pushed back by the wind!'), [
             'player_id' => $player_id,
             'player_name' => $this->getActivePlayerName(),
             'horde_sum' => $result['horde_sum'],
@@ -401,7 +450,8 @@ trait WW_Confrontation
         
         // Verify the card belongs to the player's horde
         $card = $this->cards->getCard($card_id);
-        if (!$card || $card['location'] != 'horde_' . $player_id) {
+        $location = $card['card_location'] ?? $card['location'] ?? '';
+        if (!$card || $location != 'horde_' . $player_id) {
             throw new BgaUserException($this->_("This card is not in your horde"));
         }
         
@@ -411,9 +461,10 @@ trait WW_Confrontation
         $this->incStat(1, 'hordiers_lost', $player_id);
         
         // Get character info for notification
-        $char_info = $this->characters[$card['type_arg']] ?? ['name' => 'Hordier'];
+        $type_arg = $card['card_type_arg'] ?? $card['type_arg'] ?? null;
+        $char_info = $this->characters[$type_arg] ?? ['name' => 'Hordier'];
         
-        $this->notify->all('hordierLost', clienttranslate('${player_name} loses ${character_name}'), [
+        $this->notifyAllPlayers('hordierLost', clienttranslate('${player_name} loses ${character_name}'), [
             'player_id' => $player_id,
             'player_name' => $this->getActivePlayerName(),
             'card_id' => $card_id,

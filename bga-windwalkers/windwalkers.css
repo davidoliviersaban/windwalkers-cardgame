@@ -332,8 +332,38 @@
 #ww_horde {
     display: flex;
     flex-wrap: wrap;
-    gap: 5px;
+    gap: 8px;
     min-height: 130px;
+}
+
+/* Horde cards in main panel - same style as draft but smaller and without hover lift */
+.ww_horde_card_item {
+    width: 120px;
+    min-height: 80px;
+    padding: 8px;
+    margin: 4px;
+    cursor: default;
+}
+
+.ww_horde_card_item:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.ww_horde_card_item.ww_selectable_card {
+    cursor: pointer;
+    box-shadow: 0 0 8px 2px rgba(255, 200, 0, 0.8);
+}
+
+.ww_horde_card_item.ww_selectable_card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0 12px 3px rgba(255, 100, 0, 0.9);
+}
+
+.ww_card_lost {
+    opacity: 0;
+    transform: scale(0.5) rotate(10deg);
+    transition: all 0.5s ease-out;
 }
 
 /* ==========================================
@@ -353,20 +383,42 @@
     font-size: 14px;
 }
 
-.ww_dice_row {
+.ww_dice_column {
     display: flex;
-    gap: 20px;
+    flex-direction: column;
+    gap: 15px;
     margin-bottom: 15px;
 }
 
 .ww_dice_section {
-    flex: 1;
+    width: 100%;
 }
 
 .ww_dice_section h4 {
     margin: 0 0 8px 0;
     font-size: 12px;
     color: #666;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.ww_dice_sum {
+    font-size: 14px;
+    font-weight: bold;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: #ddd;
+}
+
+.ww_dice_sum.ww_sum_winning {
+    background: #4caf50;
+    color: white;
+}
+
+.ww_dice_sum.ww_sum_losing {
+    background: #f44336;
+    color: white;
 }
 
 #ww_horde_dice,
@@ -388,6 +440,73 @@
 
 #ww_wind_dice {
     background: rgba(156, 39, 176, 0.2);
+}
+
+/* Confrontation preview */
+#ww_confrontation_preview {
+    margin-top: 15px;
+    padding: 12px;
+    border-radius: 8px;
+    background: #f5f5f5;
+    border: 2px solid #ddd;
+}
+
+#ww_confrontation_preview.ww_preview_success {
+    background: #e8f5e9;
+    border-color: #4caf50;
+}
+
+#ww_confrontation_preview.ww_preview_failure {
+    background: #ffebee;
+    border-color: #f44336;
+}
+
+#ww_sum_comparison {
+    font-size: 16px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+#ww_preview_status {
+    padding: 4px 12px;
+    border-radius: 4px;
+}
+
+#ww_preview_status.ww_status_success {
+    background: #4caf50;
+    color: white;
+}
+
+#ww_preview_status.ww_status_failure {
+    background: #f44336;
+    color: white;
+}
+
+#ww_matching_details {
+    font-size: 12px;
+    color: #555;
+}
+
+.ww_match_row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    border-bottom: 1px solid #ddd;
+}
+
+.ww_match_row:last-child {
+    border-bottom: none;
+}
+
+.ww_match_ok {
+    color: #4caf50;
+    font-weight: bold;
+}
+
+.ww_match_fail {
+    color: #f44336;
+    font-weight: bold;
 }
 
 /* ==========================================
@@ -696,6 +815,16 @@
     border: 2px solid #4caf50;
     border-radius: 4px;
     background: #e8f5e9;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+#ww_draft_panel h4 {
+    margin: 15px 0 10px 0;
+    color: #333;
+    font-size: 14px;
+    font-weight: bold;
 }
 
 /* Draft cards */

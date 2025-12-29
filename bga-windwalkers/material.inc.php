@@ -31,4 +31,5 @@ require_once(__DIR__ . '/modules/material/buildings.inc.php');
 // Wind configuration
 require_once(__DIR__ . '/modules/material/wind.inc.php');
 
-// Chapter tile data is loaded from JSON files in modules/chapters/
+// Chapter tile data is embedded (no filesystem access)
+require_once(__DIR__ . '/modules/material/chapters.inc.php');

@@ -11,6 +11,7 @@ trait WW_Movement
     
     /**
      * Select a tile to move to
+     * Automatically detects if this is a surpass (has_moved > 0)
      */
     function actSelectTile(int $tile_id): void
     {
@@ -19,40 +20,36 @@ trait WW_Movement
         
         $this->validateTileAdjacent($player_id, $tile_id);
         
+        // Check if this is a surpass (player has already moved this turn)
+        $has_moved = (int)$this->getUniqueValueFromDB("SELECT player_has_moved FROM player WHERE player_id = $player_id");
+        
         $this->setGameStateValue('selected_tile', $tile_id);
-        $this->DbQuery("UPDATE player SET player_has_moved = player_has_moved + 1 WHERE player_id = $player_id");
+        
+        if ($has_moved > 0) {
+            // This is a surpass - increment both counters
+            $this->DbQuery("UPDATE player SET player_has_moved = player_has_moved + 1, player_surpass_count = player_surpass_count + 1 WHERE player_id = $player_id");
+            $this->incStat(1, 'surpass_count', $player_id);
+            
+            $this->notifyAllPlayers('playerSurpasses', clienttranslate('${player_name} surpasses! (-1 die)'), [
+                'player_id' => $player_id,
+                'player_name' => $this->getActivePlayerName()
+            ]);
+        } else {
+            // First movement - just increment has_moved
+            $this->DbQuery("UPDATE player SET player_has_moved = player_has_moved + 1 WHERE player_id = $player_id");
+        }
         
         $this->gamestate->nextState('moveToTile');
     }
 
     /**
      * Surpass (extra movement at cost of 1 die) and select tile
+     * @deprecated Use actSelectTile instead - surpass is now automatic
      */
     function actSurpassAndSelectTile(int $tile_id): void
     {
-        $this->checkAction('actSurpassAndSelectTile');
-        $player_id = $this->getActivePlayerId();
-        
-        // Must have moved first
-        $has_moved = $this->getUniqueValueFromDB("SELECT player_has_moved FROM player WHERE player_id = $player_id");
-        if ($has_moved == 0) {
-            throw new BgaUserException($this->_("You must move first before surpassing"));
-        }
-        
-        $this->validateTileAdjacent($player_id, $tile_id);
-        
-        $this->setGameStateValue('selected_tile', $tile_id);
-        
-        // Increment both counters
-        $this->DbQuery("UPDATE player SET player_has_moved = player_has_moved + 1, player_surpass_count = player_surpass_count + 1 WHERE player_id = $player_id");
-        $this->incStat(1, 'surpass_count', $player_id);
-        
-        $this->notify->all('playerSurpasses', clienttranslate('${player_name} surpasses! (-1 die)'), [
-            'player_id' => $player_id,
-            'player_name' => $this->getActivePlayerName()
-        ]);
-        
-        $this->gamestate->nextState('moveToTile');
+        // Redirect to actSelectTile - it handles surpass automatically
+        $this->actSelectTile($tile_id);
     }
 
     /**
@@ -65,9 +62,14 @@ trait WW_Movement
         
         $this->DbQuery("UPDATE player SET player_has_moved = 0, player_surpass_count = 0 WHERE player_id = $player_id");
         
-        $this->notify->all('playerRests', clienttranslate('${player_name} rests and resets surpass counter'), [
+        // Get updated player data
+        $player = $this->getObjectFromDB("SELECT * FROM player WHERE player_id = $player_id");
+        
+        $this->notifyAllPlayers('playerRests', clienttranslate('${player_name} rests and resets surpass counter'), [
             'player_id' => $player_id,
-            'player_name' => $this->getActivePlayerName()
+            'player_name' => $this->getActivePlayerName(),
+            'dice_count' => (int)$player['player_dice_count'],
+            'surpass_count' => 0
         ]);
         
         $this->incStat(1, 'rest_count', $player_id);

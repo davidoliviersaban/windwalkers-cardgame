@@ -52,20 +52,28 @@
                 </div>
             </div>
             
-            <div class="ww_dice_row">
+            <div class="ww_dice_column">
                 <div class="ww_dice_section">
-                    <h4>{HORDE_DICE}</h4>
-                    <div id="ww_horde_dice">
-                        <!-- Blue dice will appear here -->
-                    </div>
-                </div>
-                
-                <div class="ww_dice_section">
-                    <h4>{WIND_DICE}</h4>
+                    <h4>{WIND_DICE} <span id="ww_wind_sum" class="ww_dice_sum"></span></h4>
                     <div id="ww_wind_dice">
                         <!-- Wind dice will appear here -->
                     </div>
                 </div>
+                
+                <div class="ww_dice_section">
+                    <h4>{HORDE_DICE} <span id="ww_horde_sum" class="ww_dice_sum"></span></h4>
+                    <div id="ww_horde_dice">
+                        <!-- Blue dice will appear here -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Confrontation result preview -->
+            <div id="ww_confrontation_preview" style="display: none;">
+                <div id="ww_sum_comparison">
+                    <span id="ww_preview_status"></span>
+                </div>
+                <div id="ww_matching_details"></div>
             </div>
         </div>
         
@@ -90,8 +98,14 @@
             </div>
         </div>
         
+        <h4>Available Characters</h4>
         <div id="ww_available_characters">
             <!-- Available characters for draft -->
+        </div>
+        
+        <h4>Your Selection</h4>
+        <div id="ww_draft_selected">
+            <!-- Selected characters for draft -->
         </div>
     </div>
     

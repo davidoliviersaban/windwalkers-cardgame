@@ -201,6 +201,16 @@ class Windwalkers extends Table
         $result['character_types'] = $this->character_types ?? [];
         $result['terrain_types'] = $this->terrain_types ?? [];
 
+        // Current dice (for restoring after refresh during confrontation)
+        $result['horde_dice'] = $this->getCollectionFromDb("SELECT * FROM dice_roll WHERE dice_owner = 'player'");
+        $result['challenge_dice'] = $this->getCollectionFromDb("SELECT * FROM dice_roll WHERE dice_owner = 'challenge'");
+        
+        // Selected tile (for showing wind force)
+        $selected_tile_id = $this->getGameStateValue('selected_tile');
+        if ($selected_tile_id > 0) {
+            $result['selected_tile'] = $this->getObjectFromDB("SELECT * FROM tile WHERE tile_id = $selected_tile_id");
+        }
+
         return $result;
     }
 
@@ -208,7 +218,7 @@ class Windwalkers extends Table
     //////////// Game Progression
     //////////////////////////////////////////////////////////////////////////////
 
-    function getGameProgression()
+    function getGameProgression(): int
     {
         $chapter = $this->getGameStateValue('current_chapter');
         return min(100, ($chapter - 1) * 25);
@@ -221,7 +231,7 @@ class Windwalkers extends Table
     /**
      * Get characters available for recruitment at current location
      */
-    function getRecruitPool($player_id)
+    function getRecruitPool(int $player_id): array
     {
         $player = $this->getObjectFromDB("SELECT * FROM player WHERE player_id = $player_id");
         $chapter = $this->getGameStateValue('current_chapter');
@@ -245,9 +255,17 @@ class Windwalkers extends Table
     private function getRecruitableCharacters(array $tile): array
     {
         if ($tile['tile_type'] == 'city') {
-            return $this->getCollectionFromDb(
-                "SELECT * FROM card WHERE card_type IN ('fer', 'pack', 'traine') AND card_location = 'deck' ORDER BY card_type_arg"
+            // Cities: 2 characters from each type
+            $fer = $this->getCollectionFromDb(
+                "SELECT * FROM card WHERE card_type = 'fer' AND card_location = 'deck' ORDER BY RAND() LIMIT 2"
             );
+            $pack = $this->getCollectionFromDb(
+                "SELECT * FROM card WHERE card_type = 'pack' AND card_location = 'deck' ORDER BY RAND() LIMIT 2"
+            );
+            $traine = $this->getCollectionFromDb(
+                "SELECT * FROM card WHERE card_type = 'traine' AND card_location = 'deck' ORDER BY RAND() LIMIT 2"
+            );
+            return array_merge($fer, $pack, $traine);
         }
         
         if ($tile['tile_type'] == 'village') {
@@ -258,22 +276,22 @@ class Windwalkers extends Table
     }
 
     /**
-     * Get village-specific recruits
+     * Get village-specific recruits (limited to 2 random characters)
      */
     private function getVillageRecruits(string $subtype): array
     {
         switch ($subtype) {
             case 'village_green':
                 return $this->getCollectionFromDb(
-                    "SELECT * FROM card WHERE card_type = 'pack' AND card_location = 'deck' ORDER BY card_type_arg"
+                    "SELECT * FROM card WHERE card_type = 'pack' AND card_location = 'deck' ORDER BY RAND() LIMIT 2"
                 );
             case 'village_red':
                 return $this->getCollectionFromDb(
-                    "SELECT * FROM card WHERE card_type = 'fer' AND card_is_leader = 0 AND card_location = 'deck' ORDER BY card_type_arg"
+                    "SELECT * FROM card WHERE card_type = 'fer' AND card_is_leader = 0 AND card_location = 'deck' ORDER BY RAND() LIMIT 2"
                 );
             case 'village_blue':
                 return $this->getCollectionFromDb(
-                    "SELECT * FROM card WHERE card_type = 'traine' AND card_location = 'deck' ORDER BY card_type_arg"
+                    "SELECT * FROM card WHERE card_type = 'traine' AND card_location = 'deck' ORDER BY RAND() LIMIT 2"
                 );
             default:
                 return [];
@@ -284,7 +302,7 @@ class Windwalkers extends Table
     //////////// Game State Actions
     //////////////////////////////////////////////////////////////////////////////
 
-    function stNextDraft()
+    function stNextDraft(): void
     {
         $player_id = $this->getActivePlayerId();
         
@@ -304,12 +322,26 @@ class Windwalkers extends Table
         }
     }
 
-    function stRest()
+    function stRest(): void
     {
+        // Reset movement counters for the active player (after failure or manual rest)
+        $player_id = $this->getActivePlayerId();
+        $this->DbQuery("UPDATE player SET player_has_moved = 0, player_surpass_count = 0 WHERE player_id = $player_id");
+        
+        // Get updated player data for notification
+        $player = $this->getObjectFromDB("SELECT * FROM player WHERE player_id = $player_id");
+        
+        $this->notifyAllPlayers('playerRests', clienttranslate('${player_name} rests and resets surpass counter'), [
+            'player_id' => $player_id,
+            'player_name' => $this->getActivePlayerName(),
+            'dice_count' => (int)$player['player_dice_count'],
+            'surpass_count' => 0
+        ]);
+        
         $this->gamestate->nextState('restComplete');
     }
 
-    function stApplyTileEffect()
+    function stApplyTileEffect(): void
     {
         $player_id = $this->getActivePlayerId();
         $tile_id = $this->getGameStateValue('selected_tile');
@@ -334,7 +366,7 @@ class Windwalkers extends Table
         $this->gamestate->nextState('continue');
     }
 
-    function stNextPlayer()
+    function stNextPlayer(): void
     {
         $player_id = $this->getActivePlayerId();
         $this->incStat(1, 'turns_number', $player_id);
@@ -344,7 +376,14 @@ class Windwalkers extends Table
         $this->gamestate->nextState('nextTurn');
     }
 
-    function stEndChapter()
+    function stEndRound(): void
+    {
+        // End of round - all players have taken their turn
+        // For now, just start a new round
+        $this->gamestate->nextState('newRound');
+    }
+
+    function stEndChapter(): void
     {
         $chapter = $this->getGameStateValue('current_chapter');
         $this->incStat(1, 'chapters_completed');
@@ -362,7 +401,24 @@ class Windwalkers extends Table
         $this->gamestate->nextState('nextChapter');
     }
 
-    function stSetupNextChapter()
+    function argEndChapter(): array
+    {
+        return [
+            'chapter_num' => $this->getGameStateValue('current_chapter')
+        ];
+    }
+
+    function argRecruitment(): array
+    {
+        $player_id = $this->getActivePlayerId();
+        return [
+            'recruitPool' => $this->getRecruitPool($player_id),
+            'horde' => $this->cards->getCardsInLocation('horde_' . $player_id),
+            'horde_count' => count($this->cards->getCardsInLocation('horde_' . $player_id))
+        ];
+    }
+
+    function stSetupNextChapter(): void
     {
         $this->transitionToNextChapter();
         $this->gamestate->nextState('chapterReady');
@@ -372,7 +428,7 @@ class Windwalkers extends Table
     //////////// Final Scoring
     //////////////////////////////////////////////////////////////////////////////
 
-    function calculateFinalScores()
+    function calculateFinalScores(): void
     {
         $players = $this->loadPlayersBasicInfos();
         
@@ -398,7 +454,7 @@ class Windwalkers extends Table
     //////////// Zombie Mode
     //////////////////////////////////////////////////////////////////////////////
 
-    function zombieTurn($state, $active_player)
+    function zombieTurn(array $state, int $active_player): void
     {
         $statename = $state['name'];
 
@@ -427,7 +483,7 @@ class Windwalkers extends Table
     //////////// Debug
     //////////////////////////////////////////////////////////////////////////////
 
-    function debug_setMoral($moral)
+    function debug_setMoral(int $moral): void
     {
         $player_id = $this->getCurrentPlayerId();
         $this->DbQuery("UPDATE player SET player_moral = $moral WHERE player_id = $player_id");
