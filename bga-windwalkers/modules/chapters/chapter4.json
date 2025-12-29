@@ -1,0 +1,139 @@
+{
+  "title": "Windwalker - Chapter 4",
+  "start_city": "alticcio",
+  "end_city": "campboban",
+  "grid": [
+    {
+      "q": 10,
+      "r": 38,
+      "type": "building",
+      "name": "alticcio",
+      "city": true,
+      "start": true
+    },
+    {
+      "q": 9,
+      "r": 38,
+      "type": "building",
+      "name": "portedhurle",
+      "special": true
+    },
+    {
+      "q": 8,
+      "r": 39,
+      "type": "terrain",
+      "name": "mountain"
+    },
+    {
+      "q": 9,
+      "r": 37,
+      "type": "terrain",
+      "name": "mountain"
+    },
+    {
+      "q": 10,
+      "r": 36,
+      "type": "terrain",
+      "name": "mountain"
+    },
+    {
+      "q": 7,
+      "r": 39,
+      "type": "terrain",
+      "name": "swamp"
+    },
+    {
+      "q": 8,
+      "r": 38,
+      "type": "terrain",
+      "name": "swamp"
+    },
+    {
+      "q": 8,
+      "r": 37,
+      "type": "terrain",
+      "name": "swamp"
+    },
+    {
+      "q": 7,
+      "r": 37,
+      "type": "terrain",
+      "name": "swamp"
+    },
+    {
+      "q": 6,
+      "r": 38,
+      "type": "terrain",
+      "name": "swamp"
+    },
+    {
+      "q": 7,
+      "r": 36,
+      "type": "terrain",
+      "name": "swamp"
+    },
+    {
+      "q": 9,
+      "r": 36,
+      "type": "terrain",
+      "name": "swamp"
+    },
+    {
+      "q": 8,
+      "r": 36,
+      "type": "terrain",
+      "name": "forest"
+    },
+    {
+      "q": 6,
+      "r": 39,
+      "type": "terrain",
+      "name": "plain"
+    },
+    {
+      "q": 6,
+      "r": 37,
+      "type": "terrain",
+      "name": "plain"
+    },
+    {
+      "q": 10,
+      "r": 35,
+      "type": "terrain",
+      "name": "hut"
+    },
+    {
+      "q": 5,
+      "r": 38,
+      "type": "building",
+      "name": "village_green",
+      "village": true
+    },
+    {
+      "q": 6,
+      "r": 36,
+      "type": "terrain",
+      "name": "swamp"
+    },
+    {
+      "q": 6,
+      "r": 35,
+      "type": "building",
+      "name": "campboban",
+      "city": true,
+      "end": true
+    },
+    {
+      "q": 8,
+      "r": 35,
+      "type": "terrain",
+      "name": "hut"
+    },
+    {
+      "q": 7,
+      "r": 40,
+      "type": "terrain",
+      "name": "mountain"
+    }
+  ]
+}

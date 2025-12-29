@@ -18,22 +18,26 @@ trait WW_Confrontation
         $player_id = $this->getActivePlayerId();
         
         $player = $this->getObjectFromDB("SELECT * FROM player WHERE player_id = $player_id");
-        $surpass_count = $player['player_surpass_count'];
-        $dice_count = $player['player_dice_count'] - $surpass_count;
+        $surpass_count = (int)$player['player_surpass_count'];
+        $base_dice = (int)$player['player_dice_count'];
+        
+        // Final dice count after surpass reduction
+        $dice_count = max(0, $base_dice - $surpass_count);
         
         $horde_dice = $this->rollDice($dice_count, 'blue', 'player');
         
-        // Store in database
-        $this->storeDiceRolls($horde_dice);
+        // Store in database and get dice with their DB IDs
+        $stored_dice = $this->storeDiceRolls($horde_dice);
         
         $this->notify->all('diceRolled', clienttranslate('${player_name} rolls ${dice_count} dice'), [
             'player_id' => $player_id,
             'player_name' => $this->getActivePlayerName(),
             'dice_count' => $dice_count,
-            'dice' => $horde_dice
+            'dice' => $stored_dice
         ]);
         
-        $this->gamestate->nextState('rollAgain');
+        // Go to diceResult state where player can modify or confirm
+        $this->gamestate->nextState('diceRolled');
     }
 
     /**
@@ -71,6 +75,9 @@ trait WW_Confrontation
             'new_value' => $new_value,
             'new_moral' => $moral - 1
         ]);
+        
+        // Stay in diceResult state
+        $this->gamestate->nextState('modified');
     }
 
     /**
@@ -94,15 +101,21 @@ trait WW_Confrontation
         $tile_id = $this->getGameStateValue('selected_tile');
         $tile = $this->getObjectFromDB("SELECT * FROM tile WHERE tile_id = $tile_id");
         
+        // Clear previous dice rolls
+        $this->clearDiceRolls();
+        
         // Cities have no wind
         if ($this->tileHasNoWind($tile)) {
             $this->gamestate->nextState('noWind');
             return;
         }
         
-        // Draw wind token if not already revealed
-        if ($tile['tile_wind_force'] === null) {
+        // Draw wind token if not already revealed (check for null or empty)
+        if (empty($tile['tile_wind_force'])) {
             $this->revealWindOnTile($tile_id, $tile);
+        } else {
+            // Tile already discovered - just roll challenge dice with existing wind force
+            $this->rollChallengeForExistingTile($tile_id, $tile);
         }
         
         $this->gamestate->nextState('windRevealed');
@@ -154,7 +167,39 @@ trait WW_Confrontation
     }
 
     /**
+     * Roll challenge dice for an already discovered tile
+     */
+    private function rollChallengeForExistingTile(int $tile_id, array $tile): void
+    {
+        $force = (int) $tile['tile_wind_force'];
+        
+        // Roll challenge dice
+        $challenge_dice = $this->rollChallengeDice($tile, $force);
+        
+        // Store wind dice
+        foreach ($challenge_dice as $dice) {
+            $this->DbQuery("INSERT INTO dice_roll (dice_type, dice_value, dice_owner) 
+                           VALUES ('{$dice['type']}', {$dice['value']}, 'challenge')");
+        }
+        
+        // Separate by type for notification
+        $white_dice = array_filter($challenge_dice, fn($d) => $d['type'] == 'white');
+        $green_dice = array_filter($challenge_dice, fn($d) => $d['type'] == 'green');
+        $black_dice = array_filter($challenge_dice, fn($d) => $d['type'] == 'black');
+        
+        $this->notify->all('windRevealed', clienttranslate('Wind force ${force} - challenge dice rolled'), [
+            'tile_id' => $tile_id,
+            'force' => $force,
+            'white_dice' => array_values($white_dice),
+            'green_dice' => array_values($green_dice),
+            'black_dice' => array_values($black_dice),
+            'added_white_dice' => []
+        ]);
+    }
+
+    /**
      * Roll challenge dice for a tile
+     * On edge tiles (< 6 neighbors), wind rolls max 5 dice total (easier for player)
      */
     private function rollChallengeDice(array $tile, int $force): array
     {
@@ -167,18 +212,26 @@ trait WW_Confrontation
         foreach ($green_dice as &$d) { $d['rolled'] = true; }
         foreach ($black_dice as &$d) { $d['rolled'] = true; }
         
-        // Add missing white dice as fixed 6 to reach wind force
-        $missing_white = max(0, $force - (count($white_dice) + count($green_dice)));
-        for ($i = 0; $i < $missing_white; $i++) {
-            $white_dice[] = [
-                'type' => 'white',
-                'value' => 6,
-                'owner' => 'challenge',
-                'rolled' => false
-            ];
+        // Check if this tile is on the edge (< 6 neighbors)
+        // If so, cap total challenge dice to 5 maximum (easier for player)
+        $is_edge_tile = false;
+        $neighbors = $this->getAdjacentTiles((int)$tile['tile_q'], (int)$tile['tile_r'], (int)$tile['tile_chapter']);
+        if (count($neighbors) < 6) {
+            $is_edge_tile = true;
+            $white_dice = array_slice($white_dice, 0, 5 - count($green_dice));
+            if ($force === 6) {
+                $white_dice[] = [
+                    'type' => 'white',
+                    'value' => 6,
+                    'owner' => 'challenge',
+                    'rolled' => false
+                ];
+            }
         }
-        
-        return array_merge($white_dice, $green_dice, $black_dice);
+
+        // Combine all dice
+        $all_dice = array_merge($white_dice, $green_dice, $black_dice);
+        return $all_dice;
     }
 
     //////////////////////////////////////////////////////////////////////////////
@@ -316,5 +369,58 @@ trait WW_Confrontation
             'horde_dice' => $horde_dice,
             'challenge_dice' => $challenge_dice
         ];
+    }
+
+    //////////////////////////////////////////////////////////////////////////////
+    // Lose Hordier (after confrontation failure)
+    //////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Get arguments for loseHordier state
+     */
+    function argLoseHordier(): array
+    {
+        $player_id = $this->getActivePlayerId();
+        
+        // Get player's horde cards
+        $horde = $this->cards->getCardsInLocation('horde_' . $player_id);
+        
+        return [
+            'horde' => $horde,
+            'horde_count' => count($horde)
+        ];
+    }
+
+    /**
+     * Player abandons a hordier after losing a confrontation
+     */
+    function actAbandonHordier(int $card_id): void
+    {
+        $this->checkAction('actAbandonHordier');
+        $player_id = $this->getActivePlayerId();
+        
+        // Verify the card belongs to the player's horde
+        $card = $this->cards->getCard($card_id);
+        if (!$card || $card['location'] != 'horde_' . $player_id) {
+            throw new BgaUserException($this->_("This card is not in your horde"));
+        }
+        
+        // Move card to discard
+        $this->cards->moveCard($card_id, 'discard');
+        
+        $this->incStat(1, 'hordiers_lost', $player_id);
+        
+        // Get character info for notification
+        $char_info = $this->characters[$card['type_arg']] ?? ['name' => 'Hordier'];
+        
+        $this->notify->all('hordierLost', clienttranslate('${player_name} loses ${character_name}'), [
+            'player_id' => $player_id,
+            'player_name' => $this->getActivePlayerName(),
+            'card_id' => $card_id,
+            'character_name' => $char_info['name']
+        ]);
+        
+        // Go to rest state
+        $this->gamestate->nextState('hordierLost');
     }
 }

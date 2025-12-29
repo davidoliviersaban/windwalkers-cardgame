@@ -70,18 +70,32 @@ $machinestates = [
     25 => [
         "name" => "confrontation",
         "description" => clienttranslate('${actplayer} faces the wind challenge'),
-        "descriptionmyturn" => clienttranslate('${you} must roll dice and overcome the wind'),
+        "descriptionmyturn" => clienttranslate('${you} must roll dice to overcome the wind'),
         "type" => "activeplayer",
         "possibleactions" => [
             "actRollDice",
-            "actUsePower",
-            "actUseMoral",      // Modify dice ±1
-            "actRerollAll",     // Spend moral to reroll all
-            "actConfirmRoll"    // Accept current roll
+            "actUsePower"
         ],
         "args" => "argConfrontation",
         "transitions" => [
-            "rollAgain" => 25,
+            "diceRolled" => 26,
+            "checkResult" => 35
+        ]
+    ],
+
+    26 => [
+        "name" => "diceResult",
+        "description" => clienttranslate('${actplayer} may modify dice or confirm'),
+        "descriptionmyturn" => clienttranslate('${you} may spend moral to modify dice, or confirm your roll'),
+        "type" => "activeplayer",
+        "possibleactions" => [
+            "actUseMoral",
+            "actRerollAll",
+            "actConfirmRoll"
+        ],
+        "args" => "argConfrontation",
+        "transitions" => [
+            "modified" => 26,
             "checkResult" => 35
         ]
     ],

@@ -378,6 +378,8 @@
     padding: 10px;
     background: #e0e0e0;
     border-radius: 5px;
+    align-items: flex-start;
+    align-content: flex-start;
 }
 
 #ww_horde_dice {
@@ -404,6 +406,9 @@
     box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
     cursor: pointer;
     transition: transform 0.2s;
+    /* Ensure dice are not positioned absolutely by ebg.zone or other scripts */
+    position: relative !important;
+    flex-shrink: 0;
 }
 
 .ww_dice:hover {
@@ -492,6 +497,32 @@
 
 .ww_character_card.ww_selected {
     outline: 3px solid var(--color-moral);
+}
+
+/* Selectable card for abandoning */
+.ww_character_card.ww_selectable_card {
+    cursor: pointer;
+    animation: pulse-card 1s infinite;
+}
+
+.ww_character_card.ww_selectable_card:hover {
+    transform: translateY(-5px) scale(1.05);
+    box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+}
+
+@keyframes pulse-card {
+    0%, 100% { box-shadow: 2px 2px 6px rgba(0,0,0,0.3); }
+    50% { box-shadow: 0 0 15px rgba(255, 0, 0, 0.5); }
+}
+
+/* Card lost animation */
+.ww_character_card.ww_card_lost {
+    animation: card-lost 0.5s ease-out forwards;
+}
+
+@keyframes card-lost {
+    0% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(0.5) rotate(10deg); }
 }
 
 /* Card type indicators */

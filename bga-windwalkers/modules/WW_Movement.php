@@ -74,6 +74,17 @@ trait WW_Movement
         $this->gamestate->nextState('rest');
     }
 
+    /**
+     * End turn without resting (keep surpass counters)
+     */
+    function actEndTurn(): void
+    {
+        $this->checkAction('actEndTurn');
+        $player_id = $this->getActivePlayerId();
+        
+        $this->gamestate->nextState('nextTurn');
+    }
+
     //////////////////////////////////////////////////////////////////////////////
     // Tile Validation
     //////////////////////////////////////////////////////////////////////////////
@@ -162,3 +173,5 @@ trait WW_Movement
         $this->DbQuery("UPDATE player SET player_position_q = {$tile['tile_q']}, player_position_r = {$tile['tile_r']} WHERE player_id = $player_id");
     }
 }
+
+

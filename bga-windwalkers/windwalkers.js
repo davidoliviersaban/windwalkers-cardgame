@@ -41,6 +41,9 @@ function (dojo, declare) {
             // Player info
             this.playerMoral = {};
             this.playerDice = {};
+
+            // Surpass flow: when true, next tile click will trigger surpass-and-move
+            this.awaitingSurpassSelection = false;
         },
         
         /*
@@ -265,18 +268,14 @@ function (dojo, declare) {
         
         /**
          * Setup dice display zone
+         * Note: We're not using ebg.zone anymore because it causes stacking issues
+         * Instead, we use simple flexbox layout defined in CSS
          */
         setupDiceZone: function()
         {
-            // Horde dice zone
-            this.hordeDiceZone = new ebg.zone();
-            this.hordeDiceZone.create(this, 'ww_horde_dice', 60, 60);
-            this.hordeDiceZone.setPattern('diagonal');
-            
-            // Wind dice zone
-            this.windDiceZone = new ebg.zone();
-            this.windDiceZone.create(this, 'ww_wind_dice', 60, 60);
-            this.windDiceZone.setPattern('diagonal');
+            // Just clear the containers - CSS handles the layout
+            $('ww_horde_dice').innerHTML = '';
+            $('ww_wind_dice').innerHTML = '';
         },
         
         ///////////////////////////////////////////////////
@@ -300,6 +299,12 @@ function (dojo, declare) {
                     dojo.style('ww_dice_panel', 'display', 'block');
                     dojo.style('ww_draft_panel', 'display', 'none');
                     
+                    // Clear dice from previous turn
+                    this.clearDice();
+                    
+                    // Reset wind force display
+                    $('ww_wind_force').innerHTML = '-';
+                    
                     if (this.isCurrentPlayerActive()) {
                         this.highlightAdjacentTiles(args.args.adjacent);
                     }
@@ -309,8 +314,20 @@ function (dojo, declare) {
                     this.showConfrontation(args.args);
                     break;
                     
+                case 'diceResult':
+                    // Keep dice visible, they were already created by notification
+                    // Just update wind force if needed
+                    if (args.args && args.args.wind_force !== null && args.args.wind_force !== undefined) {
+                        $('ww_wind_force').innerHTML = args.args.wind_force;
+                    }
+                    break;
+                    
                 case 'continueOrSurpass':
                     this.showSurpassChoice(args.args);
+                    break;
+                    
+                case 'loseHordier':
+                    this.showLoseHordierChoice(args.args);
                     break;
             }
         },
@@ -324,9 +341,9 @@ function (dojo, declare) {
                     this.clearTileHighlights();
                     break;
                     
-                case 'confrontation':
-                    this.clearDice();
-                    break;
+                // Note: We don't clear dice when leaving confrontation
+                // because we might be rolling again (staying in same state)
+                // Dice are cleared at the start of a new confrontation instead
             }
         },
         
@@ -342,8 +359,11 @@ function (dojo, declare) {
                         
                     case 'playerTurn':
                         this.addActionButton('btn_rest', _('Rest'), 'onRest', null, false, 'gray');
+                        if (args.can_surpass) {
+                            this.addActionButton('btn_surpass', _('Surpass (-1 die)'), 'onSurpass');
+                        }
                         break;
-                        
+
                     case 'confrontation':
                         this.addActionButton('btn_roll', _('Roll Dice'), 'onRollDice');
                         break;
@@ -353,12 +373,9 @@ function (dojo, declare) {
                         this.addActionButton('btn_moral_minus', _('-1 (spend moral)'), 'onMoralMinus');
                         this.addActionButton('btn_confirm_roll', _('Confirm'), 'onConfirmRoll');
                         break;
-                        
-                    case 'continueOrSurpass':
-                        if (args.can_surpass) {
-                            this.addActionButton('btn_surpass', _('Surpass (-1 die)'), 'onSurpass');
-                        }
-                        this.addActionButton('btn_end_turn', _('End Turn'), 'onEndTurn');
+
+                    case 'loseHordier':
+                        // Buttons are created dynamically in showLoseHordierChoice
                         break;
                 }
             }
@@ -577,54 +594,108 @@ function (dojo, declare) {
         
         /**
          * Show dice for confrontation
+         * This is called when entering the confrontation state
+         * It displays any dice that were already rolled and stored in the database
          */
         showConfrontation: function(args)
         {
-            // Display horde dice
-            for (var dice_id in args.horde_dice) {
-                var dice = args.horde_dice[dice_id];
-                this.createDice(dice, 'ww_horde_dice');
+            // Clear existing dice first to avoid duplicates
+            // (in case we're re-entering the state after rollAgain)
+            this.clearDice('horde');
+            this.clearDice('wind');
+            
+            // Display horde dice from database
+            if (args.horde_dice) {
+                for (var dice_id in args.horde_dice) {
+                    var dice = args.horde_dice[dice_id];
+                    this.createDice(dice, 'ww_horde_dice');
+                }
             }
             
-            // Display wind/terrain dice
-            for (var dice_id in args.wind_dice) {
-                var dice = args.wind_dice[dice_id];
-                this.createDice(dice, 'ww_wind_dice');
+            // Display challenge dice from database
+            if (args.challenge_dice) {
+                for (var dice_id in args.challenge_dice) {
+                    var dice = args.challenge_dice[dice_id];
+                    this.createDice(dice, 'ww_wind_dice');
+                }
             }
             
             // Show wind force
-            $('ww_wind_force').innerHTML = args.wind_force;
+            if (args.wind_force !== null && args.wind_force !== undefined) {
+                $('ww_wind_force').innerHTML = args.wind_force;
+            }
         },
         
         /**
          * Create a dice element
+         * @param {Object} dice - Dice data with id, type, and value
+         *        Can use either 'dice_id'/'dice_type'/'dice_value' (from DB)
+         *        or 'id'/'type'/'value' (from notifications)
+         * @param {string} container - Container element ID
          */
         createDice: function(dice, container)
         {
-            var diceHtml = '<div id="dice_' + dice.dice_id + '" ' +
-                           'class="ww_dice ww_dice_' + dice.dice_type + '" ' +
-                           'data-value="' + dice.dice_value + '">' +
-                           dice.dice_value +
+            // Normalize dice properties (handle both DB format and notification format)
+            var diceId = dice.dice_id || dice.id || ('dice_' + Math.random().toString(36).substr(2, 9));
+            var diceType = dice.dice_type || dice.type || 'blue';
+            var diceValue = dice.dice_value || dice.value || '?';
+            
+            var diceHtml = '<div id="dice_' + diceId + '" ' +
+                           'class="ww_dice ww_dice_' + diceType + '" ' +
+                           'data-dice-id="' + diceId + '" ' +
+                           'data-value="' + diceValue + '">' +
+                           diceValue +
                            '</div>';
             
             dojo.place(diceHtml, container);
             
-            // Add to zone
-            if (container == 'ww_horde_dice') {
-                this.hordeDiceZone.placeInZone('dice_' + dice.dice_id);
-            } else {
-                this.windDiceZone.placeInZone('dice_' + dice.dice_id);
+            // Add click handler for horde dice (player can select them to modify)
+            if (container === 'ww_horde_dice') {
+                var self = this;
+                dojo.connect($('dice_' + diceId), 'onclick', function(evt) {
+                    dojo.stopEvent(evt);
+                    self.onDiceClick(diceId);
+                });
             }
         },
         
         /**
-         * Clear all dice
+         * Handle dice click - select/deselect for modification
          */
-        clearDice: function()
+        onDiceClick: function(diceId)
         {
-            dojo.query('.ww_dice').forEach(function(node) {
-                dojo.destroy(node);
-            });
+            console.log('Dice clicked:', diceId);
+            
+            var diceEl = $('dice_' + diceId);
+            if (!diceEl) return;
+            
+            // Deselect all other dice
+            dojo.query('#ww_horde_dice .ww_dice').removeClass('ww_selected');
+            
+            // Select this dice
+            dojo.addClass(diceEl, 'ww_selected');
+            this.selectedDice = [diceId];
+            
+            console.log('Selected dice:', this.selectedDice);
+        },
+        
+        /**
+         * Clear dice from a specific container or all dice
+         * @param {string|null} container - 'horde', 'wind', or null for all
+         */
+        clearDice: function(container)
+        {
+            if (container === 'horde') {
+                $('ww_horde_dice').innerHTML = '';
+                this.selectedDice = [];
+            } else if (container === 'wind') {
+                $('ww_wind_dice').innerHTML = '';
+            } else {
+                // Clear all dice
+                $('ww_horde_dice').innerHTML = '';
+                $('ww_wind_dice').innerHTML = '';
+                this.selectedDice = [];
+            }
         },
         
         /**
@@ -701,6 +772,58 @@ function (dojo, declare) {
             dojo.addClass(tile, 'ww_discovered');
         },
         
+        /**
+         * Show surpass choice interface
+         */
+        showSurpassChoice: function(args)
+        {
+            // Interface is handled by action buttons
+            console.log('Surpass choice:', args);
+        },
+        
+        /**
+         * Show lose hordier choice interface
+         */
+        showLoseHordierChoice: function(args)
+        {
+            console.log('Lose hordier choice:', args);
+            
+            if (!args || !args.horde) {
+                return;
+            }
+            
+            // Make horde cards selectable
+            var self = this;
+            for (var card_id in args.horde) {
+                var cardEl = $('horde_card_' + card_id);
+                if (cardEl) {
+                    dojo.addClass(cardEl, 'ww_selectable_card');
+                    
+                    // Add click handler
+                    (function(cid) {
+                        dojo.connect(cardEl, 'onclick', function(evt) {
+                            dojo.stopEvent(evt);
+                            self.onAbandonHordier(cid);
+                        });
+                    })(card_id);
+                }
+            }
+            
+            this.showMessage(_("You must abandon a Hordier! Click on a card to abandon it."), "info");
+        },
+        
+        /**
+         * Handle abandoning a hordier
+         */
+        onAbandonHordier: function(card_id)
+        {
+            console.log('Abandoning hordier:', card_id);
+            
+            this.bgaPerformAction('actAbandonHordier', {
+                card_id: parseInt(card_id)
+            });
+        },
+        
         ///////////////////////////////////////////////////
         //// Player's action handlers
         
@@ -718,9 +841,17 @@ function (dojo, declare) {
             
             this.selectedTile = tile_id;
             
-            this.bgaPerformAction('actSelectTile', {
-                tile_id: tile_id
-            });
+            // If player has chosen to surpass, use the dedicated server action
+            if (this.awaitingSurpassSelection) {
+                this.awaitingSurpassSelection = false;
+                this.bgaPerformAction('actSurpassAndSelectTile', {
+                    tile_id: tile_id
+                });
+            } else {
+                this.bgaPerformAction('actSelectTile', {
+                    tile_id: tile_id
+                });
+            }
         },
         
         onRollDice: function(evt)
@@ -740,7 +871,7 @@ function (dojo, declare) {
             }
             
             this.bgaPerformAction('actUseMoral', {
-                dice_id: this.selectedDice[0],
+                dice_id: parseInt(this.selectedDice[0]),
                 modifier: 1
             });
         },
@@ -755,7 +886,7 @@ function (dojo, declare) {
             }
             
             this.bgaPerformAction('actUseMoral', {
-                dice_id: this.selectedDice[0],
+                dice_id: parseInt(this.selectedDice[0]),
                 modifier: -1
             });
         },
@@ -771,14 +902,9 @@ function (dojo, declare) {
         {
             dojo.stopEvent(evt);
             
-            this.bgaPerformAction('actSurpass', {});
-        },
-        
-        onEndTurn: function(evt)
-        {
-            dojo.stopEvent(evt);
-            
-            this.bgaPerformAction('actEndTurn', {});
+            // Toggle surpass mode: next tile click will perform surpass-and-move
+            this.awaitingSurpassSelection = true;
+            this.showMessage(_("Select a tile to surpass and move (you will roll with -1 die)"), "info");
         },
         
         onRest: function(evt)
@@ -830,27 +956,44 @@ function (dojo, declare) {
             
             dojo.subscribe('draftComplete', this, "notif_draftComplete");
             this.notifqueue.setSynchronous('draftComplete', 500);
+            
+            // Hordier lost notification
+            dojo.subscribe('hordierLost', this, "notif_hordierLost");
+            this.notifqueue.setSynchronous('hordierLost', 500);
         },
         
         notif_diceRolled: function(notif)
         {
             console.log('notif_diceRolled', notif);
             
-            // Clear existing dice
-            this.clearDice();
+            // Clear only horde dice, keep wind dice visible
+            this.clearDice('horde');
             
-            // Create new dice with animation
+            // Sort dice by value (smallest to largest)
+            var sortedDice = notif.args.dice.slice().sort(function(a, b) {
+                return (a.value || 0) - (b.value || 0);
+            });
+            
+            // Create all sorted dice immediately (without setTimeout)
             var self = this;
-            notif.args.dice.forEach(function(dice, index) {
+            sortedDice.forEach(function(dice) {
+                self.createDice({
+                    dice_id: dice.id,
+                    dice_type: dice.type,
+                    dice_value: dice.value
+                }, 'ww_horde_dice');
+            });
+            
+            // Animate all dice with staggered timing
+            var animationDelay = 0;
+            sortedDice.forEach(function(dice) {
                 setTimeout(function() {
-                    self.createDice({
-                        dice_id: 'horde_' + index,
-                        dice_type: dice.type,
-                        dice_value: dice.value
-                    }, 'ww_horde_dice');
-                    
-                    self.animateDiceRoll($('dice_horde_' + index));
-                }, index * 100);
+                    var diceEl = $('dice_' + dice.id);
+                    if (diceEl) {
+                        self.animateDiceRoll(diceEl);
+                    }
+                }, animationDelay);
+                animationDelay += 100;
             });
         },
         
@@ -860,28 +1003,54 @@ function (dojo, declare) {
             
             this.revealWindToken(notif.args.tile_id, notif.args.force);
             
-            // Show wind dice (white_dice from PHP)
-            var self = this;
+            // Clear only wind dice before adding new ones
+            this.clearDice('wind');
+            
+            // Separate white/green from black dice
+            var windForceDice = [];
+            var blackDice = [];
+            
+            // Collect white dice
             (notif.args.white_dice || []).forEach(function(dice, index) {
-                self.createDice({
-                    dice_id: 'white_' + index,
-                    dice_type: 'white',
-                    dice_value: dice.value
-                }, 'ww_wind_dice');
+                windForceDice.push({
+                    type: 'white',
+                    value: dice.value,
+                    originalIndex: index
+                });
             });
             
+            // Collect green dice
             (notif.args.green_dice || []).forEach(function(dice, index) {
-                self.createDice({
-                    dice_id: 'green_' + index,
-                    dice_type: 'green',
-                    dice_value: dice.value
-                }, 'ww_wind_dice');
+                windForceDice.push({
+                    type: 'green',
+                    value: dice.value,
+                    originalIndex: index
+                });
             });
             
+            // Collect black dice (separate, not sorted with white/green)
             (notif.args.black_dice || []).forEach(function(dice, index) {
+                blackDice.push({
+                    type: 'black',
+                    value: dice.value,
+                    originalIndex: index
+                });
+            });
+            
+            // Sort wind force dice (white + green) by value
+            windForceDice.sort(function(a, b) {
+                return (a.value || 0) - (b.value || 0);
+            });
+            
+            // Combine: sorted wind force dice, then black dice
+            var allWindDice = windForceDice.concat(blackDice);
+            
+            // Create all wind dice
+            var self = this;
+            allWindDice.forEach(function(dice) {
                 self.createDice({
-                    dice_id: 'black_' + index,
-                    dice_type: 'black',
+                    dice_id: dice.type + '_' + dice.originalIndex,
+                    dice_type: dice.type,
                     dice_value: dice.value
                 }, 'ww_wind_dice');
             });
@@ -944,6 +1113,11 @@ function (dojo, declare) {
         notif_playerRests: function(notif)
         {
             console.log('notif_playerRests', notif);
+            
+            // Reset dice count to base value (surpass count reset to 0)
+            var player_id = notif.args.player_id;
+            var baseDice = this.gamedatas.players[player_id].dice_count || 6;
+            this.updateDiceCount(player_id, baseDice);
         },
         
         notif_playerMoves: function(notif)
@@ -1011,6 +1185,25 @@ function (dojo, declare) {
                                '</div>';
                 
                 dojo.place(cardHtml, hordeEl);
+            }
+        },
+        
+        /**
+         * Handle hordier lost notification
+         */
+        notif_hordierLost: function(notif)
+        {
+            console.log('notif_hordierLost', notif);
+            
+            // Remove the card from horde display
+            var cardEl = $('horde_card_' + notif.args.card_id);
+            if (cardEl) {
+                // Animate card removal
+                dojo.addClass(cardEl, 'ww_card_lost');
+                var self = this;
+                setTimeout(function() {
+                    dojo.destroy(cardEl);
+                }, 500);
             }
         }
    });

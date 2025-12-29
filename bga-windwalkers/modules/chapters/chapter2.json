@@ -1,0 +1,141 @@
+{
+  "title": "Windwalker - Chapter 2",
+  "start_city": "portchoon",
+  "end_city": "chawondasee",
+  "grid": [
+    {
+      "q": 3,
+      "r": 4,
+      "type": "building",
+      "name": "portchoon",
+      "city": true,
+      "start": true
+    },
+    {
+      "q": 3,
+      "r": 2,
+      "type": "building",
+      "name": "tourfontaine",
+      "special": true
+    },
+    {
+      "q": 3,
+      "r": 1,
+      "type": "terrain",
+      "name": "water"
+    },
+    {
+      "q": 3,
+      "r": 3,
+      "type": "terrain",
+      "name": "water"
+    },
+    {
+      "q": 4,
+      "r": 2,
+      "type": "terrain",
+      "name": "water"
+    },
+    {
+      "q": 4,
+      "r": 1,
+      "type": "terrain",
+      "name": "water"
+    },
+    {
+      "q": 5,
+      "r": 2,
+      "type": "terrain",
+      "name": "water"
+    },
+    {
+      "q": 6,
+      "r": 1,
+      "type": "terrain",
+      "name": "water"
+    },
+    {
+      "q": 6,
+      "r": 0,
+      "type": "terrain",
+      "name": "water"
+    },
+    {
+      "q": 5,
+      "r": 0,
+      "type": "terrain",
+      "name": "water"
+    },
+    {
+      "q": 5,
+      "r": 1,
+      "type": "building",
+      "name": "village_green",
+      "village": true
+    },
+    {
+      "q": 3,
+      "r": 0,
+      "type": "building",
+      "name": "chawondasee",
+      "city": true,
+      "end": true
+    },
+    {
+      "q": 7,
+      "r": 1,
+      "type": "building",
+      "name": "village_red",
+      "village": true
+    },
+    {
+      "q": 6,
+      "r": -1,
+      "type": "building",
+      "name": "village_blue",
+      "village": true
+    },
+    {
+      "q": 4,
+      "r": 0,
+      "type": "terrain",
+      "name": "hut"
+    },
+    {
+      "q": 6,
+      "r": 2,
+      "type": "terrain",
+      "name": "hut"
+    },
+    {
+      "q": 5,
+      "r": -1,
+      "type": "terrain",
+      "name": "forest"
+    },
+    {
+      "q": 4,
+      "r": 3,
+      "type": "terrain",
+      "name": "forest"
+    },
+    {
+      "q": 5,
+      "r": 3,
+      "type": "terrain",
+      "name": "mountain"
+    },
+    {
+      "q": 7,
+      "r": 0,
+      "type": "terrain",
+      "name": "mountain"
+    },
+    {
+      "q": 7,
+      "r": -1,
+      "type": "terrain",
+      "name": "plain"
+    }
+  ]
+}

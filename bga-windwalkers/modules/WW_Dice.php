@@ -22,16 +22,25 @@ trait WW_Dice
     }
     
     /**
-     * Store dice rolls in database
+     * Store dice rolls in database and return dice with their DB IDs
      */
-    function storeDiceRolls(array $dice_list): void
+    function storeDiceRolls(array $dice_list): array
     {
+        $result = [];
         foreach ($dice_list as $dice) {
             $this->DbQuery(
                 "INSERT INTO dice_roll (dice_type, dice_value, dice_owner) 
                  VALUES ('{$dice['type']}', {$dice['value']}, '{$dice['owner']}')"
             );
+            $dice_id = $this->DbGetLastId();
+            $result[] = [
+                'id' => $dice_id,
+                'type' => $dice['type'],
+                'value' => $dice['value'],
+                'owner' => $dice['owner']
+            ];
         }
+        return $result;
     }
     
     /**
