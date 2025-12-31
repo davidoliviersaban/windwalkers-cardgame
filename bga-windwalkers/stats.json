@@ -62,6 +62,11 @@
       "name": "Successful surpass",
       "type": "int"
     },
+    "surpass_points": {
+      "id": 22,
+      "name": "Surpass points earned",
+      "type": "int"
+    },
     "furevents_defeated": {
       "id": 17,
       "name": "Furevents defeated",

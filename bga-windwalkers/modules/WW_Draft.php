@@ -18,6 +18,37 @@ trait WW_Draft
         ];
     }
 
+    /**
+     * Get horde cards with power_used status (direct SQL query to get all columns)
+     */
+    function getHordeWithPowerStatus(int $player_id): array
+    {
+        $location = 'horde_' . $player_id;
+        $cards = $this->getCollectionFromDb(
+            "SELECT card_id, card_type, card_type_arg, card_location, card_location_arg, card_is_leader, card_power_used 
+             FROM card WHERE card_location = '$location'"
+        );
+        
+        // Enrich with character info and normalize keys for JS
+        $enriched = [];
+        foreach ($cards as $card) {
+            $type_arg = $card['card_type_arg'];
+            $card_id = $card['card_id'];
+            
+            $charInfo = $this->characters[$type_arg] ?? [];
+            $card['name'] = $charInfo['name'] ?? 'Unknown';
+            $card['char_type'] = $charInfo['type'] ?? $card['card_type'];
+            $card['is_leader'] = !empty($charInfo['is_leader']);
+            $card['power'] = $charInfo['power'] ?? '';
+            // Normalize for JS (expects both formats)
+            $card['id'] = $card_id;
+            $card['type_arg'] = $type_arg;
+            $card['power_used'] = (int)$card['card_power_used'];
+            $enriched[$card_id] = $card;
+        }
+        return $enriched;
+    }
+
     //////////////////////////////////////////////////////////////////////////////
     // Draft Actions
     //////////////////////////////////////////////////////////////////////////////
@@ -28,9 +59,9 @@ trait WW_Draft
         $requirements = $this->getHordeRequirements();
         $selected_cards = [];
         
-        // First, recruit traceur (fer with is_leader)
+        // First, recruit 1 traceur (is_leader = 1)
         $traceurs = $this->getCollectionFromDb(
-            "SELECT * FROM card WHERE card_type = 'fer' AND card_is_leader = 1 AND card_location = 'deck' LIMIT 1"
+            "SELECT * FROM card WHERE card_type = 'traceur' AND card_location = 'deck' ORDER BY RAND() LIMIT " . $requirements['traceur']
         );
         foreach ($traceurs as $card) {
             $card_id = $card['card_id'] ?? $card['id'];
@@ -38,9 +69,9 @@ trait WW_Draft
             $selected_cards[] = $card_id;
         }
         
-        // Then recruit fer (non-leaders)
+        // Then recruit fer
         $fers = $this->getCollectionFromDb(
-            "SELECT * FROM card WHERE card_type = 'fer' AND card_is_leader = 0 AND card_location = 'deck' LIMIT " . $requirements['fer']
+            "SELECT * FROM card WHERE card_type = 'fer' AND card_location = 'deck' ORDER BY RAND() LIMIT " . $requirements['fer']
         );
         foreach ($fers as $card) {
             $card_id = $card['card_id'] ?? $card['id'];
@@ -49,7 +80,9 @@ trait WW_Draft
         }
         
         // Recruit pack
-        $packs = $this->cards->getCardsOfTypeInLocation('pack', null, 'deck', $requirements['pack']);
+        $packs = $this->getCollectionFromDb(
+            "SELECT * FROM card WHERE card_type = 'pack' AND card_location = 'deck' ORDER BY RAND() LIMIT " . $requirements['pack']
+        );
         foreach ($packs as $card) {
             $card_id = $card['card_id'] ?? $card['id'];
             $this->cards->moveCard($card_id, 'horde_' . $player_id);
@@ -57,7 +90,9 @@ trait WW_Draft
         }
         
         // Recruit traine
-        $traines = $this->cards->getCardsOfTypeInLocation('traine', null, 'deck', $requirements['traine']);
+        $traines = $this->getCollectionFromDb(
+            "SELECT * FROM card WHERE card_type = 'traine' AND card_location = 'deck' ORDER BY RAND() LIMIT " . $requirements['traine']
+        );
         foreach ($traines as $card) {
             $card_id = $card['card_id'] ?? $card['id'];
             $this->cards->moveCard($card_id, 'horde_' . $player_id);
@@ -116,20 +151,13 @@ trait WW_Draft
         }
         
         $horde = $this->cards->getCardsInLocation('horde_' . $player_id);
-        $type_arg = $card['card_type_arg'] ?? $card['type_arg'] ?? null;
         $card_type = $card['card_type'] ?? $card['type'] ?? '';
         $card_id = $card['card_id'] ?? $card['id'] ?? 0;
-        
-        $char_info = $this->characters[$type_arg] ?? [];
-        $actual_type = $char_info['type'] ?? $card_type;
-        $is_leader = !empty($char_info['is_leader']);
         
         $counts = $this->countHordeByType($horde);
         $requirements = $this->getHordeRequirements();
         
-        $type_key = $is_leader ? 'traceur' : $actual_type;
-        
-        if ($counts[$type_key] >= $requirements[$type_key]) {
+        if (!isset($requirements[$card_type]) || $counts[$card_type] >= $requirements[$card_type]) {
             throw new BgaUserException($this->_("You already have enough characters of this type"));
         }
         
@@ -196,6 +224,7 @@ trait WW_Draft
     
     /**
      * Count cards in horde by type
+     * card_type is directly 'traceur', 'fer', 'pack', or 'traine'
      */
     function countHordeByType(array $horde): array
     {
@@ -207,18 +236,10 @@ trait WW_Draft
         ];
         
         foreach ($horde as $card) {
-            // Handle both card_type_arg and type_arg keys
-            $type_arg = $card['card_type_arg'] ?? $card['type_arg'] ?? null;
             $card_type = $card['card_type'] ?? $card['type'] ?? null;
             
-            $char_info = $this->characters[$type_arg] ?? [];
-            $actual_type = $char_info['type'] ?? $card_type;
-            $is_leader = !empty($char_info['is_leader']);
-            
-            if ($is_leader) {
-                $counts['traceur']++;
-            } else if (isset($counts[$actual_type])) {
-                $counts[$actual_type]++;
+            if ($card_type && isset($counts[$card_type])) {
+                $counts[$card_type]++;
             }
         }
         
@@ -321,17 +342,10 @@ trait WW_Draft
      */
     private function zombieRecruitType(int $player_id, string $type, array &$counts): bool
     {
-        if ($type == 'traceur') {
-            $cards = $this->getCollectionFromDb(
-                "SELECT * FROM card WHERE card_type = 'fer' AND card_is_leader = 1 AND card_location = 'deck'"
-            );
-        } else if ($type == 'fer') {
-            $cards = $this->getCollectionFromDb(
-                "SELECT * FROM card WHERE card_type = 'fer' AND card_is_leader = 0 AND card_location = 'deck' LIMIT 1"
-            );
-        } else {
-            $cards = $this->cards->getCardsOfTypeInLocation($type, null, 'deck');
-        }
+        // All types use their actual card_type value
+        $cards = $this->getCollectionFromDb(
+            "SELECT * FROM card WHERE card_type = '$type' AND card_location = 'deck' ORDER BY RAND() LIMIT 1"
+        );
         
         if (empty($cards)) {
             return false;
@@ -365,7 +379,18 @@ trait WW_Draft
         
         // Get current recruit pool and verify card is in it
         $recruitPool = $this->getRecruitPool($player_id);
-        if (!isset($recruitPool[$card_id])) {
+        
+        // Check if card_id is in the pool (keys can be card_id directly or string)
+        $found = false;
+        foreach ($recruitPool as $key => $poolCard) {
+            $poolCardId = $poolCard['card_id'] ?? $key;
+            if ($poolCardId == $card_id) {
+                $found = true;
+                break;
+            }
+        }
+        
+        if (!$found) {
             throw new BgaUserException($this->_("This card is not available for recruitment"));
         }
         
@@ -373,20 +398,36 @@ trait WW_Draft
         $this->cards->moveCard($card_id, 'horde_' . $player_id);
         
         $type_arg = $card['card_type_arg'] ?? $card['type_arg'] ?? null;
+        $card_type = $card['card_type'] ?? $card['type'] ?? 'character';
         $char_info = $this->characters[$type_arg] ?? ['name' => 'Hordier'];
         
         $this->notifyAllPlayers('hordierRecruited', clienttranslate('${player_name} recruits ${character_name}'), [
             'player_id' => $player_id,
             'player_name' => $this->getActivePlayerName(),
             'card_id' => $card_id,
-            'character_name' => $char_info['name']
+            'card_type' => $card_type,
+            'card_type_arg' => $type_arg,
+            'character_name' => $char_info['name'],
+            'card' => [
+                'card_id' => $card_id,
+                'card_type' => $card_type,
+                'card_type_arg' => $type_arg
+            ]
         ]);
         
-        $this->gamestate->nextState('recruited');
+        // Check if player now has more than 8 hordiers
+        $hordeCount = count($this->cards->getCardsInLocation('horde_' . $player_id));
+        if ($hordeCount > 8) {
+            $this->gamestate->nextState('mustRelease');
+        } else {
+            $this->gamestate->nextState('recruited');
+        }
     }
 
     /**
      * Release a hordier (during recruitment to make room)
+     * In a village: card goes to village recruit pool
+     * Elsewhere: card goes to discard
      */
     function actReleaseHordier(int $card_id): void
     {
@@ -399,20 +440,41 @@ trait WW_Draft
             throw new BgaUserException($this->_("This card is not in your horde"));
         }
         
-        // Move card to discard
-        $this->cards->moveCard($card_id, 'discard');
+        // Get current tile to check if in village
+        $player = $this->getObjectFromDB("SELECT * FROM player WHERE player_id = $player_id");
+        $chapter = $this->getGameStateValue('current_chapter');
+        $tile = $this->getTileAt((int)$player['player_position_q'], (int)$player['player_position_r'], $chapter);
+        
+        // Add card to recruit pool or discard
+        $this->addCardToRecruitPool($card_id, $tile);
         
         $type_arg = $card['card_type_arg'] ?? $card['type_arg'] ?? null;
         $char_info = $this->characters[$type_arg] ?? ['name' => 'Hordier'];
         
-        $this->notifyAllPlayers('hordierReleased', clienttranslate('${player_name} releases ${character_name}'), [
+        $destination = ($tile && ($tile['tile_type'] == 'village' || $tile['tile_type'] == 'city')) ? 'recruit pool' : 'discard';
+        $isRecruitLocation = $tile && ($tile['tile_type'] == 'village' || $tile['tile_type'] == 'city');
+        
+        $this->notifyAllPlayers('hordierReleased', clienttranslate('${player_name} releases ${character_name} to ${destination}'), [
             'player_id' => $player_id,
             'player_name' => $this->getActivePlayerName(),
             'card_id' => $card_id,
-            'character_name' => $char_info['name']
+            'character_name' => $char_info['name'],
+            'destination' => $destination,
+            'tile_type' => $tile ? $tile['tile_type'] : null,
+            'card' => $isRecruitLocation ? [
+                'card_id' => $card_id,
+                'card_type' => $card['card_type'] ?? $card['type'],
+                'card_type_arg' => $type_arg
+            ] : null
         ]);
         
-        $this->gamestate->nextState('recruited');
+        // Determine which transition to use based on current state
+        $stateName = $this->gamestate->state()['name'];
+        if ($stateName == 'mustReleaseHordier') {
+            $this->gamestate->nextState('released');
+        } else {
+            $this->gamestate->nextState('recruited');
+        }
     }
 
     /**
@@ -460,5 +522,52 @@ trait WW_Draft
         
         // TODO: Implement specific power effects based on character
         // For now, just stay in current state
+    }
+    
+    /**
+     * Rest one exhausted Hordier (reactivate power)
+     * If card_id is provided, rest that specific card. Otherwise, rest the first exhausted one.
+     * Returns the rested card or null if none available
+     */
+    function restOneHordier(int $player_id, ?int $card_id = null): ?array
+    {
+        // Find exhausted Hordier (specific or first available)
+        if ($card_id !== null) {
+            $exhausted_card = $this->getObjectFromDB(
+                "SELECT * FROM card WHERE card_id = $card_id AND card_location = 'horde_$player_id' AND card_power_used = 1 LIMIT 1"
+            );
+        } else {
+            $exhausted_card = $this->getObjectFromDB(
+                "SELECT * FROM card WHERE card_location = 'horde_$player_id' AND card_power_used = 1 LIMIT 1"
+            );
+        }
+        
+        if (!$exhausted_card) {
+            return null;
+        }
+        
+        // Reactivate power
+        $this->DbQuery("UPDATE card SET card_power_used = 0 WHERE card_id = " . $exhausted_card['card_id']);
+        
+        return $exhausted_card;
+    }
+    
+    /**
+     * Rest all Hordiers (reactivate all powers) - used in cities
+     * Returns the number of Hordiers rested
+     */
+    function restAllHordiers(int $player_id): int
+    {
+        // Count exhausted Hordiers
+        $count = (int)$this->getUniqueValueFromDB(
+            "SELECT COUNT(*) FROM card WHERE card_location = 'horde_$player_id' AND card_power_used = 1"
+        );
+        
+        if ($count > 0) {
+            // Reactivate all powers
+            $this->DbQuery("UPDATE card SET card_power_used = 0 WHERE card_location = 'horde_$player_id'");
+        }
+        
+        return $count;
     }
 }

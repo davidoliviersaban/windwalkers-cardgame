@@ -345,14 +345,28 @@ trait WW_Confrontation
         $this->incStat(1, 'confrontations_won', $player_id);
         $this->incStat(1, 'tiles_traversed', $player_id);
         
+        // 1 point for tile traversed
+        $points_earned = 1;
+        
         if ($result['wind_force'] == 6) {
             $this->incStat(1, 'furevents_defeated', $player_id);
             $this->incStat(1, 'furevents_defeated');
+            // 3 points for furevent
+            $points_earned += 3;
         }
         
-        // Award surpass points
-        $surpass_count = $this->getUniqueValueFromDB("SELECT player_surpass_count FROM player WHERE player_id = $player_id");
-        $this->DbQuery("UPDATE player SET player_score = player_score + $surpass_count WHERE player_id = $player_id");
+        // Award surpass points (cumulative: 0, 1, 2, 3, 4, 5...)
+        $surpass_count = (int)$this->getUniqueValueFromDB("SELECT player_surpass_count FROM player WHERE player_id = $player_id");
+        if ($surpass_count > 0) {
+            $this->incStat($surpass_count, 'surpass_points', $player_id);
+            $points_earned += $surpass_count;
+        }
+        
+        // Increment score directly in player table
+        $this->DbQuery("UPDATE player SET player_score = player_score + $points_earned WHERE player_id = $player_id");
+        
+        // Get new score to notify
+        $new_score = $this->getUniqueValueFromDB("SELECT player_score FROM player WHERE player_id = $player_id");
         
         $this->notifyAllPlayers('confrontationSuccess', clienttranslate('${player_name} overcomes the wind! (+${surpass_points} points for surpass)'), [
             'player_id' => $player_id,
@@ -361,7 +375,8 @@ trait WW_Confrontation
             'wind_sum' => $result['wind_sum'],
             'surpass_points' => $surpass_count,
             'wind_value_counts' => $result['wind_counts'],
-            'player_value_counts' => $result['player_counts']
+            'player_value_counts' => $result['player_counts'],
+            'new_score' => $new_score
         ]);
         
         // Move player
@@ -406,6 +421,7 @@ trait WW_Confrontation
      */
     function argConfrontation(): array
     {
+        $player_id = $this->getActivePlayerId();
         $tile_id = $this->getGameStateValue('selected_tile');
         $tile = $this->getObjectFromDB("SELECT * FROM tile WHERE tile_id = $tile_id");
         
@@ -416,7 +432,8 @@ trait WW_Confrontation
             'tile' => $tile,
             'wind_force' => $tile['tile_wind_force'],
             'horde_dice' => $horde_dice,
-            'challenge_dice' => $challenge_dice
+            'challenge_dice' => $challenge_dice,
+            'horde' => $this->getHordeWithPowerStatus($player_id)
         ];
     }
 
@@ -431,8 +448,8 @@ trait WW_Confrontation
     {
         $player_id = $this->getActivePlayerId();
         
-        // Get player's horde cards
-        $horde = $this->cards->getCardsInLocation('horde_' . $player_id);
+        // Get player's horde cards with power_used status
+        $horde = $this->getHordeWithPowerStatus($player_id);
         
         return [
             'horde' => $horde,
@@ -471,7 +488,56 @@ trait WW_Confrontation
             'character_name' => $char_info['name']
         ]);
         
+        // Check if player has any hordiers left
+        $remaining_hordiers = count($this->cards->getCardsInLocation('horde_' . $player_id));
+        
+        if ($remaining_hordiers == 0) {
+            // Game over for this player - they will be eliminated in the game state
+            $this->notifyAllPlayers('playerEliminated', clienttranslate('${player_name} has lost all Hordiers and is eliminated!'), [
+                'player_id' => $player_id,
+                'player_name' => $this->getActivePlayerName()
+            ]);
+            
+            // Store player to eliminate and transition to game state
+            $this->setGameStateValue('player_to_eliminate', $player_id);
+            $this->gamestate->nextState('eliminate');
+            return;
+        }
+        
         // Go to rest state
         $this->gamestate->nextState('hordierLost');
+    }
+
+    /**
+     * Player voluntarily abandons the game after losing a confrontation
+     */
+    function actAbandonGame(): void
+    {
+        $this->checkAction('actAbandonGame');
+        $player_id = $this->getActivePlayerId();
+        
+        // Notify all players
+        $this->notifyAllPlayers('playerEliminated', clienttranslate('${player_name} has abandoned the expedition!'), [
+            'player_id' => $player_id,
+            'player_name' => $this->getActivePlayerName()
+        ]);
+        
+        // Store player to eliminate and transition to game state
+        $this->setGameStateValue('player_to_eliminate', $player_id);
+        $this->gamestate->nextState('eliminate');
+    }
+
+    /**
+     * Game state action to eliminate a player (can't eliminate active player directly)
+     */
+    function stPlayerElimination(): void
+    {
+        $player_id = $this->getGameStateValue('player_to_eliminate');
+        
+        if ($player_id > 0) {
+            $this->eliminatePlayer($player_id);
+        }
+        
+        $this->gamestate->nextState('gameOver');
     }
 }

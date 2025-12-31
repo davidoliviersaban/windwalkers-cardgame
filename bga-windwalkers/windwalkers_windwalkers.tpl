@@ -13,8 +13,48 @@
 
 <div id="ww_game_area">
     
-    <!-- Top area: Map + Horde panel -->
-    <div id="ww_top_area">
+    <!-- Main game area: Confrontation + Map + Horde (vertical layout) -->
+    <div id="ww_main_area">
+        
+        <!-- Dice panel (Confrontation) -->
+        <div id="ww_dice_panel">
+            <h3>{CONFRONTATION}
+                <div id="ww_info_panel">
+                    <div id="ww_wind_force_display">
+                        <label>{WIND_FORCE}:</label>
+                        <span id="ww_wind_force">-</span>
+                    </div>
+                </div>
+            </h3>
+            
+            <div class="ww_dice_row">
+                <!-- Wind Dice Column -->
+                <div class="ww_dice_section">
+                    <h4>{WIND_DICE}</h4>
+                    <div id="ww_wind_dice">
+                        <!-- Wind dice will appear here -->
+                    </div>
+                    <span id="ww_wind_sum" class="ww_dice_sum"></span>
+                </div>
+                
+                <!-- Horde Dice Column -->
+                <div class="ww_dice_section">
+                    <h4>{HORDE_DICE}</h4>
+                    <div id="ww_horde_dice">
+                        <!-- Blue dice will appear here -->
+                    </div>
+                    <span id="ww_horde_sum" class="ww_dice_sum"></span>
+                </div>
+                
+                <!-- Confrontation result preview -->
+                <div id="ww_confrontation_preview">
+                    <div id="ww_sum_comparison">
+                        <span id="ww_preview_status"></span>
+                    </div>
+                    <div id="ww_matching_details"></div>
+                </div>
+            </div>
+        </div>
         
         <!-- Hex Map with Scrollmap -->
         <div id="ww_map_container">
@@ -32,48 +72,6 @@
             <h3>{MY_HORDE}</h3>
             <div id="ww_horde">
                 <!-- Character cards will be placed here -->
-            </div>
-        </div>
-        
-    </div>
-    
-    <!-- Bottom area: Dice panel + Info -->
-    <div id="ww_bottom_area">
-        
-        <!-- Dice panel -->
-        <div id="ww_dice_panel">
-            <h3>{CONFRONTATION}</h3>
-            
-            <!-- Wind force indicator -->
-            <div id="ww_info_panel">
-                <div id="ww_wind_force_display">
-                    <label>{WIND_FORCE}:</label>
-                    <span id="ww_wind_force">-</span>
-                </div>
-            </div>
-            
-            <div class="ww_dice_column">
-                <div class="ww_dice_section">
-                    <h4>{WIND_DICE} <span id="ww_wind_sum" class="ww_dice_sum"></span></h4>
-                    <div id="ww_wind_dice">
-                        <!-- Wind dice will appear here -->
-                    </div>
-                </div>
-                
-                <div class="ww_dice_section">
-                    <h4>{HORDE_DICE} <span id="ww_horde_sum" class="ww_dice_sum"></span></h4>
-                    <div id="ww_horde_dice">
-                        <!-- Blue dice will appear here -->
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Confrontation result preview -->
-            <div id="ww_confrontation_preview" style="display: none;">
-                <div id="ww_sum_comparison">
-                    <span id="ww_preview_status"></span>
-                </div>
-                <div id="ww_matching_details"></div>
             </div>
         </div>
         

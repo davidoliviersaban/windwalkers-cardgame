@@ -121,6 +121,36 @@ function (dojo, declare) {
             return null;
         },
         
+        disconnect: function(handle) {
+            if (handle) dojo.disconnect(handle);
+        },
+        
+        // Store event handles for later disconnection
+        _eventHandles: {},
+        
+        connectWithId: function(id, event, scope, handler) {
+            var el = typeof id === 'string' ? $(id) : id;
+            if (el) {
+                var elId = el.id || id;
+                var key = elId + '_' + event;
+                // Disconnect existing handler if any
+                if (this._eventHandles[key]) {
+                    dojo.disconnect(this._eventHandles[key]);
+                }
+                this._eventHandles[key] = dojo.connect(el, event, scope, handler);
+                return this._eventHandles[key];
+            }
+            return null;
+        },
+        
+        disconnectById: function(id, event) {
+            var key = id + '_' + event;
+            if (this._eventHandles[key]) {
+                dojo.disconnect(this._eventHandles[key]);
+                delete this._eventHandles[key];
+            }
+        },
+        
         stopEvent: function(evt) {
             dojo.stopEvent(evt);
         },
@@ -273,8 +303,8 @@ function (dojo, declare) {
         HEX_HEIGHT: 86.6,
         Q_OFFSET: 3,
         R_OFFSET: 14,
-        MAP_CENTER_X: 0,
-        MAP_CENTER_Y: 0,
+        MAP_CENTER_X: 1500,  // Center of 3000px scrollable area
+        MAP_CENTER_Y: 1500,  // Center of 3000px scrollable area
         
         /**
          * Create HTML for a wind token (always shows number, never 'F')
@@ -345,8 +375,11 @@ function (dojo, declare) {
             var pos = this.hexToPixelCenter(q, r);
             var token = $('player_token_' + playerId);
             
-            if (token && gameGui.slideToObjectPos) {
-                gameGui.slideToObjectPos(token, 'ww_map_scrollable', pos.x, pos.y, 500);
+            if (token) {
+                // Use CSS transition for smooth animation
+                dojo.style(token, 'transition', 'left 0.5s ease-out, top 0.5s ease-out');
+                dojo.style(token, 'left', pos.x + 'px');
+                dojo.style(token, 'top', pos.y + 'px');
             }
         },
         
@@ -613,6 +646,12 @@ function (dojo, declare) {
             if (gamedatas.selected_tile && gamedatas.selected_tile.tile_wind_force !== null) {
                 WW_DOM.setHtml('ww_wind_force', gamedatas.selected_tile.tile_wind_force);
             }
+            
+            // Update confrontation preview if dice were restored
+            if ((gamedatas.horde_dice && Object.keys(gamedatas.horde_dice).length > 0) ||
+                (gamedatas.challenge_dice && Object.keys(gamedatas.challenge_dice).length > 0)) {
+                this.updateConfrontationPreview();
+            }
         }
     };
     
@@ -663,16 +702,18 @@ function (dojo, declare) {
         addHordeCard: function(card, onCardClick) {
             var cardId = card.card_id || card.id;
             var typeArg = card.card_type_arg || card.type_arg;
+            // Convert to integer - DB returns strings like "0" or "1"
+            var powerUsed = parseInt(card.card_power_used || card.power_used || 0, 10);
             
             this.createCard({
                 prefix: 'ww_horde_item',
                 card: card,
                 containerId: 'ww_horde',
-                extraClass: 'ww_horde_card_item',
+                extraClass: 'ww_horde_card_item' + (powerUsed ? ' ww_card_exhausted' : ''),
                 onClick: onCardClick
             });
             
-            WW_State.addHordeCard(cardId, { id: cardId, type: typeArg });
+            WW_State.addHordeCard(cardId, { id: cardId, type: typeArg, powerUsed: powerUsed });
         },
         
         removeHordeCard: function(cardId, animate) {
@@ -692,23 +733,129 @@ function (dojo, declare) {
         },
         
         makeHordeSelectable: function(hordeData, onSelectCard) {
+            // Clear any existing handlers first to prevent accumulation
+            this.clearHordeSelectable();
+            
             for (var cardId in hordeData) {
                 var cardEl = $('ww_horde_item_' + cardId);
                 if (cardEl) {
                     WW_DOM.addClass(cardEl, 'ww_selectable_card');
                     
-                    (function(cid) {
-                        WW_DOM.connect(cardEl, 'onclick', null, function(evt) {
+                    (function(cid, el) {
+                        WW_DOM.connectWithId(el.id, 'onclick', null, function(evt) {
                             WW_DOM.stopEvent(evt);
                             onSelectCard(cid);
                         });
-                    })(cardId);
+                    })(cardId, cardEl);
                 }
             }
         },
         
         clearHordeSelectable: function() {
-            WW_DOM.removeClassFromAll('.ww_horde_card_item', 'ww_selectable_card');
+            WW_DOM.forEach('.ww_horde_card_item', function(cardEl) {
+                WW_DOM.removeClass(cardEl, 'ww_selectable_card');
+                WW_DOM.disconnectById(cardEl.id, 'onclick');
+            });
+        },
+        
+        /**
+         * Make horde cards usable (clickable to use power)
+         * Only cards that are not exhausted can be clicked
+         */
+        makeHordeUsable: function(onUsePower) {
+            // Clear any existing handlers first to prevent accumulation
+            this.clearHordeUsable();
+            
+            WW_DOM.forEach('.ww_horde_card_item', function(cardEl) {
+                // Only make non-exhausted cards usable
+                if (!WW_DOM.hasClass(cardEl, 'ww_card_exhausted')) {
+                    WW_DOM.addClass(cardEl, 'ww_card_usable');
+                    
+                    var cardId = cardEl.id.replace('ww_horde_item_', '');
+                    WW_DOM.connectWithId(cardEl.id, 'onclick', null, function(evt) {
+                        WW_DOM.stopEvent(evt);
+                        onUsePower(cardId);
+                    });
+                }
+            });
+        },
+        
+        clearHordeUsable: function() {
+            WW_DOM.forEach('.ww_horde_card_item', function(cardEl) {
+                WW_DOM.removeClass(cardEl, 'ww_card_usable');
+                WW_DOM.disconnectById(cardEl.id, 'onclick');
+            });
+        },
+        
+        /**
+         * Make horde cards releasable (clickable to release during recruitment)
+         */
+        makeHordeReleasable: function(hordeData, onReleaseCard) {
+            // Clear any existing handlers first to prevent accumulation
+            this.clearHordeReleasable();
+            
+            WW_DOM.forEach('.ww_horde_card_item', function(cardEl) {
+                WW_DOM.addClass(cardEl, 'ww_card_releasable');
+                
+                var cardId = cardEl.id.replace('ww_horde_item_', '');
+                WW_DOM.connectWithId(cardEl.id, 'onclick', null, function(evt) {
+                    WW_DOM.stopEvent(evt);
+                    onReleaseCard(cardId);
+                });
+            });
+        },
+        
+        clearHordeReleasable: function() {
+            WW_DOM.forEach('.ww_horde_card_item', function(cardEl) {
+                WW_DOM.removeClass(cardEl, 'ww_card_releasable');
+                WW_DOM.disconnectById(cardEl.id, 'onclick');
+            });
+        },
+        
+        /**
+         * Update the exhausted visual state of all horde cards based on server data
+         */
+        updateHordeExhaustedState: function(hordeData) {
+            if (!hordeData) return;
+            
+            for (var cardId in hordeData) {
+                var card = hordeData[cardId];
+                var powerUsed = parseInt(card.card_power_used || card.power_used || 0, 10);
+                this.setCardRested(cardId, !powerUsed);
+            }
+        },
+        
+        /**
+         * Set a card as rested (power available) or exhausted
+         */
+        setCardRested: function(cardId, rested) {
+            var cardEl = $('ww_horde_item_' + cardId);
+            if (cardEl) {
+                if (rested) {
+                    WW_DOM.removeClass(cardEl, 'ww_card_exhausted');
+                    WW_DOM.addClass(cardEl, 'ww_card_rested');
+                    // Animation to show power recovered
+                    WW_DOM.animateClass(cardEl, 'ww_card_pulse', 500);
+                } else {
+                    WW_DOM.addClass(cardEl, 'ww_card_exhausted');
+                    WW_DOM.removeClass(cardEl, 'ww_card_rested');
+                }
+            }
+        },
+        
+        /**
+         * Set all cards of a player as rested
+         */
+        setAllCardsRested: function(playerId) {
+            var self = this;
+            WW_DOM.forEach('.ww_horde_card_item', function(cardEl) {
+                WW_DOM.removeClass(cardEl, 'ww_card_exhausted');
+                WW_DOM.addClass(cardEl, 'ww_card_rested');
+            });
+            // Animation for all cards
+            WW_DOM.forEach('.ww_horde_card_item', function(cardEl) {
+                WW_DOM.animateClass(cardEl, 'ww_card_pulse', 500);
+            });
         },
         
         // Draft Management
@@ -888,16 +1035,44 @@ function (dojo, declare) {
     return declare("bgagame.windwalkers", ebg.core.gamegui, {
         
         constructor: function() {
-            console.log('windwalkers constructor');
             this.animationSpeed = 500;
+            this._lastMessage = '';
+            this._lastMessageTime = 0;
+            this._actionInProgress = false;
+        },
+        
+        // Override showMessage to debounce duplicate messages
+        showMessage: function(msg, type) {
+            var now = Date.now();
+            // Skip if same message within 2 seconds
+            if (msg === this._lastMessage && (now - this._lastMessageTime) < 2000) {
+                return;
+            }
+            this._lastMessage = msg;
+            this._lastMessageTime = now;
+            this.inherited(arguments);
+        },
+        
+        // Wrapper for bgaPerformAction that prevents double-clicks
+        performAction: function(action, args) {
+            if (this._actionInProgress) {
+                return;
+            }
+            
+            this._actionInProgress = true;
+            var self = this;
+            
+            this.bgaPerformAction(action, args || {}).then(function() {
+                self._actionInProgress = false;
+            }).catch(function() {
+                self._actionInProgress = false;
+            });
         },
         
         /*
          * setup: Called on page load
          */
         setup: function(gamedatas) {
-            console.log("Starting game setup", gamedatas);
-            
             // Initialize state
             WW_State.init(gamedatas);
             
@@ -928,8 +1103,6 @@ function (dojo, declare) {
             
             // Setup notifications
             this.setupNotifications();
-            
-            console.log("Game setup complete");
         },
         
         setupHexMap: function() {
@@ -944,6 +1117,15 @@ function (dojo, declare) {
         },
         
         centerMapOnTiles: function(tiles) {
+            var self = this;
+            
+            // Wait for DOM to be fully rendered
+            setTimeout(function() {
+                self._doCenterMapOnTiles(tiles);
+            }, 100);
+        },
+        
+        _doCenterMapOnTiles: function(tiles) {
             if (!tiles || Object.keys(tiles).length === 0) {
                 this.scrollmap.scrollto(-100, -100);
                 return;
@@ -968,8 +1150,9 @@ function (dojo, declare) {
             
             // Get container dimensions
             var container = $('ww_map_container');
-            var containerWidth = container.offsetWidth || 800;
-            var containerHeight = container.offsetHeight || 600;
+            var rect = container.getBoundingClientRect();
+            var containerWidth = rect.width || container.offsetWidth || 800;
+            var containerHeight = rect.height || container.offsetHeight || 600;
             
             // Scroll so center of tiles is in center of viewport
             var scrollX = -(centerX - containerWidth / 2);
@@ -984,14 +1167,67 @@ function (dojo, declare) {
                 var tileEl = WW_Hex.createTile(tiles[tile_id]);
                 WW_DOM.connect(tileEl, 'onclick', this, 'onTileClick');
             }
-            
-            // Center map on tiles after creating them
-            this.centerMapOnTiles(tiles);
+            // Map will be centered on player after setupPlayerTokens
         },
         
         setupPlayerTokens: function(players) {
             for (var player_id in players) {
                 WW_Hex.createPlayerToken(player_id, players[player_id]);
+            }
+            
+            // Center map on current player's token
+            this.centerMapOnPlayer(players);
+        },
+        
+        centerMapOnPlayer: function(players) {
+            var self = this;
+            
+            // Find current player's position
+            var playerData = players[this.player_id];
+            
+            if (!playerData) {
+                // If not found, use first player (spectator mode)
+                for (var pid in players) {
+                    playerData = players[pid];
+                    break;
+                }
+            }
+            
+            if (!playerData) return;
+            
+            // Wait for DOM to be fully rendered
+            setTimeout(function() {
+                self._doCenterMapOnPlayer(playerData.pos_q, playerData.pos_r);
+            }, 500);
+        },
+        
+        _doCenterMapOnPlayer: function(q, r) {
+            // Use hexToPixelCenter to get the pixel position, same as createPlayerToken
+            var pos = WW_Hex.hexToPixelCenter(q, r);
+            var tokenLeft = pos.x;
+            var tokenTop = pos.y;
+            
+            // Get container dimensions
+            var container = $('ww_map_container');
+            var rect = container.getBoundingClientRect();
+            var containerWidth = rect.width || container.offsetWidth || 800;
+            var containerHeight = rect.height || container.offsetHeight || 600;
+            
+            // Calculate scroll position to center the token
+            var scrollX = containerWidth / 2 - tokenLeft;
+            var scrollY = containerHeight / 2 - tokenTop;
+            
+            // Directly set the position of both scrollable layers
+            var scrollable = $('ww_map_scrollable');
+            var oversurface = $('ww_map_scrollable_oversurface');
+            
+            if (scrollable) {
+                dojo.style(scrollable, 'left', scrollX + 'px');
+                dojo.style(scrollable, 'top', scrollY + 'px');
+            }
+            if (oversurface) {
+                dojo.style(oversurface, 'left', scrollX + 'px');
+                dojo.style(oversurface, 'top', scrollY + 'px');
             }
         },
         
@@ -999,8 +1235,6 @@ function (dojo, declare) {
         //// Game & client states
         
         onEnteringState: function(stateName, args) {
-            console.log('Entering state: ' + stateName, args);
-            
             WW_State.setCurrentState(stateName);
             
             if (stateName !== 'playerTurn') {
@@ -1026,28 +1260,36 @@ function (dojo, declare) {
                 case 'recruitment':
                     this.enterRecruitmentState(args.args);
                     break;
+                case 'mustReleaseHordier':
+                    this.enterMustReleaseHordierState(args.args);
+                    break;
             }
         },
         
         onLeavingState: function(stateName) {
-            console.log('Leaving state: ' + stateName);
-            
             switch (stateName) {
                 case 'playerTurn':
                     WW_Hex.clearHighlights();
+                    WW_Cards.clearHordeUsable();
+                    break;
+                case 'confrontation':
+                case 'diceResult':
+                    WW_Cards.clearHordeUsable();
                     break;
                 case 'loseHordier':
                     WW_Cards.clearHordeSelectable();
                     break;
                 case 'recruitment':
                     WW_Cards.hideRecruitmentInterface();
+                    WW_Cards.clearHordeReleasable();
+                    break;
+                case 'mustReleaseHordier':
+                    WW_Cards.clearHordeReleasable();
                     break;
             }
         },
         
         onUpdateActionButtons: function(stateName, args) {
-            console.log('onUpdateActionButtons: ' + stateName);
-            
             if (!this.isCurrentPlayerActive()) return;
             
             switch (stateName) {
@@ -1068,10 +1310,22 @@ function (dojo, declare) {
                 case 'diceResult':
                     this.addActionButton('btn_moral_plus', _('+1 (spend moral)'), 'onMoralPlus');
                     this.addActionButton('btn_moral_minus', _('-1 (spend moral)'), 'onMoralMinus');
-                    this.addActionButton('btn_confirm_roll', _('Confirm'), 'onConfirmRoll');
+                    // Check confrontation result to set button color
+                    var hordeDice = WW_Dice.getHordeDice();
+                    var windDice = WW_Dice.getWindDice();
+                    var windForce = parseInt(WW_DOM.getHtml('ww_wind_force')) || 0;
+                    var buttonColor = 'blue'; // default to success
+                    if (hordeDice.length > 0 && windDice.length > 0) {
+                        var result = WW_Dice.calculateConfrontationResult(hordeDice, windDice, windForce);
+                        buttonColor = (result && result.success) ? 'blue' : 'red';
+                    }
+                    this.addActionButton('btn_confirm_roll', _('Confirm'), 'onConfirmRoll', null, false, buttonColor);
                     break;
                 case 'recruitment':
                     this.addActionButton('btn_skip_recruit', _('Skip Recruitment'), 'onSkipRecruitment', null, false, 'gray');
+                    break;
+                case 'mustReleaseHordier':
+                    // No skip button - player must release a hordier
                     break;
             }
         },
@@ -1100,6 +1354,14 @@ function (dojo, declare) {
             if (this.isCurrentPlayerActive() && args && args.adjacent) {
                 WW_Hex.highlightTiles(args.adjacent);
             }
+            
+            // Make horde cards clickable to use powers
+            if (this.isCurrentPlayerActive()) {
+                var self = this;
+                WW_Cards.makeHordeUsable(function(cardId) {
+                    self.onUsePower(cardId);
+                });
+            }
         },
         
         enterConfrontationState: function(args) {
@@ -1107,6 +1369,18 @@ function (dojo, declare) {
             WW_Dice.clearDice('wind');
             
             var self = this;
+            
+            // Update horde exhausted state from server data
+            if (args.horde) {
+                WW_Cards.updateHordeExhaustedState(args.horde);
+            }
+            
+            // Make horde cards clickable to use powers during confrontation
+            if (this.isCurrentPlayerActive()) {
+                WW_Cards.makeHordeUsable(function(cardId) {
+                    self.onUsePower(cardId);
+                });
+            }
             
             if (args.horde_dice) {
                 WW_Dice.createDiceSorted(args.horde_dice, 'ww_horde_dice', function(diceId) {
@@ -1127,11 +1401,22 @@ function (dojo, declare) {
             if (args && args.wind_force !== null && args.wind_force !== undefined) {
                 WW_DOM.setHtml('ww_wind_force', args.wind_force);
             }
+            
+            // Update horde exhausted state from server data
+            if (args && args.horde) {
+                WW_Cards.updateHordeExhaustedState(args.horde);
+            }
+            
+            // Make horde cards clickable to use powers
+            if (this.isCurrentPlayerActive()) {
+                var self = this;
+                WW_Cards.makeHordeUsable(function(cardId) {
+                    self.onUsePower(cardId);
+                });
+            }
         },
         
         enterLoseHordierState: function(args) {
-            console.log('Lose hordier state:', args);
-            
             if (!args || !args.horde) return;
             
             var self = this;
@@ -1139,22 +1424,57 @@ function (dojo, declare) {
                 self.onAbandonHordier(cardId);
             });
             
+            // Add abandon game button
+            if (this.isCurrentPlayerActive()) {
+                this.addActionButton('btn_abandon_game', _('Abandon Expedition'), function() {
+                    self.onAbandonGame();
+                }, null, false, 'red');
+            }
+            
             this.showMessage(_("You must abandon a Hordier! Click on a card to abandon it."), "info");
         },
         
         enterRecruitmentState: function(args) {
-            console.log('Recruitment state:', args);
-            
             var self = this;
             var result = WW_Cards.showRecruitmentInterface(args, function(cardId) {
                 self.onRecruitCard(cardId);
             });
             
-            if (result && result.isEmpty) {
-                this.showMessage(_("No characters available for recruitment at this location."), "info");
-            } else {
-                this.showMessage(_("You may recruit new characters. Click on a card to recruit or Skip."), "info");
+            // Make horde cards selectable to release if player has 8+ cards
+            var hordeCount = args.horde_count || 0;
+            if (this.isCurrentPlayerActive() && hordeCount >= 8) {
+                WW_Cards.makeHordeReleasable(args.horde, function(cardId) {
+                    self.onReleaseHordier(cardId);
+                });
             }
+            
+            if (result && result.isEmpty) {
+                if (hordeCount >= 8) {
+                    this.showMessage(_("No recruitment available. You may release a Hordier to make room."), "info");
+                } else {
+                    this.showMessage(_("No characters available for recruitment at this location."), "info");
+                }
+            } else {
+                if (hordeCount >= 8) {
+                    this.showMessage(_("Horde is full! Release a Hordier before recruiting, or skip."), "info");
+                } else {
+                    this.showMessage(_("You may recruit new characters. Click on a card to recruit or Skip."), "info");
+                }
+            }
+        },
+        
+        enterMustReleaseHordierState: function(args) {
+            var self = this;
+            
+            // Make horde cards selectable for release
+            if (this.isCurrentPlayerActive() && args.horde) {
+                WW_Cards.clearHordeReleasable();
+                WW_Cards.makeHordeReleasable(args.horde, function(cardId) {
+                    self.onReleaseHordier(cardId);
+                });
+            }
+            
+            this.showMessage(_("You have more than 8 Hordiers! You must release one."), "info");
         },
         
         ///////////////////////////////////////////////////
@@ -1173,24 +1493,21 @@ function (dojo, declare) {
             }
             
             WW_State.setSelectedTile(tileId);
-            this.bgaPerformAction('actSelectTile', { tile_id: tileId });
+            this.performAction('actSelectTile', { tile_id: tileId });
         },
         
         onDiceClick: function(diceId) {
-            console.log('Dice clicked:', diceId);
             WW_Dice.selectDice(diceId);
         },
         
         onDraftCardClick: function(cardId) {
-            console.log('Draft card clicked:', cardId);
-            
             if (!this.isCurrentPlayerActive()) return;
             
             var cardEl = $('draft_card_' + cardId);
             if (!cardEl) return;
             
             var isSelected = WW_DOM.hasClass(cardEl, 'ww_selected');
-            this.bgaPerformAction('actToggleDraftCard', {
+            this.performAction('actToggleDraftCard', {
                 card_id: cardId,
                 select: !isSelected
             });
@@ -1201,7 +1518,7 @@ function (dojo, declare) {
         
         onRollDice: function(evt) {
             WW_DOM.stopEvent(evt);
-            this.bgaPerformAction('actRollDice', {});
+            this.performAction('actRollDice', {});
         },
         
         onMoralPlus: function(evt) {
@@ -1212,7 +1529,7 @@ function (dojo, declare) {
                 return;
             }
             
-            this.bgaPerformAction('actUseMoral', {
+            this.performAction('actUseMoral', {
                 dice_id: parseInt(WW_State.getFirstSelectedDice()),
                 modifier: 1
             });
@@ -1226,7 +1543,7 @@ function (dojo, declare) {
                 return;
             }
             
-            this.bgaPerformAction('actUseMoral', {
+            this.performAction('actUseMoral', {
                 dice_id: parseInt(WW_State.getFirstSelectedDice()),
                 modifier: -1
             });
@@ -1234,45 +1551,55 @@ function (dojo, declare) {
         
         onConfirmRoll: function(evt) {
             WW_DOM.stopEvent(evt);
-            this.bgaPerformAction('actConfirmRoll', {});
+            this.performAction('actConfirmRoll', {});
         },
         
         onRest: function(evt) {
             WW_DOM.stopEvent(evt);
-            this.bgaPerformAction('actRest', {});
+            this.performAction('actRest', {});
+        },
+        
+        onUsePower: function(cardId) {
+            this.performAction('actUsePower', { card_id: parseInt(cardId) });
         },
         
         onConfirmDraft: function(evt) {
             WW_DOM.stopEvent(evt);
-            this.bgaPerformAction('actConfirmDraft', {});
+            this.performAction('actConfirmDraft', {});
         },
         
         onAbandonHordier: function(cardId) {
-            console.log('Abandoning hordier:', cardId);
-            this.bgaPerformAction('actAbandonHordier', {
-                card_id: parseInt(cardId)
-            });
+            this.performAction('actAbandonHordier', { card_id: parseInt(cardId) });
+        },
+        
+        onAbandonGame: function() {
+            var self = this;
+            this.confirmationDialog(
+                _('Are you sure you want to abandon the expedition? This will end the game for you.'),
+                function() {
+                    self.performAction('actAbandonGame', {});
+                }
+            );
         },
         
         onRecruitCard: function(cardId) {
-            console.log('Recruiting card:', cardId);
-            this.bgaPerformAction('actRecruit', {
-                card_id: parseInt(cardId)
-            });
+            this.performAction('actRecruit', { card_id: parseInt(cardId) });
+        },
+        
+        onReleaseHordier: function(cardId) {
+            this.performAction('actReleaseHordier', { card_id: parseInt(cardId) });
         },
         
         onSkipRecruitment: function(evt) {
             WW_DOM.stopEvent(evt);
             WW_Cards.hideRecruitmentInterface();
-            this.bgaPerformAction('actSkipRecruitment', {});
+            this.performAction('actSkipRecruitment', {});
         },
         
         ///////////////////////////////////////////////////
         //// Notifications
 
         setupNotifications: function() {
-            console.log('Setting up notifications');
-            
             dojo.subscribe('diceRolled', this, "notif_diceRolled");
             this.notifqueue.setSynchronous('diceRolled', 1000);
             
@@ -1304,11 +1631,38 @@ function (dojo, declare) {
             
             dojo.subscribe('hordierLost', this, "notif_hordierLost");
             this.notifqueue.setSynchronous('hordierLost', 500);
+            
+            dojo.subscribe('playerEliminated', this, "notif_playerEliminated");
+            this.notifqueue.setSynchronous('playerEliminated', 2000);
+            
+            dojo.subscribe('hordierRecruited', this, "notif_hordierRecruited");
+            this.notifqueue.setSynchronous('hordierRecruited', 500);
+            
+            dojo.subscribe('hordierReleased', this, "notif_hordierReleased");
+            this.notifqueue.setSynchronous('hordierReleased', 500);
+            
+            dojo.subscribe('scoreUpdate', this, "notif_scoreUpdate");
+            
+            dojo.subscribe('finalScore', this, "notif_finalScore");
+            this.notifqueue.setSynchronous('finalScore', 1000);
+            
+            dojo.subscribe('chapterComplete', this, "notif_chapterComplete");
+            this.notifqueue.setSynchronous('chapterComplete', 1000);
+            
+            dojo.subscribe('moralChanged', this, "notif_moralChanged");
+            this.notifqueue.setSynchronous('moralChanged', 500);
+            
+            dojo.subscribe('hordierRested', this, "notif_hordierRested");
+            this.notifqueue.setSynchronous('hordierRested', 500);
+            
+            dojo.subscribe('allHordiersRested', this, "notif_allHordiersRested");
+            this.notifqueue.setSynchronous('allHordiersRested', 500);
+            
+            dojo.subscribe('powerUsed', this, "notif_powerUsed");
+            this.notifqueue.setSynchronous('powerUsed', 500);
         },
         
         notif_diceRolled: function(notif) {
-            console.log('notif_diceRolled', notif);
-            
             WW_Dice.clearDice('horde');
             
             var self = this;
@@ -1339,8 +1693,6 @@ function (dojo, declare) {
         },
         
         notif_windRevealed: function(notif) {
-            console.log('notif_windRevealed', notif);
-            
             WW_Hex.revealWindToken(notif.args.tile_id, notif.args.force);
             WW_Dice.clearDice('wind');
             
@@ -1360,17 +1712,17 @@ function (dojo, declare) {
         },
         
         notif_confrontationSuccess: function(notif) {
-            console.log('notif_confrontationSuccess', notif);
             WW_Hex.showConfrontationResult(WW_State.getSelectedTile(), true);
+            if (notif.args.new_score !== undefined) {
+                this.scoreCtrl[notif.args.player_id].toValue(notif.args.new_score);
+            }
         },
         
         notif_confrontationFailure: function(notif) {
-            console.log('notif_confrontationFailure', notif);
             WW_Hex.showConfrontationResult(WW_State.getSelectedTile(), false);
         },
         
         notif_moralUsed: function(notif) {
-            console.log('notif_moralUsed', notif);
             
             WW_Player.updateMoral(notif.args.player_id, notif.args.new_moral);
             WW_Dice.updateDiceValue(notif.args.dice_id, notif.args.new_value);
@@ -1378,25 +1730,29 @@ function (dojo, declare) {
         },
         
         notif_playerSurpasses: function(notif) {
-            console.log('notif_playerSurpasses', notif);
             var current = WW_Player.getCurrentDiceCount(notif.args.player_id);
             WW_Player.updateDiceCount(notif.args.player_id, current - 1);
         },
         
         notif_playerRests: function(notif) {
-            console.log('notif_playerRests', notif);
             var diceCount = notif.args.dice_count - notif.args.surpass_count;
             WW_Player.updateDiceCount(notif.args.player_id, diceCount);
         },
         
         notif_playerMoves: function(notif) {
-            console.log('notif_playerMoves', notif);
             WW_Hex.movePlayerToken(this, notif.args.player_id, notif.args.q, notif.args.r);
             WW_Player.updatePosition(notif.args.player_id, notif.args.q, notif.args.r);
+            
+            // Center map on player if it's our player moving
+            if (notif.args.player_id == this.player_id) {
+                var self = this;
+                setTimeout(function() {
+                    self._doCenterMapOnPlayer(notif.args.q, notif.args.r);
+                }, 600); // Wait for move animation to complete
+            }
         },
         
         notif_cardToggled: function(notif) {
-            console.log('notif_cardToggled', notif);
             WW_Cards.toggleDraftCardSelection(notif.args.card_id, notif.args.selected);
             if (notif.args.counts && notif.args.requirements) {
                 WW_Cards.updateDraftCounts(notif.args.counts, notif.args.requirements);
@@ -1404,7 +1760,6 @@ function (dojo, declare) {
         },
         
         notif_draftComplete: function(notif) {
-            console.log('notif_draftComplete', notif);
             WW_Cards.hideDraftPanel();
             if (notif.args.horde) {
                 WW_Cards.refreshHorde(notif.args.horde);
@@ -1412,12 +1767,97 @@ function (dojo, declare) {
         },
         
         notif_autoSelectTeam: function(notif) {
-            console.log('notif_autoSelectTeam', notif);
+            // Auto-select handled server-side
         },
         
         notif_hordierLost: function(notif) {
-            console.log('notif_hordierLost', notif);
             WW_Cards.removeHordeCard(notif.args.card_id, true);
+        },
+        
+        notif_playerEliminated: function(notif) {
+            // Show elimination message
+            this.showMessage(_("Game Over! All hordiers have been lost."), "error");
+        },
+        
+        notif_hordierRecruited: function(notif) {
+            // Add the recruited card to horde if it's our player
+            if (notif.args.player_id == this.player_id) {
+                // Card data should be in notification
+                var card = notif.args.card || {
+                    card_id: notif.args.card_id,
+                    card_type: notif.args.card_type,
+                    card_type_arg: notif.args.card_type_arg
+                };
+                WW_Cards.addHordeCard(card);
+            }
+            // Remove from recruitment panel
+            var recruitCard = $('recruit_card_' + notif.args.card_id);
+            if (recruitCard) {
+                WW_DOM.destroy(recruitCard);
+            }
+            
+            // Check if recruitment panel is now empty
+            var availableChars = $('ww_available_characters');
+            if (availableChars && availableChars.childNodes.length === 0) {
+                WW_DOM.hide('ww_draft_panel');
+            }
+        },
+        
+        notif_hordierReleased: function(notif) {
+            // Remove from horde with animation
+            WW_Cards.removeHordeCard(notif.args.card_id, true);
+            
+            // If released in a village or city, add to recruitment panel
+            if ((notif.args.tile_type === 'village' || notif.args.tile_type === 'city') && notif.args.card) {
+                var self = this;
+                WW_Cards.createCard({
+                    prefix: 'recruit_card',
+                    card: notif.args.card,
+                    containerId: 'ww_available_characters',
+                    extraClass: 'ww_recruit_card',
+                    onClick: function(cid) {
+                        self.onRecruitCard(parseInt(cid, 10));
+                    }
+                });
+            }
+        },
+        
+        notif_scoreUpdate: function(notif) {
+            this.scoreCtrl[notif.args.player_id].toValue(notif.args.score);
+        },
+        
+        notif_finalScore: function(notif) {
+            this.scoreCtrl[notif.args.player_id].toValue(notif.args.score);
+            
+            // Display score breakdown
+            var breakdown = notif.args.breakdown;
+            var msg = _('Score: ') + notif.args.score + ' = ' +
+                      breakdown.tiles + _(' (tiles) + ') +
+                      breakdown.surpass + _(' (surpass) + ') +
+                      breakdown.moral + _(' (moral) + ') +
+                      breakdown.hordiers_points + _(' (hordiers) + ') +
+                      breakdown.furevents_points + _(' (furevents)');
+            this.showMessage(msg, 'info');
+        },
+        
+        notif_chapterComplete: function(notif) {
+            this.showMessage(_('Chapter ') + notif.args.chapter_num + _(' complete!'), 'info');
+        },
+        
+        notif_moralChanged: function(notif) {
+            WW_Player.updateMoral(notif.args.player_id, notif.args.new_moral);
+        },
+        
+        notif_hordierRested: function(notif) {
+            WW_Cards.setCardRested(notif.args.card_id, true);
+        },
+        
+        notif_allHordiersRested: function(notif) {
+            WW_Cards.setAllCardsRested(notif.args.player_id);
+        },
+        
+        notif_powerUsed: function(notif) {
+            WW_Cards.setCardRested(notif.args.card_id, false);
         }
    });
 });

@@ -51,7 +51,8 @@ class Windwalkers extends Table
         $this->initGameStateLabels([
             'current_chapter' => 10,
             'current_round' => 11,
-            'selected_tile' => 12
+            'selected_tile' => 12,
+            'player_to_eliminate' => 13
         ]);
     }
 
@@ -143,6 +144,7 @@ class Windwalkers extends Table
             $this->initStat('player', 'powers_used', 0, $player_id);
             $this->initStat('player', 'surpass_count', 0, $player_id);
             $this->initStat('player', 'surpass_success', 0, $player_id);
+            $this->initStat('player', 'surpass_points', 0, $player_id);
             $this->initStat('player', 'rest_count', 0, $player_id);
             $this->initStat('player', 'furevents_defeated', 0, $player_id);
             $this->initStat('player', 'confrontations_won', 0, $player_id);
@@ -186,10 +188,10 @@ class Windwalkers extends Table
              FROM tile WHERE tile_chapter = $chapter"
         );
 
-        // Player's horde
+        // Player's horde (with power_used status for UI)
         $result['myHorde'] = [];
         try {
-            $result['myHorde'] = $this->cards->getCardsInLocation('horde_' . $current_player_id);
+            $result['myHorde'] = $this->getHordeWithPowerStatus($current_player_id);
         } catch (Exception $e) {
             // Cards may not be set up yet
         }
@@ -230,6 +232,7 @@ class Windwalkers extends Table
 
     /**
      * Get characters available for recruitment at current location
+     * Uses persistent pools that last until chapter end
      */
     function getRecruitPool(int $player_id): array
     {
@@ -250,52 +253,173 @@ class Windwalkers extends Table
     }
 
     /**
+     * Get the location string for a village/city recruit pool
+     */
+    private function getRecruitLocation(array $tile): string
+    {
+        $chapter = $this->getGameStateValue('current_chapter');
+        return 'recruit_' . $tile['tile_q'] . '_' . $tile['tile_r'] . '_ch' . $chapter;
+    }
+
+    /**
      * Get recruitable characters based on tile type
+     * Uses persistent pools for both villages and cities
      */
     private function getRecruitableCharacters(array $tile): array
     {
         if ($tile['tile_type'] == 'city') {
-            // Cities: 2 characters from each type
-            $fer = $this->getCollectionFromDb(
-                "SELECT * FROM card WHERE card_type = 'fer' AND card_location = 'deck' ORDER BY RAND() LIMIT 2"
-            );
-            $pack = $this->getCollectionFromDb(
-                "SELECT * FROM card WHERE card_type = 'pack' AND card_location = 'deck' ORDER BY RAND() LIMIT 2"
-            );
-            $traine = $this->getCollectionFromDb(
-                "SELECT * FROM card WHERE card_type = 'traine' AND card_location = 'deck' ORDER BY RAND() LIMIT 2"
-            );
-            return array_merge($fer, $pack, $traine);
+            // Cities: 2 of each type (fer, pack, traine)
+            return $this->getOrCreateRecruitPool($tile, 2, 2, 2);
         }
         
         if ($tile['tile_type'] == 'village') {
-            return $this->getVillageRecruits($tile['tile_subtype']);
+            return $this->getVillageRecruitPool($tile);
         }
         
         return [];
     }
 
     /**
-     * Get village-specific recruits (limited to 2 random characters)
+     * Get recruit pool for a village based on its color/type
      */
-    private function getVillageRecruits(string $subtype): array
+    private function getVillageRecruitPool(array $tile): array
     {
-        switch ($subtype) {
+        switch ($tile['tile_subtype']) {
             case 'village_green':
-                return $this->getCollectionFromDb(
-                    "SELECT * FROM card WHERE card_type = 'pack' AND card_location = 'deck' ORDER BY RAND() LIMIT 2"
-                );
+                // Village vert: 2 traîne (vert)
+                return $this->getOrCreateRecruitPool($tile, 0, 0, 2);
             case 'village_red':
-                return $this->getCollectionFromDb(
-                    "SELECT * FROM card WHERE card_type = 'fer' AND card_is_leader = 0 AND card_location = 'deck' ORDER BY RAND() LIMIT 2"
-                );
+                // Village rouge: 2 fer (rouge)
+                return $this->getOrCreateRecruitPool($tile, 2, 0, 0);
             case 'village_blue':
-                return $this->getCollectionFromDb(
-                    "SELECT * FROM card WHERE card_type = 'traine' AND card_location = 'deck' ORDER BY RAND() LIMIT 2"
-                );
+                // Village bleu: 2 pack (bleu)
+                return $this->getOrCreateRecruitPool($tile, 0, 2, 0);
             default:
                 return [];
         }
+    }
+
+    /**
+     * Get existing recruit pool or create a new one
+     * Pools persist until chapter end
+     * 
+     * @param array $tile The tile (village or city)
+     * @param int $ferCount Number of Fer (red) cards to draw
+     * @param int $packCount Number of Pack (blue) cards to draw
+     * @param int $traineCount Number of Traîne (green) cards to draw
+     * @return array The recruit pool cards
+     */
+    private function getOrCreateRecruitPool(array $tile, int $ferCount, int $packCount, int $traineCount): array
+    {
+        $location = $this->getRecruitLocation($tile);
+        $chapter = $this->getGameStateValue('current_chapter');
+        $poolKey = "pool_initialized_{$location}_ch{$chapter}";
+        
+        // Check if pool was already initialized this chapter (even if now empty)
+        $poolInitialized = $this->getUniqueValueFromDB(
+            "SELECT var_value FROM global_var WHERE var_name = '$poolKey'"
+        );
+        
+        // Get existing pool
+        $existingPool = $this->getCollectionFromDb(
+            "SELECT * FROM card WHERE card_location = '$location'"
+        );
+        
+        // If pool was already initialized, return current state (even if empty)
+        if ($poolInitialized) {
+            return $existingPool;
+        }
+        
+        // First time visiting this location this chapter - create the pool
+        $this->DbQuery("INSERT INTO global_var (var_name, var_value) VALUES ('$poolKey', '1') 
+                        ON DUPLICATE KEY UPDATE var_value = '1'");
+        
+        // If there are already cards (from released hordiers), don't add more
+        if (!empty($existingPool)) {
+            return $existingPool;
+        }
+        
+        // Create new pool - draw cards and assign to this location
+        $newCards = $this->drawRecruitCards($ferCount, $packCount, $traineCount);
+        
+        // Move cards to pool location
+        foreach ($newCards as $card) {
+            $card_id = $card['card_id'];
+            $this->DbQuery("UPDATE card SET card_location = '$location' WHERE card_id = $card_id");
+        }
+        
+        // Return the cards with updated location
+        return $this->getCollectionFromDb(
+            "SELECT * FROM card WHERE card_location = '$location'"
+        );
+    }
+
+    /**
+     * Draw cards for recruitment based on specified counts
+     * 
+     * @param int $ferCount Number of Fer (red) cards
+     * @param int $packCount Number of Pack (blue) cards
+     * @param int $traineCount Number of Traîne (green) cards
+     * @return array The drawn cards
+     */
+    private function drawRecruitCards(int $ferCount, int $packCount, int $traineCount): array
+    {
+        $cards = [];
+        
+        if ($ferCount > 0) {
+            $fer = $this->getCollectionFromDb(
+                "SELECT * FROM card WHERE card_type = 'fer' AND card_is_leader = 0 AND card_location = 'deck' ORDER BY RAND() LIMIT $ferCount"
+            );
+            $cards = array_merge($cards, $fer);
+        }
+        
+        if ($packCount > 0) {
+            $pack = $this->getCollectionFromDb(
+                "SELECT * FROM card WHERE card_type = 'pack' AND card_location = 'deck' ORDER BY RAND() LIMIT $packCount"
+            );
+            $cards = array_merge($cards, $pack);
+        }
+        
+        if ($traineCount > 0) {
+            $traine = $this->getCollectionFromDb(
+                "SELECT * FROM card WHERE card_type = 'traine' AND card_location = 'deck' ORDER BY RAND() LIMIT $traineCount"
+            );
+            $cards = array_merge($cards, $traine);
+        }
+        
+        return $cards;
+    }
+
+    /**
+     * Add a card to a location's recruit pool (when released in that village/city)
+     */
+    function addCardToRecruitPool(int $card_id, array $tile): void
+    {
+        if ($tile['tile_type'] != 'village' && $tile['tile_type'] != 'city') {
+            // Not a village or city, just discard
+            $this->DbQuery("UPDATE card SET card_location = 'discard' WHERE card_id = $card_id");
+            return;
+        }
+        
+        $location = $this->getRecruitLocation($tile);
+        $this->DbQuery("UPDATE card SET card_location = '$location' WHERE card_id = $card_id");
+    }
+
+    /**
+     * Clear all recruit pools (villages and cities) for a chapter
+     * Called at chapter end - cards go back to deck
+     */
+    function clearRecruitPoolsForChapter(int $chapter): void
+    {
+        // Clear cards from recruit pools
+        $this->DbQuery(
+            "UPDATE card SET card_location = 'deck' WHERE card_location LIKE 'recruit_%_ch$chapter'"
+        );
+        
+        // Clear pool initialization flags for this chapter
+        $this->DbQuery(
+            "DELETE FROM global_var WHERE var_name LIKE 'pool_initialized_%_ch$chapter'"
+        );
     }
 
     //////////////////////////////////////////////////////////////////////////////
@@ -328,8 +452,34 @@ class Windwalkers extends Table
         $player_id = $this->getActivePlayerId();
         $this->DbQuery("UPDATE player SET player_has_moved = 0, player_surpass_count = 0 WHERE player_id = $player_id");
         
-        // Get updated player data for notification
+        // Get current tile to check if in city
         $player = $this->getObjectFromDB("SELECT * FROM player WHERE player_id = $player_id");
+        $tile = $this->getTileAt((int)$player['player_position_q'], (int)$player['player_position_r'], (int)$player['player_chapter']);
+        
+        // In cities: rest ALL Hordiers (reactivate all powers)
+        if ($tile && $tile['tile_type'] == 'city') {
+            $rested_count = $this->restAllHordiers($player_id);
+            if ($rested_count > 0) {
+                $this->notifyAllPlayers('allHordiersRested', clienttranslate('${player_name} rests in the city - all Hordiers recover their powers'), [
+                    'player_id' => $player_id,
+                    'player_name' => $this->getActivePlayerName(),
+                    'rested_count' => $rested_count
+                ]);
+            }
+        } else {
+            // On regular tiles: rest 1 Hordier
+            $rested_card = $this->restOneHordier($player_id);
+            if ($rested_card) {
+                $char_info = $this->characters[$rested_card['card_type_arg']] ?? ['name' => 'Hordier'];
+                $this->notifyAllPlayers('hordierRested', clienttranslate('${player_name} rests ${character_name}'), [
+                    'player_id' => $player_id,
+                    'player_name' => $this->getActivePlayerName(),
+                    'card_id' => $rested_card['card_id'],
+                    'character_name' => $char_info['name'],
+                    'terrain_name' => $tile ? $tile['tile_subtype'] : ''
+                ]);
+            }
+        }
         
         $this->notifyAllPlayers('playerRests', clienttranslate('${player_name} rests and resets surpass counter'), [
             'player_id' => $player_id,
@@ -337,6 +487,8 @@ class Windwalkers extends Table
             'dice_count' => (int)$player['player_dice_count'],
             'surpass_count' => 0
         ]);
+        
+        $this->incStat(1, 'rest_count', $player_id);
         
         $this->gamestate->nextState('restComplete');
     }
@@ -347,9 +499,68 @@ class Windwalkers extends Table
         $tile_id = $this->getGameStateValue('selected_tile');
         $tile = $this->getTileById($tile_id);
         
+        // Get terrain/building name
+        $terrain_name = $tile['tile_subtype'];
+        if (isset($this->terrain_types[$tile['tile_subtype']])) {
+            $terrain_name = $this->terrain_types[$tile['tile_subtype']]['name'];
+        } elseif (isset($this->village_types[$tile['tile_subtype']])) {
+            $terrain_name = $this->village_types[$tile['tile_subtype']]['name'];
+        } elseif (isset($this->cities[$tile['tile_subtype']])) {
+            $terrain_name = $this->cities[$tile['tile_subtype']]['name'];
+        }
+        
+        // Calculate moral effect
+        $moral_effect = (int)$tile['tile_moral_effect'];
+        
+        // Cities give +1 moral when passing through
+        if ($tile['tile_type'] == 'city') {
+            $moral_effect = 1;
+        }
+        
         // Apply moral effect
-        if ($tile['tile_moral_effect'] != 0) {
-            $this->modifyPlayerMoral($player_id, $tile['tile_moral_effect']);
+        if ($moral_effect != 0) {
+            $new_moral = $this->modifyPlayerMoral($player_id, $moral_effect);
+            
+            if ($moral_effect > 0) {
+                $this->notifyAllPlayers('moralChanged', clienttranslate('${player_name} gains ${amount} moral from ${terrain_name}'), [
+                    'player_id' => $player_id,
+                    'player_name' => $this->getActivePlayerName(),
+                    'amount' => $moral_effect,
+                    'new_moral' => $new_moral,
+                    'terrain_name' => $terrain_name
+                ]);
+            } else {
+                $this->notifyAllPlayers('moralChanged', clienttranslate('${player_name} loses ${amount} moral from ${terrain_name}'), [
+                    'player_id' => $player_id,
+                    'player_name' => $this->getActivePlayerName(),
+                    'amount' => abs($moral_effect),
+                    'new_moral' => $new_moral,
+                    'terrain_name' => $terrain_name
+                ]);
+            }
+        }
+        
+        // Cities and villages: rest 1 Hordier when passing through
+        if ($tile['tile_type'] == 'village' || $tile['tile_type'] == 'city') {
+            $rested_card = $this->restOneHordier($player_id);
+            if ($rested_card) {
+                $char_info = $this->characters[$rested_card['card_type_arg']] ?? ['name' => 'Hordier'];
+                $this->notifyAllPlayers('hordierRested', clienttranslate('${player_name} rests ${character_name} at ${terrain_name}'), [
+                    'player_id' => $player_id,
+                    'player_name' => $this->getActivePlayerName(),
+                    'card_id' => $rested_card['card_id'],
+                    'character_name' => $char_info['name'],
+                    'terrain_name' => $terrain_name
+                ]);
+            }
+        }
+        
+        // Score is now updated incrementally in WW_Confrontation
+        
+        // Check if player reached chapter destination
+        if ($this->isChapterDestination($tile)) {
+            $this->gamestate->nextState('endChapter');
+            return;
         }
         
         // Check for recruitment or special
@@ -388,14 +599,29 @@ class Windwalkers extends Table
         $chapter = $this->getGameStateValue('current_chapter');
         $this->incStat(1, 'chapters_completed');
         
-        // Award moral for completing chapter
+        // Clear all recruit pools (villages and cities) for this chapter - cards go back to deck
+        $this->clearRecruitPoolsForChapter($chapter);
+        
+        // Calculate and display final scores for this chapter
         $players = $this->loadPlayersBasicInfos();
         foreach ($players as $player_id => $player) {
+            // Award moral for completing chapter
             $this->modifyPlayerMoral($player_id, 1);
+            
+            // Update score with chapter-end bonuses (moral + hordiers)
+            $this->updateChapterEndScore($player_id);
         }
         
+        // Notify chapter completion
+        $this->notifyAllPlayers('chapterComplete', clienttranslate('Chapter ${chapter_num} complete!'), [
+            'chapter_num' => $chapter
+        ]);
+        
         if ($chapter >= 4) {
+            // Game over - calculate final scores
             $this->calculateFinalScores();
+            $this->gamestate->nextState('gameEnd');
+            return;
         }
         
         $this->gamestate->nextState('nextChapter');
@@ -411,10 +637,21 @@ class Windwalkers extends Table
     function argRecruitment(): array
     {
         $player_id = $this->getActivePlayerId();
+        $horde = $this->getHordeWithPowerStatus($player_id);
         return [
             'recruitPool' => $this->getRecruitPool($player_id),
-            'horde' => $this->cards->getCardsInLocation('horde_' . $player_id),
-            'horde_count' => count($this->cards->getCardsInLocation('horde_' . $player_id))
+            'horde' => $horde,
+            'horde_count' => count($horde)
+        ];
+    }
+
+    function argMustReleaseHordier(): array
+    {
+        $player_id = $this->getActivePlayerId();
+        $horde = $this->getHordeWithPowerStatus($player_id);
+        return [
+            'horde' => $horde,
+            'horde_count' => count($horde)
         ];
     }
 
@@ -424,9 +661,117 @@ class Windwalkers extends Table
         $this->gamestate->nextState('chapterReady');
     }
 
+    function argSetupNextChapter(): array
+    {
+        return [
+            'chapter_num' => $this->getGameStateValue('current_chapter') + 1
+        ];
+    }
+
     //////////////////////////////////////////////////////////////////////////////
     //////////// Final Scoring
     //////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Check if tile is the chapter destination
+     */
+    private function isChapterDestination(array $tile): bool
+    {
+        $chapter = $this->getGameStateValue('current_chapter');
+        if (!isset($this->chapters[$chapter])) {
+            return false;
+        }
+        
+        $end_city = $this->chapters[$chapter]['end_city'];
+        return $tile['tile_subtype'] === $end_city;
+    }
+
+    /**
+     * Update and notify player score during game
+     * During gameplay, only show earned points (tiles, surpass, furevents)
+     * Moral and hordiers are only counted at end of chapter
+     */
+    function updatePlayerScore(int $player_id): void
+    {
+        $score = $this->calculateInGameScore($player_id);
+        $this->DbQuery("UPDATE player SET player_score = $score WHERE player_id = $player_id");
+        
+        // Notify all players of score update
+        $this->notifyAllPlayers('scoreUpdate', '', [
+            'player_id' => $player_id,
+            'score' => $score,
+            'breakdown' => $this->getInGameScoreBreakdown($player_id)
+        ]);
+    }
+
+    /**
+     * Calculate in-game score (points earned during play)
+     * Does NOT include moral/hordiers as those are end-of-chapter bonuses
+     */
+    private function calculateInGameScore(int $player_id): int
+    {
+        $score = 0;
+        
+        // Tiles traversed (1 point each)
+        $tiles = $this->getStat('tiles_traversed', $player_id);
+        $score += $tiles;
+        
+        // Surpass points
+        $surpass_total = $this->getStat('surpass_points', $player_id) ?? 0;
+        $score += $surpass_total;
+        
+        // Furevents defeated (3 points each)
+        $furevents = $this->getStat('furevents_defeated', $player_id);
+        $score += $furevents * 3;
+        
+        return $score;
+    }
+    
+    /**
+     * Get in-game score breakdown (without end-of-chapter bonuses)
+     */
+    private function getInGameScoreBreakdown(int $player_id): array
+    {
+        $tiles = $this->getStat('tiles_traversed', $player_id);
+        $surpass = $this->getStat('surpass_points', $player_id) ?? 0;
+        $furevents = $this->getStat('furevents_defeated', $player_id);
+        
+        return [
+            'tiles' => $tiles,
+            'surpass' => $surpass,
+            'furevents' => $furevents,
+            'furevents_points' => $furevents * 3
+        ];
+    }
+    
+    /**
+     * Update score at end of chapter - ADD moral and hordiers bonuses to current score
+     */
+    function updateChapterEndScore(int $player_id): void
+    {
+        // Get current score
+        $currentScore = $this->getUniqueValueFromDb("SELECT player_score FROM player WHERE player_id = $player_id");
+        
+        // Calculate chapter-end bonuses
+        $moral = $this->getPlayerMoral($player_id);
+        $hordiers = count($this->cards->getCardsInLocation('horde_' . $player_id));
+        $chapterBonus = $moral + ($hordiers * 2);
+        
+        // Add bonus to score
+        $newScore = $currentScore + $chapterBonus;
+        $this->DbQuery("UPDATE player SET player_score = $newScore WHERE player_id = $player_id");
+        
+        // Notify all players of chapter end bonus
+        $this->notifyAllPlayers('chapterEndScore', clienttranslate('${player_name} earns ${bonus} bonus points (${moral} moral + ${hordiers_points} for ${hordiers} hordiers)'), [
+            'player_id' => $player_id,
+            'player_name' => $this->getPlayerNameById($player_id),
+            'score' => $newScore,
+            'bonus' => $chapterBonus,
+            'moral' => $moral,
+            'hordiers' => $hordiers,
+            'hordiers_points' => $hordiers * 2
+        ]);
+    }
 
     function calculateFinalScores(): void
     {
@@ -436,18 +781,75 @@ class Windwalkers extends Table
             $score = $this->calculatePlayerScore($player_id);
             $this->DbQuery("UPDATE player SET player_score = $score WHERE player_id = $player_id");
             $this->setStat($score, 'total_score', $player_id);
+            
+            // Notify final score with breakdown
+            $this->notifyAllPlayers('finalScore', clienttranslate('${player_name} scores ${score} points'), [
+                'player_id' => $player_id,
+                'player_name' => $player['player_name'],
+                'score' => $score,
+                'breakdown' => $this->getScoreBreakdown($player_id)
+            ]);
         }
     }
 
+    /**
+     * Calculate player FINAL score according to rules:
+     * - 1 point per tile traversed
+     * - Surpass points (cumulative: 0+1+2+3+4+5...)
+     * - 1 point per moral remaining
+     * - 2 points per Hordier in horde
+     * - 3 points per Furevent defeated
+     * - Chapter bonus (e.g., Porte d'Hurle: 5 points)
+     */
     private function calculatePlayerScore(int $player_id): int
     {
         $score = 0;
-        $score += $this->getStat('tiles_traversed', $player_id);
-        $score += $this->getPlayerMoral($player_id);
-        $score += $this->getStat('furevents_defeated', $player_id) * 3;
-        $score += count($this->cards->getCardsInLocation('horde_' . $player_id)) * 2;
+        
+        // Tiles traversed (1 point each)
+        $tiles = $this->getStat('tiles_traversed', $player_id);
+        $score += $tiles;
+        
+        // Surpass points are already added during game (cumulative)
+        // They are stored in player_score incrementally, so we don't add them here
+        // Actually we recalculate from scratch, so we need surpass_total stat
+        $surpass_total = $this->getStat('surpass_points', $player_id) ?? 0;
+        $score += $surpass_total;
+        
+        // Moral remaining (1 point each)
+        $moral = $this->getPlayerMoral($player_id);
+        $score += $moral;
+        
+        // Hordiers remaining (2 points each)
+        $hordiers = count($this->cards->getCardsInLocation('horde_' . $player_id));
+        $score += $hordiers * 2;
+        
+        // Furevents defeated (3 points each)
+        $furevents = $this->getStat('furevents_defeated', $player_id);
+        $score += $furevents * 3;
         
         return $score;
+    }
+
+    /**
+     * Get detailed score breakdown for display
+     */
+    private function getScoreBreakdown(int $player_id): array
+    {
+        $tiles = $this->getStat('tiles_traversed', $player_id);
+        $surpass = $this->getStat('surpass_points', $player_id) ?? 0;
+        $moral = $this->getPlayerMoral($player_id);
+        $hordiers = count($this->cards->getCardsInLocation('horde_' . $player_id));
+        $furevents = $this->getStat('furevents_defeated', $player_id);
+        
+        return [
+            'tiles' => $tiles,
+            'surpass' => $surpass,
+            'moral' => $moral,
+            'hordiers' => $hordiers,
+            'hordiers_points' => $hordiers * 2,
+            'furevents' => $furevents,
+            'furevents_points' => $furevents * 3
+        ];
     }
 
     //////////////////////////////////////////////////////////////////////////////

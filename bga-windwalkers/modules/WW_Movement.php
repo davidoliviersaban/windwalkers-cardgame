@@ -139,26 +139,18 @@ trait WW_Movement
         $tile_count = (int)$this->getUniqueValueFromDB("SELECT COUNT(*) FROM tile WHERE tile_chapter = $chapter");
         if ($tile_count == 0) {
             $this->setupChapterTiles($chapter);
-            $tile_count = (int)$this->getUniqueValueFromDB("SELECT COUNT(*) FROM tile WHERE tile_chapter = $chapter");
         }
         
         $q = (int)$player['player_position_q'];
         $r = (int)$player['player_position_r'];
         $adjacent = $this->getAdjacentTiles($q, $r, $chapter);
         
-        $all_tiles = $this->getCollectionFromDb("SELECT tile_id, tile_q, tile_r, tile_subtype FROM tile WHERE tile_chapter = $chapter LIMIT 10");
-        
         return [
             'position' => ['q' => $q, 'r' => $r],
             'adjacent' => $adjacent,
             'moral' => $player['player_moral'],
             'has_moved' => $player['player_has_moved'],
-            'can_surpass' => $player['player_has_moved'] > 0,
-            '_debug_chapter' => $chapter,
-            '_debug_tile_count' => $tile_count,
-            '_debug_player_pos' => "q=$q, r=$r",
-            '_debug_adjacent_count' => count($adjacent),
-            '_debug_sample_tiles' => $all_tiles
+            'can_surpass' => $player['player_has_moved'] > 0
         ];
     }
 

@@ -91,7 +91,8 @@ $machinestates = [
         "possibleactions" => [
             "actUseMoral",
             "actRerollAll",
-            "actConfirmRoll"
+            "actConfirmRoll",
+            "actUsePower"
         ],
         "args" => "argConfrontation",
         "transitions" => [
@@ -144,10 +145,22 @@ $machinestates = [
         "description" => clienttranslate('${actplayer} must abandon a Hordier'),
         "descriptionmyturn" => clienttranslate('${you} must choose any Hordier to abandon'),
         "type" => "activeplayer",
-        "possibleactions" => ["actAbandonHordier"],
+        "possibleactions" => ["actAbandonHordier", "actAbandonGame"],
         "args" => "argLoseHordier",
         "transitions" => [
-            "hordierLost" => 30  // Rest after failure (no surpass possible)
+            "hordierLost" => 30,  // Rest after failure (no surpass possible)
+            "eliminate" => 46    // Player will be eliminated
+        ]
+    ],
+
+    // Player elimination (game state to properly eliminate active player)
+    46 => [
+        "name" => "playerElimination",
+        "description" => clienttranslate('Processing elimination...'),
+        "type" => "game",
+        "action" => "stPlayerElimination",
+        "transitions" => [
+            "gameOver" => 99     // End game
         ]
     ],
 
@@ -162,7 +175,20 @@ $machinestates = [
         "args" => "argRecruitment",
         "transitions" => [
             "recruited" => 55,  // Can recruit multiple
+            "mustRelease" => 56,  // Over 8 hordiers, must release
             "done" => 70  // After recruitment: go to continueOrRest (surpass or rest)
+        ]
+    ],
+
+    56 => [
+        "name" => "mustReleaseHordier",
+        "description" => clienttranslate('${actplayer} must release a Hordier (max 8)'),
+        "descriptionmyturn" => clienttranslate('${you} must release a Hordier to stay under 8'),
+        "type" => "activeplayer",
+        "possibleactions" => ["actReleaseHordier"],
+        "args" => "argMustReleaseHordier",
+        "transitions" => [
+            "released" => 55  // Back to recruitment after releasing
         ]
     ],
 
@@ -175,7 +201,8 @@ $machinestates = [
         "action" => "stEndChapter",
         "args" => "argEndChapter",
         "transitions" => [
-            "nextChapter" => 65
+            "nextChapter" => 65,
+            "gameEnd" => 99
         ]
     ],
 
@@ -184,6 +211,7 @@ $machinestates = [
         "description" => clienttranslate('Setting up Chapter ${chapter_num}...'),
         "type" => "game",
         "action" => "stSetupNextChapter",
+        "args" => "argSetupNextChapter",
         "transitions" => [
             "chapterReady" => 2  // Back to draft for new chapter
         ]
@@ -210,6 +238,15 @@ $machinestates = [
         "transitions" => [
             "newRound" => 10
         ]
+    ],
+
+    // ==================== GAME END ====================
+
+    99 => [
+        "name" => "gameEnd",
+        "description" => clienttranslate('Game Over'),
+        "type" => "manager",
+        "action" => "stGameEnd"
     ]
 
 ];

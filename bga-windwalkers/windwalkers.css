@@ -15,7 +15,7 @@
 :root {
     --hex-width: 100px;
     --hex-height: 86px;
-    --dice-size: 50px;
+    --dice-size: 38px;
     --card-width: 80px;
     --card-height: 120px;
     --wind-token-size: 40px;
@@ -44,18 +44,14 @@
 #ww_game_area {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 15px;
 }
 
-#ww_top_area {
+#ww_main_area {
     display: flex;
-    gap: 20px;
-    min-height: 400px;
-}
-
-#ww_bottom_area {
-    display: flex;
-    gap: 20px;
+    flex-direction: row;
+    gap: 12px;
+    align-items: stretch;
 }
 
 /* ==========================================
@@ -64,8 +60,7 @@
 
 #ww_map_container {
     flex: 1;
-    min-width: 600px;
-    min-height: 400px;
+    min-height: 500px;
     position: relative;
     overflow: hidden;
     background: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%);
@@ -316,32 +311,40 @@
 
 #ww_horde_panel {
     width: 300px;
-    background: #f5f5f5;
-    border-radius: 8px;
-    padding: 10px;
+    min-width: 300px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 10px;
+    padding: 12px 15px;
+    border: 1px solid #dee2e6;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
 }
 
 #ww_horde_panel h3 {
     margin: 0 0 10px 0;
-    color: #333;
-    font-size: 14px;
+    color: #495057;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
     border-bottom: 2px solid #4a90d9;
-    padding-bottom: 5px;
+    padding-bottom: 8px;
 }
 
 #ww_horde {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
     gap: 8px;
-    min-height: 130px;
+    flex: 1;
+    overflow-y: auto;
 }
 
 /* Horde cards in main panel - same style as draft but smaller and without hover lift */
 .ww_horde_card_item {
-    width: 120px;
-    min-height: 80px;
-    padding: 8px;
-    margin: 4px;
+    width: var(--card-width);
+    height: var(--card-height);
+    padding: 6px;
+    margin: 0;
     cursor: default;
 }
 
@@ -366,21 +369,116 @@
     transition: all 0.5s ease-out;
 }
 
+/* Card exhausted (power used) */
+.ww_card_exhausted {
+    opacity: 0.6;
+    filter: grayscale(50%);
+}
+
+/* Card rested (power available) */
+.ww_card_rested {
+    opacity: 1;
+    filter: none;
+}
+
+/* Pulse animation when card is rested */
+.ww_card_pulse {
+    animation: cardPulse 0.5s ease-out;
+}
+
+@keyframes cardPulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 rgba(100, 255, 100, 0.8); }
+    50% { transform: scale(1.05); box-shadow: 0 0 15px rgba(100, 255, 100, 0.8); }
+    100% { transform: scale(1); box-shadow: 0 0 0 rgba(100, 255, 100, 0); }
+}
+
+/* Card usable (can click to use power) */
+.ww_card_usable {
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ww_card_usable:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0, 100, 200, 0.4);
+}
+
+/* Card releasable (can click to release during recruitment) */
+.ww_card_releasable {
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: 2px dashed rgba(255, 100, 100, 0.5);
+}
+
+.ww_card_releasable:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 4px 12px rgba(255, 50, 50, 0.5);
+    border-color: rgba(255, 50, 50, 0.8);
+}
+
 /* ==========================================
-   DICE PANEL
+   DICE PANEL (above map)
    ========================================== */
 
 #ww_dice_panel {
-    flex: 1;
-    background: #f5f5f5;
-    border-radius: 8px;
-    padding: 15px;
+    width: 280px;
+    min-width: 280px;
+    background: linear-gradient(135deg, #3d5a73 0%, #2c4356 100%);
+    border-radius: 10px;
+    padding: 12px 15px;
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
 }
 
 #ww_dice_panel h3 {
     margin: 0 0 10px 0;
-    color: #333;
-    font-size: 14px;
+    color: #fff;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+#ww_info_panel {
+    display: inline-block;
+    margin-left: auto;
+}
+
+#ww_wind_force_display {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, rgba(198, 40, 40, 0.8) 0%, rgba(183, 28, 28, 0.9) 100%);
+    padding: 6px 14px;
+    border-radius: 20px;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(198, 40, 40, 0.4);
+}
+
+#ww_wind_force_display label {
+    font-size: 11px;
+    color: rgba(255,255,255,0.9);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+#ww_wind_force {
+    font-size: 20px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.ww_dice_row {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    flex: 1;
 }
 
 .ww_dice_column {
@@ -391,24 +489,28 @@
 }
 
 .ww_dice_section {
-    width: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 .ww_dice_section h4 {
-    margin: 0 0 8px 0;
-    font-size: 12px;
-    color: #666;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    margin: 0 0 6px 0;
+    font-size: 11px;
+    color: #aaa;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .ww_dice_sum {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: bold;
-    padding: 2px 8px;
-    border-radius: 10px;
-    background: #ddd;
+    padding: 2px 6px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    display: block;
+    text-align: center;
+    margin-top: 4px;
 }
 
 .ww_dice_sum.ww_sum_winning {
@@ -425,52 +527,59 @@
 #ww_wind_dice {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
-    min-height: 60px;
-    padding: 10px;
-    background: #e0e0e0;
-    border-radius: 5px;
-    align-items: flex-start;
-    align-content: flex-start;
+    gap: 6px;
+    min-height: 50px;
+    padding: 8px;
+    border-radius: 8px;
+    align-items: center;
+    justify-content: flex-start;
 }
 
 #ww_horde_dice {
-    background: rgba(74, 144, 217, 0.2);
+    background: linear-gradient(180deg, rgba(74, 144, 217, 0.25) 0%, rgba(74, 144, 217, 0.1) 100%);
+    border: 1px solid rgba(74, 144, 217, 0.4);
 }
 
 #ww_wind_dice {
-    background: rgba(156, 39, 176, 0.2);
+    background: linear-gradient(180deg, rgba(200, 200, 200, 0.2) 0%, rgba(150, 150, 150, 0.1) 100%);
+    border: 1px solid rgba(200, 200, 200, 0.3);
 }
 
 /* Confrontation preview */
 #ww_confrontation_preview {
-    margin-top: 15px;
-    padding: 12px;
-    border-radius: 8px;
-    background: #f5f5f5;
-    border: 2px solid #ddd;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(0,0,0,0.4);
+    border: 2px solid rgba(255,255,255,0.15);
+    min-width: 100px;
+    align-self: center;
 }
 
 #ww_confrontation_preview.ww_preview_success {
-    background: #e8f5e9;
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.4) 0%, rgba(56, 142, 60, 0.3) 100%);
     border-color: #4caf50;
+    box-shadow: 0 0 12px rgba(76, 175, 80, 0.3);
 }
 
 #ww_confrontation_preview.ww_preview_failure {
-    background: #ffebee;
+    background: linear-gradient(135deg, rgba(244, 67, 54, 0.4) 0%, rgba(198, 40, 40, 0.3) 100%);
     border-color: #f44336;
+    box-shadow: 0 0 12px rgba(244, 67, 54, 0.3);
 }
 
 #ww_sum_comparison {
-    font-size: 16px;
+    font-size: 13px;
     font-weight: bold;
     text-align: center;
-    margin-bottom: 10px;
+    color: #fff;
+    margin-bottom: 6px;
 }
 
 #ww_preview_status {
-    padding: 4px 12px;
+    padding: 4px 10px;
     border-radius: 4px;
+    font-size: 12px;
+    display: inline-block;
 }
 
 #ww_preview_status.ww_status_success {
@@ -484,15 +593,17 @@
 }
 
 #ww_matching_details {
-    font-size: 12px;
-    color: #555;
+    font-size: 11px;
+    color: #ddd;
+    margin-top: 6px;
 }
 
 .ww_match_row {
     display: flex;
     justify-content: space-between;
-    padding: 4px 0;
-    border-bottom: 1px solid #ddd;
+    gap: 10px;
+    padding: 3px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.15);
 }
 
 .ww_match_row:last-child {
@@ -500,12 +611,12 @@
 }
 
 .ww_match_ok {
-    color: #4caf50;
+    color: #81c784;
     font-weight: bold;
 }
 
 .ww_match_fail {
-    color: #f44336;
+    color: #ef5350;
     font-weight: bold;
 }
 
@@ -516,18 +627,20 @@
 .ww_dice {
     width: var(--dice-size);
     height: var(--dice-size);
-    border-radius: 8px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: bold;
-    font-size: 24px;
-    box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
+    font-size: 18px;
+    box-shadow: 1px 2px 4px rgba(0,0,0,0.3);
     cursor: pointer;
     transition: transform 0.2s;
     /* Ensure dice are not positioned absolutely by ebg.zone or other scripts */
     position: relative !important;
     flex-shrink: 0;
+    box-sizing: border-box;
+    border: 1px solid transparent;
 }
 
 .ww_dice:hover {
@@ -718,18 +831,30 @@
    RESPONSIVE
    ========================================== */
 
-@media (max-width: 900px) {
-    #ww_top_area {
+@media (max-width: 1000px) {
+    #ww_main_area {
         flex-direction: column;
     }
     
-    #ww_map_container {
-        min-width: 100%;
-        min-height: 300px;
-    }
-    
+    #ww_dice_panel,
     #ww_horde_panel {
         width: 100%;
+        min-width: 100%;
+    }
+    
+    #ww_map_container {
+        min-height: 400px;
+    }
+    
+    #ww_horde {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .ww_dice_row {
+        flex-direction: row;
+        flex-wrap: wrap;
     }
 }
 
@@ -829,9 +954,9 @@
 
 /* Draft cards */
 .ww_draft_card {
-    width: 150px;
-    min-height: 100px;
-    padding: 10px;
+    width: var(--card-width);
+    height: var(--card-height);
+    padding: 6px;
     margin: 5px;
     border: 2px solid #ccc;
     border-radius: 8px;
@@ -840,6 +965,8 @@
     transition: all 0.2s;
     display: inline-block;
     vertical-align: top;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 .ww_draft_card:hover {
@@ -871,20 +998,37 @@
 
 .ww_draft_card_name {
     font-weight: bold;
-    font-size: 14px;
-    margin-bottom: 5px;
+    font-size: 11px;
+    margin-bottom: 3px;
     color: #333;
 }
 
 .ww_draft_card_type {
-    font-size: 11px;
+    font-size: 9px;
     color: #666;
     text-transform: uppercase;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
 }
 
 .ww_draft_card_power {
-    font-size: 11px;
+    font-size: 9px;
     color: #555;
-    line-height: 1.3;
+    line-height: 1.2;
+}
+
+/* ==========================================
+   BGA END GAME OVERLAY FIX
+   ========================================== */
+
+/* Ensure BGA's endgame banner displays properly above game content */
+#pagemaintitletext {
+    position: relative;
+    z-index: 1000;
+}
+
+/* Make sure the end game result panel is visible */
+.endgame_overlay,
+#pagesection_gameresult {
+    position: relative;
+    z-index: 999;
 }
