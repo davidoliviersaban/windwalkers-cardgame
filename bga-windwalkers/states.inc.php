@@ -213,7 +213,7 @@ $machinestates = [
         "action" => "stSetupNextChapter",
         "args" => "argSetupNextChapter",
         "transitions" => [
-            "chapterReady" => 2  // Back to draft for new chapter
+            "chapterReady" => 10  // Go to playerTurn for new chapter (no draft needed)
         ]
     ],
 

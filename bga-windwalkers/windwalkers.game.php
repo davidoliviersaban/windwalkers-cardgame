@@ -312,8 +312,7 @@ class Windwalkers extends Table
     private function getOrCreateRecruitPool(array $tile, int $ferCount, int $packCount, int $traineCount): array
     {
         $location = $this->getRecruitLocation($tile);
-        $chapter = $this->getGameStateValue('current_chapter');
-        $poolKey = "pool_initialized_{$location}_ch{$chapter}";
+        $poolKey = "pool_init_{$location}";  // location already contains chapter info
         
         // Check if pool was already initialized this chapter (even if now empty)
         $poolInitialized = $this->getUniqueValueFromDB(
@@ -418,7 +417,7 @@ class Windwalkers extends Table
         
         // Clear pool initialization flags for this chapter
         $this->DbQuery(
-            "DELETE FROM global_var WHERE var_name LIKE 'pool_initialized_%_ch$chapter'"
+            "DELETE FROM global_var WHERE var_name LIKE 'pool_init_recruit_%_ch$chapter'"
         );
     }
 
@@ -638,10 +637,24 @@ class Windwalkers extends Table
     {
         $player_id = $this->getActivePlayerId();
         $horde = $this->getHordeWithPowerStatus($player_id);
+        $counts = $this->countHordeByType($horde);
+        $requirements = $this->getHordeRequirements();
+        
+        // Determine which types are "full" (can't recruit more)
+        $fullTypes = [];
+        foreach ($requirements as $type => $required) {
+            if (($counts[$type] ?? 0) >= $required) {
+                $fullTypes[] = $type;
+            }
+        }
+        
         return [
             'recruitPool' => $this->getRecruitPool($player_id),
             'horde' => $horde,
-            'horde_count' => count($horde)
+            'horde_count' => count($horde),
+            'counts' => $counts,
+            'requirements' => $requirements,
+            'fullTypes' => $fullTypes
         ];
     }
 
@@ -658,6 +671,38 @@ class Windwalkers extends Table
     function stSetupNextChapter(): void
     {
         $this->transitionToNextChapter();
+        
+        $chapter = $this->getGameStateValue('current_chapter');
+        
+        // Get the new tiles
+        $tiles = $this->getCollectionFromDb(
+            "SELECT tile_id id, tile_q q, tile_r r, tile_type type, tile_subtype subtype,
+             tile_wind_force wind_force, tile_discovered discovered,
+             tile_white_dice white_dice, tile_green_dice green_dice, 
+             tile_black_dice black_dice, tile_moral_effect moral_effect
+             FROM tile WHERE tile_chapter = $chapter"
+        );
+        
+        // Get player positions (they are now at start city of new chapter)
+        $players = $this->loadPlayersBasicInfos();
+        $enriched = $this->enrichPlayerInfo(array_keys($players));
+        foreach ($players as $player_id => &$player) {
+            if (isset($enriched[$player_id])) {
+                $player = array_merge($player, $enriched[$player_id]);
+            }
+        }
+        unset($player);
+        
+        // Notify all players of new chapter
+        $this->notifyAllPlayers('newChapter', clienttranslate('Starting Chapter ${chapter_num}!'), [
+            'chapter_num' => $chapter,
+            'tiles' => $tiles,
+            'players' => $players
+        ]);
+        
+        // Activate first player for the new chapter
+        $this->activeNextPlayer();
+        
         $this->gamestate->nextState('chapterReady');
     }
 
@@ -778,6 +823,11 @@ class Windwalkers extends Table
         $players = $this->loadPlayersBasicInfos();
         
         foreach ($players as $player_id => $player) {
+            // Skip eliminated players (their score is already set to 0)
+            if (isset($player['player_eliminated']) && $player['player_eliminated']) {
+                continue;
+            }
+            
             $score = $this->calculatePlayerScore($player_id);
             $this->DbQuery("UPDATE player SET player_score = $score WHERE player_id = $player_id");
             $this->setStat($score, 'total_score', $player_id);

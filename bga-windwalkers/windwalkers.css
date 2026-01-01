@@ -405,15 +405,64 @@
 
 /* Card releasable (can click to release during recruitment) */
 .ww_card_releasable {
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    border: 2px dashed rgba(255, 100, 100, 0.5);
+    cursor: pointer !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border 0.2s ease;
+    position: relative;
+}
+
+.ww_card_releasable::before {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    right: -4px;
+    bottom: -4px;
+    border: 3px dashed rgba(255, 80, 80, 0.9);
+    border-radius: 8px;
+    pointer-events: none;
+    animation: pulse-release 1.5s infinite;
+}
+
+@keyframes pulse-release {
+    0%, 100% { border-color: rgba(255, 80, 80, 0.9); box-shadow: 0 0 8px rgba(255, 50, 50, 0.4); }
+    50% { border-color: rgba(255, 50, 50, 1); box-shadow: 0 0 15px rgba(255, 50, 50, 0.7); }
 }
 
 .ww_card_releasable:hover {
-    transform: translateY(-3px) scale(1.02);
-    box-shadow: 0 4px 12px rgba(255, 50, 50, 0.5);
-    border-color: rgba(255, 50, 50, 0.8);
+    transform: translateY(-5px) scale(1.05) !important;
+}
+
+.ww_card_releasable:hover::before {
+    border-color: rgba(255, 50, 50, 1);
+    box-shadow: 0 0 20px rgba(255, 50, 50, 0.8);
+    animation: none;
+}
+
+.ww_horde_card_item.ww_card_releasable {
+    cursor: pointer !important;
+}
+
+.ww_horde_card_item.ww_card_releasable:hover {
+    transform: translateY(-5px) scale(1.05) !important;
+}
+
+/* Card disabled (cannot recruit - type limit reached) */
+.ww_card_disabled {
+    opacity: 0.5;
+    cursor: not-allowed !important;
+    filter: grayscale(50%);
+    pointer-events: none;
+}
+
+.ww_card_disabled::after {
+    content: '✗';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 40px;
+    color: rgba(255, 0, 0, 0.7);
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 }
 
 /* ==========================================

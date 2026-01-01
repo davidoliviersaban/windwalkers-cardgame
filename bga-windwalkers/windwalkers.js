@@ -259,6 +259,45 @@ function (dojo, declare) {
             this._data.currentState = stateName;
         },
         
+        /**
+         * Check if horde meets all requirements
+         * Returns { valid: bool, canSkip: bool, reason: string, excessTypes: [] }
+         */
+        checkHordeValidity: function(hordeCount, counts, requirements) {
+            var result = {
+                valid: true,
+                canSkip: true,
+                reason: '',
+                excessTypes: []
+            };
+            
+            // Check max hordiers
+            if (hordeCount > 8) {
+                result.valid = false;
+                result.canSkip = false;
+                result.reason = _('⚠ Must release a Hordier!');
+                return result;
+            }
+            
+            // Check maximum requirements (can't exceed type limits)
+            if (counts && requirements) {
+                for (var type in requirements) {
+                    var required = requirements[type];
+                    var current = counts[type] || 0;
+                    if (current > required) {
+                        result.valid = false;
+                        result.canSkip = false;
+                        result.excessTypes.push((current - required) + ' ' + type);
+                    }
+                }
+                if (result.excessTypes.length > 0) {
+                    result.reason = _('⚠ Horde exceeds limits - Must release!');
+                }
+            }
+            
+            return result;
+        },
+        
         // Utilities
         getTerrainName: function(subtype) {
             var names = {
@@ -794,15 +833,20 @@ function (dojo, declare) {
             // Clear any existing handlers first to prevent accumulation
             this.clearHordeReleasable();
             
+            var count = 0;
             WW_DOM.forEach('.ww_horde_card_item', function(cardEl) {
                 WW_DOM.addClass(cardEl, 'ww_card_releasable');
                 
                 var cardId = cardEl.id.replace('ww_horde_item_', '');
+                console.log('[WW] Making card releasable:', cardEl.id, 'cardId:', cardId);
                 WW_DOM.connectWithId(cardEl.id, 'onclick', null, function(evt) {
+                    console.log('[WW] Card clicked!', cardId);
                     WW_DOM.stopEvent(evt);
                     onReleaseCard(cardId);
                 });
+                count++;
             });
+            console.log('[WW] Made', count, 'cards releasable');
         },
         
         clearHordeReleasable: function() {
@@ -938,17 +982,20 @@ function (dojo, declare) {
             WW_DOM.clear('ww_available_characters');
             
             var titleEl = dojo.query('#ww_draft_panel h3')[0];
-            if (titleEl) WW_DOM.setHtml(titleEl, _('Recruitment - Click a character to recruit'));
+            if (titleEl) WW_DOM.setHtml(titleEl, _('Recruitment - Click to recruit or release'));
             
             WW_DOM.hide('ww_draft_selected');
             WW_DOM.forEach('.ww_draft_requirements', function(el) {
                 WW_DOM.hide(el);
             });
             
+            // All cards are always clickable - player can recruit any character
             for (var cardId in recruitPool) {
+                var card = recruitPool[cardId];
+                
                 this.createCard({
                     prefix: 'recruit_card',
-                    card: recruitPool[cardId],
+                    card: card,
                     containerId: 'ww_available_characters',
                     extraClass: 'ww_recruit_card',
                     onClick: function(cid) {
@@ -957,7 +1004,7 @@ function (dojo, declare) {
                 });
             }
             
-            return { isEmpty: false, count: poolSize };
+            return { isEmpty: false, count: poolSize, recruitableCount: poolSize };
         },
         
         hideRecruitmentInterface: function() {
@@ -1322,7 +1369,19 @@ function (dojo, declare) {
                     this.addActionButton('btn_confirm_roll', _('Confirm'), 'onConfirmRoll', null, false, buttonColor);
                     break;
                 case 'recruitment':
-                    this.addActionButton('btn_skip_recruit', _('Skip Recruitment'), 'onSkipRecruitment', null, false, 'gray');
+                    // Can finish recruitment only if horde meets all constraints
+                    var validity = WW_State.checkHordeValidity(
+                        args ? args.horde_count : 0,
+                        args ? args.counts : null,
+                        args ? args.requirements : null
+                    );
+                    
+                    if (validity.canSkip) {
+                        this.addActionButton('btn_skip_recruit', _('Finish Recruitment'), 'onSkipRecruitment', null, false, 'blue');
+                    } else {
+                        this.addActionButton('btn_skip_recruit', validity.reason, null, null, false, 'red');
+                        dojo.addClass('btn_skip_recruit', 'disabled');
+                    }
                     break;
                 case 'mustReleaseHordier':
                     // No skip button - player must release a hordier
@@ -1436,30 +1495,31 @@ function (dojo, declare) {
         
         enterRecruitmentState: function(args) {
             var self = this;
+            var hordeCount = args.horde_count || 0;
+            
+            // Check horde validity
+            var validity = WW_State.checkHordeValidity(hordeCount, args.counts, args.requirements);
+            
             var result = WW_Cards.showRecruitmentInterface(args, function(cardId) {
                 self.onRecruitCard(cardId);
             });
             
-            // Make horde cards selectable to release if player has 8+ cards
-            var hordeCount = args.horde_count || 0;
-            if (this.isCurrentPlayerActive() && hordeCount >= 8) {
+            // Always make horde cards selectable to release (player can always release)
+            if (this.isCurrentPlayerActive()) {
                 WW_Cards.makeHordeReleasable(args.horde, function(cardId) {
                     self.onReleaseHordier(cardId);
                 });
             }
             
-            if (result && result.isEmpty) {
-                if (hordeCount >= 8) {
-                    this.showMessage(_("No recruitment available. You may release a Hordier to make room."), "info");
-                } else {
-                    this.showMessage(_("No characters available for recruitment at this location."), "info");
-                }
+            // Show appropriate message based on horde state
+            if (hordeCount > 8) {
+                this.showMessage(_("Too many Hordiers! Click on a Hordier to release before finishing."), "error");
+            } else if (validity.excessTypes.length > 0) {
+                this.showMessage(_("Horde exceeds type limits: ") + validity.excessTypes.join(', ') + _(" - Release a Hordier to continue."), "error");
+            } else if (result && result.isEmpty) {
+                this.showMessage(_("No characters available. Click 'Finish Recruitment' to continue."), "info");
             } else {
-                if (hordeCount >= 8) {
-                    this.showMessage(_("Horde is full! Release a Hordier before recruiting, or skip."), "info");
-                } else {
-                    this.showMessage(_("You may recruit new characters. Click on a card to recruit or Skip."), "info");
-                }
+                this.showMessage(_("Recruit characters or release Hordiers. Click 'Finish Recruitment' when done."), "info");
             }
         },
         
@@ -1648,6 +1708,9 @@ function (dojo, declare) {
             
             dojo.subscribe('chapterComplete', this, "notif_chapterComplete");
             this.notifqueue.setSynchronous('chapterComplete', 1000);
+            
+            dojo.subscribe('newChapter', this, "notif_newChapter");
+            this.notifqueue.setSynchronous('newChapter', 1500);
             
             dojo.subscribe('moralChanged', this, "notif_moralChanged");
             this.notifqueue.setSynchronous('moralChanged', 500);
@@ -1842,6 +1905,41 @@ function (dojo, declare) {
         
         notif_chapterComplete: function(notif) {
             this.showMessage(_('Chapter ') + notif.args.chapter_num + _(' complete!'), 'info');
+        },
+        
+        notif_newChapter: function(notif) {
+            var self = this;
+            
+            // Clear existing tiles
+            var mapScrollable = $('ww_map_scrollable');
+            if (mapScrollable) {
+                // Remove all tile elements
+                dojo.query('.ww_tile', mapScrollable).forEach(function(node) {
+                    dojo.destroy(node);
+                });
+            }
+            
+            // Create new tiles
+            var tiles = notif.args.tiles;
+            for (var tile_id in tiles) {
+                var tileEl = WW_Hex.createTile(tiles[tile_id]);
+                WW_DOM.connect(tileEl, 'onclick', this, 'onTileClick');
+            }
+            
+            // Update player positions
+            var players = notif.args.players;
+            for (var player_id in players) {
+                var player = players[player_id];
+                WW_Hex.movePlayerToken(this, player_id, player.pos_q, player.pos_r);
+            }
+            
+            // Center map on current player
+            setTimeout(function() {
+                self.centerMapOnPlayer(players);
+            }, 500);
+            
+            // Update chapter number in state
+            WW_State.chapter = notif.args.chapter_num;
         },
         
         notif_moralChanged: function(notif) {

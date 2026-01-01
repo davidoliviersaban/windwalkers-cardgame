@@ -305,5 +305,23 @@ trait WW_Setup
         
         // Reset wind tokens
         $this->DbQuery("UPDATE wind_token SET token_location = 'bag', token_tile_id = NULL");
+        
+        // Reset player movement counters for new chapter
+        $this->DbQuery("UPDATE player SET player_has_moved = 0, player_surpass_count = 0");
+        
+        // Reset all hordiers power_used status for new chapter
+        $this->DbQuery("UPDATE card SET card_power_used = 0");
+        
+        // Move all players to the start city of the new chapter
+        $start_city = $this->chapters[$chapter]['start_city'];
+        $start_tile = $this->getObjectFromDB(
+            "SELECT tile_q, tile_r FROM tile WHERE tile_subtype = '$start_city' AND tile_chapter = $chapter"
+        );
+        
+        if ($start_tile) {
+            $this->DbQuery(
+                "UPDATE player SET player_position_q = {$start_tile['tile_q']}, player_position_r = {$start_tile['tile_r']}"
+            );
+        }
     }
 }

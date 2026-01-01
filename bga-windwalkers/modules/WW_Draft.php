@@ -202,7 +202,62 @@ trait WW_Draft
     }
 
     /**
-     * Validate horde is complete
+     * Check if horde meets all requirements
+     * Returns true if valid, false otherwise
+     */
+    function isHordeValid(array $counts, array $requirements): bool
+    {
+        foreach ($requirements as $type => $required) {
+            if (($counts[$type] ?? 0) < $required) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    /**
+     * Check if horde can skip recruitment (doesn't exceed limits)
+     * Returns ['valid' => bool, 'canSkip' => bool, 'reason' => string, 'excessTypes' => []]
+     */
+    function checkHordeValidity(int $hordeCount, array $counts, array $requirements): array
+    {
+        $result = [
+            'valid' => true,
+            'canSkip' => true,
+            'reason' => '',
+            'excessTypes' => []
+        ];
+        
+        // Check max hordiers
+        if ($hordeCount > 8) {
+            $result['valid'] = false;
+            $result['canSkip'] = false;
+            $result['reason'] = $this->_("You have more than 8 Hordiers! You must release one.");
+            return $result;
+        }
+        
+        // Check maximum requirements (can't exceed type limits)
+        foreach ($requirements as $type => $maxAllowed) {
+            $current = $counts[$type] ?? 0;
+            if ($current > $maxAllowed) {
+                $result['valid'] = false;
+                $result['canSkip'] = false;
+                $result['excessTypes'][] = ($current - $maxAllowed) . ' ' . $type;
+            }
+        }
+        
+        if (!empty($result['excessTypes'])) {
+            $result['reason'] = sprintf(
+                $this->_("Horde exceeds limits (%s)! You must release."),
+                implode(', ', $result['excessTypes'])
+            );
+        }
+        
+        return $result;
+    }
+    
+    /**
+     * Validate horde is complete (throws exception if not)
      */
     private function validateHordeComplete(array $counts, array $requirements): void
     {
@@ -394,7 +449,8 @@ trait WW_Draft
             throw new BgaUserException($this->_("This card is not available for recruitment"));
         }
         
-        // Move card to player's horde
+        // Move card to player's horde (we allow recruiting even if it exceeds limits,
+        // player can then release hordiers to balance before finishing recruitment)
         $this->cards->moveCard($card_id, 'horde_' . $player_id);
         
         $type_arg = $card['card_type_arg'] ?? $card['type_arg'] ?? null;
@@ -483,6 +539,18 @@ trait WW_Draft
     function actSkipRecruitment(): void
     {
         $this->checkAction('actSkipRecruitment');
+        
+        $player_id = $this->getActivePlayerId();
+        $horde = $this->cards->getCardsInLocation('horde_' . $player_id);
+        $hordeCount = count($horde);
+        $counts = $this->countHordeByType($horde);
+        $requirements = $this->getHordeRequirements();
+        
+        $validity = $this->checkHordeValidity($hordeCount, $counts, $requirements);
+        if (!$validity['canSkip']) {
+            throw new BgaUserException($validity['reason']);
+        }
+        
         $this->gamestate->nextState('done');
     }
 

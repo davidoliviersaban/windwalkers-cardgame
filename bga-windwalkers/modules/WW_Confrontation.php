@@ -535,7 +535,18 @@ trait WW_Confrontation
         $player_id = $this->getGameStateValue('player_to_eliminate');
         
         if ($player_id > 0) {
+            // Calculate final scores for remaining players BEFORE eliminating
+            // This avoids conflicts with eliminatePlayer
+            $this->calculateFinalScores();
+            
+            // Set eliminated player's score to 0 (after calculateFinalScores to override)
+            $this->DbQuery("UPDATE player SET player_score = 0 WHERE player_id = $player_id");
+            
+            // Eliminate the player
             $this->eliminatePlayer($player_id);
+            
+            // Clear the value
+            $this->setGameStateValue('player_to_eliminate', 0);
         }
         
         $this->gamestate->nextState('gameOver');
