@@ -301,6 +301,9 @@ trait WW_Setup
         $chapter = $this->getGameStateValue('current_chapter') + 1;
         $this->setGameStateValue('current_chapter', $chapter);
         
+        // Reset chapter day counter to 1 (total days remains unchanged for scoring)
+        $this->setGameStateValue('chapter_round', 1);
+                
         $this->setupChapterTiles($chapter);
         
         // Reset wind tokens
@@ -308,6 +311,9 @@ trait WW_Setup
         
         // Reset player movement counters for new chapter
         $this->DbQuery("UPDATE player SET player_has_moved = 0, player_surpass_count = 0");
+        
+        // Update player_chapter for all players
+        $this->DbQuery("UPDATE player SET player_chapter = $chapter");
         
         // Reset all hordiers power_used status for new chapter
         $this->DbQuery("UPDATE card SET card_power_used = 0");

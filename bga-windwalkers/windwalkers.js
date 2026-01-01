@@ -537,10 +537,10 @@ function (dojo, declare) {
         getHordeDice: function() {
             var dice = [];
             WW_DOM.forEach('#ww_horde_dice .ww_dice', function(diceEl) {
-                dice.push({
-                    value: parseInt(WW_DOM.getAttr(diceEl, 'data-value')) || 0,
-                    type: 'blue'
-                });
+                var value = parseInt(WW_DOM.getAttr(diceEl, 'data-value')) || 0;
+                var type = 'blue';
+                if (WW_DOM.hasClass(diceEl, 'ww_dice_violet')) type = 'violet';
+                dice.push({ value: value, type: type });
             });
             return dice;
         },
@@ -558,29 +558,41 @@ function (dojo, declare) {
         },
         
         calculateConfrontationResult: function(hordeDice, windDice, windForce) {
-            var hordeSum = hordeDice.reduce(function(sum, d) { return sum + d.value; }, 0);
-            var windSum = windDice.reduce(function(sum, d) { return sum + d.value; }, 0);
+            // 1. Separate dice by type
+            var blueDice = hordeDice.filter(function(d) { return d.type === 'blue'; });
+            var violetDice = hordeDice.filter(function(d) { return d.type === 'violet'; });
             
-            var hordeCounts = {};
-            for (var i = 1; i <= 6; i++) hordeCounts[i] = 0;
-            hordeDice.forEach(function(d) { hordeCounts[d.value] = (hordeCounts[d.value] || 0) + 1; });
+            var greenDice = windDice.filter(function(d) { return d.type === 'green'; });
+            var whiteDice = windDice.filter(function(d) { return d.type === 'white'; });
+            var blackDice = windDice.filter(function(d) { return d.type === 'black'; });
+            var nonBlackWind = windDice.filter(function(d) { return d.type !== 'black'; });
             
-            var availableCounts = Object.assign({}, hordeCounts);
+            // 2. FIRST: Match violet vs black (separate channel, independent of wind force)
+            var violetCounts = {};
+            for (var i = 1; i <= 6; i++) violetCounts[i] = 0;
+            violetDice.forEach(function(d) { violetCounts[d.value]++; });
             
-            var windByType = { green: [], white: [], black: [] };
-            windDice.forEach(function(d) {
-                if (windByType[d.type]) windByType[d.type].push(d.value);
-            });
+            var blackValues = blackDice.map(function(d) { return d.value; });
+            var blackResult = this._matchDice(blackValues, violetCounts);
+            var blackOk = blackResult.matched >= blackResult.required;
             
-            var greenResult = this._matchDice(windByType.green, availableCounts);
+            // 3. THEN: Match blue vs green/white
+            var blueCounts = {};
+            for (var i = 1; i <= 6; i++) blueCounts[i] = 0;
+            blueDice.forEach(function(d) { blueCounts[d.value]++; });
+            
+            var greenValues = greenDice.map(function(d) { return d.value; });
+            var greenResult = this._matchDice(greenValues, blueCounts);
             var greenOk = greenResult.matched >= greenResult.required || greenResult.matched >= windForce;
             var reducedForce = Math.max(0, windForce - greenResult.matched);
             
-            var whiteResult = this._matchDice(windByType.white, availableCounts);
+            var whiteValues = whiteDice.map(function(d) { return d.value; });
+            var whiteResult = this._matchDice(whiteValues, blueCounts);
             var whiteOk = whiteResult.matched >= reducedForce;
             
-            var blackResult = this._matchDice(windByType.black, availableCounts);
-            var blackOk = blackResult.matched >= blackResult.required;
+            // 4. Sum check: blue vs non-black
+            var hordeSum = blueDice.reduce(function(sum, d) { return sum + d.value; }, 0);
+            var windSum = nonBlackWind.reduce(function(sum, d) { return sum + d.value; }, 0);
             
             return {
                 success: (hordeSum >= windSum) && greenOk && whiteOk && blackOk,
@@ -964,6 +976,83 @@ function (dojo, declare) {
             WW_DOM.hide('ww_draft_panel');
         },
         
+        // Chapter Draft Interface (start of each chapter)
+        showChapterDraftInterface: function(args, onCardClick) {
+            if (!args) return;
+            
+            WW_DOM.show('ww_draft_panel');
+            WW_DOM.clear('ww_available_characters');
+            WW_DOM.clear('ww_draft_selected');
+            
+            var titleEl = dojo.query('#ww_draft_panel h3')[0];
+            if (titleEl) WW_DOM.setHtml(titleEl, _('Chapter ') + (args.chapter || 1) + _(' - Recruit new characters (up to 2 each type)'));
+            
+            // Show available cards
+            var self = this;
+            var requirements = args.requirements || {};
+            var draftedCounts = args.drafted_counts || {};
+            
+            if (args.available) {
+                for (var cardId in args.available) {
+                    var card = args.available[cardId];
+                    var cardType = card.card_type || card.type || '';
+                    var currentDrafted = draftedCounts[cardType] || 0;
+                    var maxAllowed = requirements[cardType] || 2;
+                    var isDisabled = currentDrafted >= maxAllowed;
+                    
+                    this.createCard({
+                        prefix: 'chapter_draft_card',
+                        card: card,
+                        containerId: 'ww_available_characters',
+                        extraClass: isDisabled ? 'ww_card_disabled' : '',
+                        onClick: isDisabled ? null : function(cid) { onCardClick(cid); }
+                    });
+                }
+            }
+            
+            // Show drafted cards (cards selected this turn)
+            if (args.drafted) {
+                for (var cardId in args.drafted) {
+                    this.createCard({
+                        prefix: 'chapter_draft_card',
+                        card: args.drafted[cardId],
+                        containerId: 'ww_draft_selected',
+                        extraClass: 'ww_selected'
+                    });
+                }
+            }
+            
+            // Update counts to show chapter draft requirements
+            this.updateChapterDraftCounts(draftedCounts, requirements);
+        },
+        
+        hideChapterDraftInterface: function() {
+            WW_DOM.hide('ww_draft_panel');
+            WW_DOM.setStyle('ww_draft_selected', 'display', 'flex');
+            WW_DOM.forEach('.ww_draft_requirements', function(el) {
+                WW_DOM.setStyle(el, 'display', 'flex');
+            });
+        },
+        
+        updateChapterDraftCounts: function(counts, requirements) {
+            if (!counts || !requirements) return;
+            
+            var types = ['traceur', 'fer', 'pack', 'traine'];
+            for (var i = 0; i < types.length; i++) {
+                var type = types[i];
+                var countEl = $('count_' + type);
+                if (countEl) WW_DOM.setHtml(countEl, counts[type] || 0);
+                
+                var reqEl = $('req_' + type);
+                if (reqEl) {
+                    var current = counts[type] || 0;
+                    var max = requirements[type] || 2;
+                    WW_DOM.removeClass(reqEl, 'ww_complete ww_incomplete');
+                    WW_DOM.addClass(reqEl, current >= max ? 'ww_complete' : 'ww_incomplete');
+                }
+            }
+        },
+        
         // Recruitment Management
         showRecruitmentInterface: function(args, onRecruitClick) {
             if (!args) return { isEmpty: true };
@@ -1034,18 +1123,16 @@ function (dojo, declare) {
             if (!panel) return;
             
             var moralHtml = '<div class="ww_player_info">' +
-                '<div class="ww_moral_container">' +
-                    '<span class="ww_moral_icon"></span>' +
-                    '<span id="moral_counter_' + playerId + '" class="ww_moral_value">' + player.moral + '</span>' +
-                '</div>' +
-                '<div class="ww_dice_container">' +
-                    '<span class="ww_dice_icon"></span>' +
-                    '<span id="dice_counter_' + playerId + '" class="ww_dice_value">' + 
-                        (player.dice_count - player.surpass) + '</span>' +
-                '</div>' +
-                '<div class="ww_position">' +
-                    '<span>Position: </span>' +
-                    '<span id="position_' + playerId + '">(' + player.pos_q + ',' + player.pos_r + ')</span>' +
+                '<div class="ww_stat_row">' +
+                    '<div class="ww_moral_container">' +
+                        '<span class="ww_moral_icon"></span>' +
+                        '<span id="moral_counter_' + playerId + '" class="ww_moral_value">' + player.moral + '</span>' +
+                    '</div>' +
+                    '<div class="ww_dice_container">' +
+                        '<span class="ww_dice_icon_small"></span>' +
+                        '<span id="dice_counter_' + playerId + '" class="ww_dice_value">' + 
+                            (player.dice_count - player.surpass) + '</span>' +
+                    '</div>' +
                 '</div>' +
             '</div>';
             
@@ -1053,6 +1140,65 @@ function (dojo, declare) {
             
             WW_State.setPlayerMoral(playerId, player.moral);
             WW_State.setPlayerDice(playerId, player.dice_count);
+        },
+        
+        setupGameInfoPanel: function(gamedatas) {
+            // Create game info panel in page title area or dedicated zone
+            var chapter = gamedatas.current_chapter || 1;
+            var chapterDay = gamedatas.chapter_round || 1;
+            var totalDays = gamedatas.current_round || 1;
+            
+            var existingPanel = $('ww_game_info_panel');
+            if (existingPanel) {
+                WW_DOM.setHtml('ww_chapter_value', chapter);
+                WW_DOM.setHtml('ww_chapter_day_value', chapterDay);
+                WW_DOM.setHtml('ww_total_days_value', totalDays);
+                return;
+            }
+            
+            var infoHtml = '<div id="ww_game_info_panel" class="ww_game_info">' +
+                '<div class="ww_chapter_info">' +
+                    '<span class="ww_chapter_icon">📖</span>' +
+                    '<span class="ww_chapter_label">Chapter</span>' +
+                    '<span id="ww_chapter_value" class="ww_chapter_value">' + chapter + '</span>' +
+                '</div>' +
+                '<div class="ww_day_info">' +
+                    '<span class="ww_day_icon">🌙</span>' +
+                    '<span class="ww_day_label">Day</span>' +
+                    '<span id="ww_chapter_day_value" class="ww_day_value">' + chapterDay + '</span>' +
+                '</div>' +
+                '<div class="ww_total_days_info">' +
+                    '<span class="ww_total_icon">📅</span>' +
+                    '<span class="ww_total_label">Total</span>' +
+                    '<span id="ww_total_days_value" class="ww_total_value">' + totalDays + '</span>' +
+                '</div>' +
+            '</div>';
+            
+            // Place in right column, player boards, or page title area
+            var rightCol = $('right-side-first-part');
+            var playerBoards = $('player_boards');
+            var pageTitle = $('page-title');
+            
+            if (rightCol) {
+                WW_DOM.place(infoHtml, rightCol, 'first');
+            } else if (playerBoards) {
+                WW_DOM.place(infoHtml, playerBoards, 'before');
+            } else if (pageTitle) {
+                WW_DOM.place(infoHtml, pageTitle, 'after');
+            } else {
+                console.warn('Could not find container for game info panel');
+            }
+        },
+        
+        updateChapter: function(chapter) {
+            WW_DOM.setHtml('ww_chapter_value', chapter);
+        },
+        
+        updateDay: function(chapterDay, totalDays) {
+            WW_DOM.setHtml('ww_chapter_day_value', chapterDay);
+            if (totalDays) {
+                WW_DOM.setHtml('ww_total_days_value', totalDays);
+            }
         },
         
         updateMoral: function(playerId, newMoral) {
@@ -1122,6 +1268,9 @@ function (dojo, declare) {
         setup: function(gamedatas) {
             // Initialize state
             WW_State.init(gamedatas);
+            
+            // Setup game info panel (chapter, day)
+            WW_Player.setupGameInfoPanel(gamedatas);
             
             // Setup player boards
             for (var player_id in gamedatas.players) {
@@ -1292,6 +1441,9 @@ function (dojo, declare) {
                 case 'draftHorde':
                     this.enterDraftState(args.args);
                     break;
+                case 'chapterDraft':
+                    this.enterChapterDraftState(args.args);
+                    break;
                 case 'playerTurn':
                     this.enterPlayerTurnState(args.args);
                     break;
@@ -1319,6 +1471,9 @@ function (dojo, declare) {
                     WW_Hex.clearHighlights();
                     WW_Cards.clearHordeUsable();
                     break;
+                case 'chapterDraft':
+                    WW_Cards.hideChapterDraftInterface();
+                    break;
                 case 'confrontation':
                 case 'diceResult':
                     WW_Cards.clearHordeUsable();
@@ -1342,6 +1497,9 @@ function (dojo, declare) {
             switch (stateName) {
                 case 'draftHorde':
                     this.addActionButton('btn_confirm_draft', _('Confirm Horde'), 'onConfirmDraft');
+                    break;
+                case 'chapterDraft':
+                    this.addActionButton('btn_chapter_draft_done', _('Finish Recruiting'), 'onChapterDraftDone', null, false, 'blue');
                     break;
                 case 'playerTurn':
                     if (args && args.has_moved > 0) {
@@ -1400,6 +1558,24 @@ function (dojo, declare) {
             WW_Cards.showDraftInterface(args, function(cardId) {
                 self.onDraftCardClick(cardId);
             });
+        },
+        
+        enterChapterDraftState: function(args) {
+            var self = this;
+            
+            // Show the draft interface for chapter recruitment
+            WW_Cards.showChapterDraftInterface(args, function(cardId) {
+                self.onChapterDraftRecruit(cardId);
+            });
+            
+            // Show message about what's available
+            var chapter = args.chapter || 1;
+            var total = 0;
+            var requirements = args.requirements || {};
+            for (var type in requirements) {
+                total += requirements[type];
+            }
+            this.showMessage(_("Chapter ") + chapter + _(": Recruit up to 2 characters of each type (max 8 total)"), "info");
         },
         
         enterPlayerTurnState: function(args) {
@@ -1573,6 +1749,21 @@ function (dojo, declare) {
             });
         },
         
+        onChapterDraftRecruit: function(cardId) {
+            if (!this.isCurrentPlayerActive()) return;
+            
+            this.performAction('actChapterDraftRecruit', {
+                card_id: cardId
+            });
+        },
+        
+        onChapterDraftDone: function(evt) {
+            if (evt) WW_DOM.stopEvent(evt);
+            if (!this.isCurrentPlayerActive()) return;
+            
+            this.performAction('actChapterDraftDone', {});
+        },
+        
         ///////////////////////////////////////////////////
         //// Action Handlers
         
@@ -1723,6 +1914,15 @@ function (dojo, declare) {
             
             dojo.subscribe('powerUsed', this, "notif_powerUsed");
             this.notifqueue.setSynchronous('powerUsed', 500);
+            
+            dojo.subscribe('chapterDraftRecruit', this, "notif_chapterDraftRecruit");
+            this.notifqueue.setSynchronous('chapterDraftRecruit', 500);
+            
+            dojo.subscribe('chapterDraftComplete', this, "notif_chapterDraftComplete");
+            this.notifqueue.setSynchronous('chapterDraftComplete', 500);
+            
+            dojo.subscribe('newDay', this, "notif_newDay");
+            this.notifqueue.setSynchronous('newDay', 300);
         },
         
         notif_diceRolled: function(notif) {
@@ -1827,6 +2027,35 @@ function (dojo, declare) {
             if (notif.args.horde) {
                 WW_Cards.refreshHorde(notif.args.horde);
             }
+        },
+        
+        notif_chapterDraftRecruit: function(notif) {
+            // Remove the drafted card from available pool
+            var cardEl = $('chapter_draft_card_' + notif.args.card_id);
+            if (cardEl) {
+                WW_DOM.destroy(cardEl);
+            }
+            
+            // If current player, add to selected section
+            if (notif.args.player_id == this.player_id && notif.args.card) {
+                WW_Cards.createCard({
+                    prefix: 'chapter_draft_card',
+                    card: notif.args.card,
+                    containerId: 'ww_draft_selected',
+                    extraClass: 'ww_selected'
+                });
+            }
+        },
+        
+        notif_chapterDraftComplete: function(notif) {
+            // If current player, add drafted cards to horde
+            if (notif.args.player_id == this.player_id && notif.args.cards) {
+                for (var cardId in notif.args.cards) {
+                    WW_Cards.addHordeCard(notif.args.cards[cardId]);
+                }
+            }
+            // Hide the draft panel
+            WW_Cards.hideChapterDraftInterface();
         },
         
         notif_autoSelectTeam: function(notif) {
@@ -1938,8 +2167,14 @@ function (dojo, declare) {
                 self.centerMapOnPlayer(players);
             }, 500);
             
-            // Update chapter number in state
+            // Update chapter number in state and UI
             WW_State.chapter = notif.args.chapter_num;
+            WW_Player.updateChapter(notif.args.chapter_num);
+            WW_Player.updateDay(1, null);  // Reset chapter day to 1 (keep total unchanged)
+        },
+        
+        notif_newDay: function(notif) {
+            WW_Player.updateDay(notif.args.chapter_day, notif.args.total_days);
         },
         
         notif_moralChanged: function(notif) {

@@ -74,26 +74,41 @@ trait WW_Dice
      * @param array $challenge_dice Challenge dice to match against
      * @param array &$available_counts Player dice counts (mutated)
      * @param string $dimension Dice type to match (green, white, black)
+     * @param string|null $player_type Player dice type to use (null = use available_counts, 'violet' = use violet dice)
+     * @param array|null $player_dice Full player dice array (needed when player_type is specified)
      */
-    function matchAndConsumeDice(array $challenge_dice, array &$available_counts, string $dimension): array
+    function matchAndConsumeDice(array $challenge_dice, array &$available_counts, string $dimension, ?string $player_type = null, ?array $player_dice = null): array
     {
         $challenge_counts = $this->countFaceOccurrences($challenge_dice, $dimension, 'challenge');
-        $player_before = $available_counts;
+        
+        // If player_type is specified, use those specific dice instead of available_counts
+        if ($player_type !== null && $player_dice !== null) {
+            $player_counts = $this->countFaceOccurrences($player_dice, $player_type, 'player');
+        } else {
+            $player_counts = $available_counts;
+        }
+        
+        $player_before = $player_counts;
 
         $required = array_sum($challenge_counts);
         $matched = 0;
         $consumed = array_fill(1, 6, 0);
 
         for ($v = 1; $v <= 6; $v++) {
-            $consumed[$v] = min($available_counts[$v], $challenge_counts[$v]);
+            $consumed[$v] = min($player_counts[$v], $challenge_counts[$v]);
             $matched += $consumed[$v];
-            $available_counts[$v] -= $consumed[$v];
+            $player_counts[$v] -= $consumed[$v];
+        }
+        
+        // Only update available_counts if we're using the default mode
+        if ($player_type === null) {
+            $available_counts = $player_counts;
         }
 
         return [
             'required' => $required,
             'available_before' => array_sum($player_before),
-            'available_after' => array_sum($available_counts),
+            'available_after' => array_sum($player_counts),
             'matched' => $matched,
             'ok' => ($matched >= $required),
             'consumed' => $consumed

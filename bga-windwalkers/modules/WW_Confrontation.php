@@ -24,15 +24,35 @@ trait WW_Confrontation
         // Final dice count after surpass reduction
         $dice_count = max(0, $base_dice - $surpass_count);
         
+        // Roll blue horde dice
         $horde_dice = $this->rollDice($dice_count, 'blue', 'player');
         
-        // Store in database and get dice with their DB IDs
-        $stored_dice = $this->storeDiceRolls($horde_dice);
+        // Get selected tile to check for black dice (fatalité)
+        $tile_id = $this->getGameStateValue('selected_tile');
+        $tile = $this->getObjectFromDB("SELECT * FROM tile WHERE tile_id = $tile_id");
+        $black_dice_count = (int)($tile['tile_black_dice'] ?? 0);
         
-        $this->notifyAllPlayers('diceRolled', clienttranslate('${player_name} rolls ${dice_count} dice'), [
+        // Roll violet dice to counter black dice (destin)
+        $violet_dice = [];
+        if ($black_dice_count > 0) {
+            $violet_dice = $this->rollDice($black_dice_count, 'violet', 'player');
+        }
+        
+        // Combine all player dice
+        $all_dice = array_merge($horde_dice, $violet_dice);
+        
+        // Store in database and get dice with their DB IDs
+        $stored_dice = $this->storeDiceRolls($all_dice);
+        
+        $message = $black_dice_count > 0 
+            ? clienttranslate('${player_name} rolls ${dice_count} blue dice and ${violet_count} violet dice')
+            : clienttranslate('${player_name} rolls ${dice_count} dice');
+        
+        $this->notifyAllPlayers('diceRolled', $message, [
             'player_id' => $player_id,
             'player_name' => $this->getActivePlayerName(),
             'dice_count' => $dice_count,
+            'violet_count' => $black_dice_count,
             'dice' => $stored_dice
         ]);
         
@@ -101,19 +121,34 @@ trait WW_Confrontation
         // Clear current dice
         $this->DbQuery("DELETE FROM dice_roll WHERE dice_owner = 'player'");
         
-        // Roll new dice
+        // Roll new blue dice
         $player = $this->getObjectFromDB("SELECT * FROM player WHERE player_id = $player_id");
         $surpass_count = (int)$player['player_surpass_count'];
         $base_dice = (int)$player['player_dice_count'];
         $dice_count = max(0, $base_dice - $surpass_count);
         
         $horde_dice = $this->rollDice($dice_count, 'blue', 'player');
-        $stored_dice = $this->storeDiceRolls($horde_dice);
         
-        $this->notifyAllPlayers('diceRolled', clienttranslate('${player_name} rerolls all dice (costs 2 moral)'), [
+        // Get selected tile to check for black dice (fatalité)
+        $tile_id = $this->getGameStateValue('selected_tile');
+        $tile = $this->getObjectFromDB("SELECT * FROM tile WHERE tile_id = $tile_id");
+        $black_dice_count = (int)($tile['tile_black_dice'] ?? 0);
+        
+        // Roll violet dice to counter black dice (destin)
+        $violet_dice = [];
+        if ($black_dice_count > 0) {
+            $violet_dice = $this->rollDice($black_dice_count, 'violet', 'player');
+        }
+        
+        // Combine all player dice
+        $all_dice = array_merge($horde_dice, $violet_dice);
+        $stored_dice = $this->storeDiceRolls($all_dice);
+        
+        $this->notifyAllPlayers('diceRolled', clienttranslate('${player_name} rerolls all dice (costs 1 moral)'), [
             'player_id' => $player_id,
             'player_name' => $this->getActivePlayerName(),
             'dice_count' => $dice_count,
+            'violet_count' => $black_dice_count,
             'dice' => $stored_dice,
             'new_moral' => $moral - $moral_cost
         ]);
@@ -307,33 +342,41 @@ trait WW_Confrontation
      */
     private function calculateConfrontationResult(array $horde_dice, array $wind_dice, int $wind_force): array
     {
-        $horde_sum = array_sum(array_column($horde_dice, 'dice_value'));
-        $wind_sum = array_sum(array_column($wind_dice, 'dice_value'));
+        // 1. Separate dice by type
+        $blue_dice = array_filter($horde_dice, fn($d) => $d['dice_type'] == 'blue');
+        $green_dice = array_filter($wind_dice, fn($d) => $d['dice_type'] == 'green');
+        $white_dice = array_filter($wind_dice, fn($d) => $d['dice_type'] == 'white');
+        $non_black_wind = array_filter($wind_dice, fn($d) => $d['dice_type'] != 'black');
         
-        $wind_counts = $this->countFaceOccurrences($wind_dice, null, 'challenge');
-        $player_counts = $this->countFaceOccurrences($horde_dice, null, 'player');
-        $available_counts = $player_counts;
+        // 2. FIRST: Match violet vs black (separate channel, independent of wind force)
+        $dummy = [];  // Not used, black matching uses violet dice directly
+        $black_match = $this->matchAndConsumeDice($wind_dice, $dummy, 'black', 'violet', $horde_dice);
         
-        // Match by dimension
-        $green_match = $this->matchAndConsumeDice($wind_dice, $available_counts, 'green');
-        $greens_ok = ($green_match['matched'] >= $green_match['required'] || $green_match['matched'] >= $wind_force);
+        // 3. THEN: Match blue vs green/white
+        $blue_counts = $this->countFaceOccurrences($blue_dice, null, 'player');
+        
+        $green_match = $this->matchAndConsumeDice($wind_dice, $blue_counts, 'green');
         $reduced_force = max(0, $wind_force - $green_match['matched']);
 
-        $white_match = $this->matchAndConsumeDice($wind_dice, $available_counts, 'white');
-        $whites_ok = ($white_match['matched'] >= $reduced_force);
+        $white_match = $this->matchAndConsumeDice($wind_dice, $blue_counts, 'white');
 
-        $black_match = $this->matchAndConsumeDice($wind_dice, $available_counts, 'black');
-        $blacks_ok = ($black_match['matched'] >= $black_match['required']);
+        // 4. Sum check: blue vs non-black
+        $horde_sum = array_sum(array_column($blue_dice, 'dice_value'));
+        $wind_sum = array_sum(array_column($non_black_wind, 'dice_value'));
 
-        $success = ($horde_sum >= $wind_sum) && $greens_ok && $whites_ok && $blacks_ok;
+        // Check all conditions
+        $success = ($horde_sum >= $wind_sum) 
+                && ($green_match['ok'] || $green_match['matched'] >= $wind_force)
+                && ($white_match['matched'] >= $reduced_force)
+                && $black_match['ok'];
         
         return [
             'success' => $success,
             'horde_sum' => $horde_sum,
             'wind_sum' => $wind_sum,
             'wind_force' => $wind_force,
-            'wind_counts' => $wind_counts,
-            'player_counts' => $player_counts
+            'wind_counts' => $this->countFaceOccurrences($wind_dice, null, 'challenge'),
+            'player_counts' => $this->countFaceOccurrences($blue_dice, null, 'player')
         ];
     }
 

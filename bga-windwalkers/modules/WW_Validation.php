@@ -6,20 +6,20 @@
 trait WW_Validation
 {
     /**
-     * Get and validate player's chapter
+     * Get and validate current chapter from game state
      * @throws BgaVisibleSystemException if chapter is invalid
      */
-    function getValidatedPlayerChapter(int $player_id): int
+    function getValidatedChapter(): int
     {
-        $player = $this->getObjectFromDB("SELECT * FROM player WHERE player_id = $player_id");
-        if (!$player) {
-            throw new BgaVisibleSystemException("Player $player_id not found");
-        }
-        $chapter = (int)($player['player_chapter'] ?? 0);
+        $chapter = (int)$this->getGameStateValue('current_chapter');
         
-        if ($chapter < 1 || $chapter > 4) {
+        if ($chapter < 1) {
+            $chapter = 1;  // Default fallback
+        }
+        
+        if ($chapter > 4) {
             throw new BgaVisibleSystemException(
-                "Invalid chapter value ($chapter) for player $player_id - database may be corrupted"
+                "Invalid chapter value ($chapter) - database may be corrupted"
             );
         }
         

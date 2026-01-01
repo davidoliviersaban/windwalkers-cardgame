@@ -272,6 +272,175 @@ trait WW_Draft
             }
         }
     }
+
+    //////////////////////////////////////////////////////////////////////////////
+    // Chapter Draft Phase (start of each chapter)
+    //////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Get requirements for chapter draft (2 of each type max)
+     */
+    function getChapterDraftRequirements(): array
+    {
+        return [
+            'traceur' => 2,
+            'fer' => 2,
+            'pack' => 2,
+            'traine' => 2
+        ];
+    }
+
+    /**
+     * Arguments for chapter draft state
+     */
+    function argChapterDraft(): array
+    {
+        $player_id = $this->getActivePlayerId();
+        $chapter = $this->getGameStateValue('current_chapter');
+        
+        $stateId = $this->gamestate->state_id();
+        $this->trace("argChapterDraft - State: $stateId, Chapter: $chapter, Player: $player_id");
+        
+        // Get cards drafted this chapter by this player (stored in chapter_draft location)
+        $drafted = $this->cards->getCardsInLocation('chapter_draft_' . $player_id);
+        $draftedCounts = $this->countHordeByType($drafted);
+        
+        // Get available cards from the deck
+        $available = $this->getEnrichedCards($this->cards->getCardsInLocation('deck'));
+        
+        $availableCount = count($available);
+        $this->trace("argChapterDraft - Available cards: $availableCount");
+        
+        // Get current horde for display
+        $horde = $this->getHordeWithPowerStatus($player_id);
+        $hordeCounts = $this->countHordeByType($horde);
+        
+        $requirements = $this->getChapterDraftRequirements();
+        
+        return [
+            'chapter' => $chapter,
+            'available' => $available,
+            'drafted' => $this->getEnrichedCards($drafted),
+            'drafted_counts' => $draftedCounts,
+            'horde' => $horde,
+            'horde_counts' => $hordeCounts,
+            'requirements' => $requirements
+        ];
+    }
+
+    /**
+     * Recruit a character during chapter draft
+     */
+    function actChapterDraftRecruit(int $card_id): void
+    {
+        $this->checkAction('actChapterDraftRecruit');
+        $player_id = $this->getActivePlayerId();
+        
+        // Verify card exists and is in deck
+        $card = $this->cards->getCard($card_id);
+        if (!$card) {
+            throw new BgaUserException($this->_("Card not found"));
+        }
+        
+        $location = $card['card_location'] ?? '';
+        if ($location !== 'deck') {
+            throw new BgaUserException($this->_("This card is not available"));
+        }
+        
+        // Check draft limits
+        $card_type = $card['card_type'] ?? '';
+        $drafted = $this->cards->getCardsInLocation('chapter_draft_' . $player_id);
+        $draftedCounts = $this->countHordeByType($drafted);
+        $requirements = $this->getChapterDraftRequirements();
+        
+        if (($draftedCounts[$card_type] ?? 0) >= ($requirements[$card_type] ?? 0)) {
+            throw new BgaUserException(sprintf(
+                $this->_("You can only recruit %d %s this chapter"),
+                $requirements[$card_type] ?? 0,
+                $card_type
+            ));
+        }
+        
+        // Move card to chapter_draft temporary location
+        $this->cards->moveCard($card_id, 'chapter_draft_' . $player_id);
+        
+        $type_arg = $card['card_type_arg'] ?? '';
+        $char_info = $this->characters[$type_arg] ?? ['name' => 'Unknown'];
+        
+        $this->notifyAllPlayers('chapterDraftRecruit', clienttranslate('${player_name} drafts ${character_name}'), [
+            'player_id' => $player_id,
+            'player_name' => $this->getActivePlayerName(),
+            'card_id' => $card_id,
+            'card_type' => $card_type,
+            'card_type_arg' => $type_arg,
+            'character_name' => $char_info['name'],
+            'card' => $this->getEnrichedCards([$card])[$card_id]
+        ]);
+        
+        $this->gamestate->nextState('recruited');
+    }
+
+    /**
+     * Finish chapter draft turn
+     */
+    function actChapterDraftDone(): void
+    {
+        $this->checkAction('actChapterDraftDone');
+        $player_id = $this->getActivePlayerId();
+        
+        // Move all drafted cards from chapter_draft to horde
+        $drafted = $this->cards->getCardsInLocation('chapter_draft_' . $player_id);
+        
+        foreach ($drafted as $card) {
+            $card_id = $card['card_id'] ?? $card['id'];
+            $this->cards->moveCard($card_id, 'horde_' . $player_id);
+        }
+        
+        $count = count($drafted);
+        if ($count > 0) {
+            $this->notifyAllPlayers('chapterDraftComplete', clienttranslate('${player_name} adds ${count} characters to their horde'), [
+                'player_id' => $player_id,
+                'player_name' => $this->getActivePlayerName(),
+                'count' => $count,
+                'cards' => $this->getEnrichedCards($drafted)
+            ]);
+        } else {
+            $this->notifyAllPlayers('chapterDraftComplete', clienttranslate('${player_name} does not recruit any characters'), [
+                'player_id' => $player_id,
+                'player_name' => $this->getActivePlayerName(),
+                'count' => 0,
+                'cards' => []
+            ]);
+        }
+        
+        $this->gamestate->nextState('done');
+    }
+
+    /**
+     * State action: go to next player for chapter draft
+     */
+    function stNextChapterDraft(): void
+    {
+        // Check if all players have drafted this round
+        $players = $this->loadPlayersBasicInfos();
+        $first_player = $this->getGameStateValue('first_player');
+        
+        // Safety check: if first_player is not set, just move on
+        if (!$first_player) {
+            $this->gamestate->nextState('allDrafted');
+            return;
+        }
+        
+        $this->activeNextPlayer();
+        $next_player = $this->getActivePlayerId();
+        
+        // If we're back to the first player, all have drafted
+        if ($next_player == $first_player) {
+            $this->gamestate->nextState('allDrafted');
+        } else {
+            $this->gamestate->nextState('nextPlayer');
+        }
+    }
     
     //////////////////////////////////////////////////////////////////////////////
     // Horde Utilities

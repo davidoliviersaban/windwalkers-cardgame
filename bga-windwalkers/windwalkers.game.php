@@ -50,9 +50,11 @@ class Windwalkers extends Table
         // Declare game state labels (IDs must be >= 10)
         $this->initGameStateLabels([
             'current_chapter' => 10,
-            'current_round' => 11,
+            'current_round' => 11,       // Total days since game start (for scoring)
             'selected_tile' => 12,
-            'player_to_eliminate' => 13
+            'player_to_eliminate' => 13,
+            'first_player' => 14,
+            'chapter_round' => 15        // Days in current chapter (resets each chapter)
         ]);
     }
 
@@ -83,8 +85,10 @@ class Windwalkers extends Table
         
         // Init global values
         $this->setGameStateInitialValue('current_chapter', $startingChapter);
-        $this->setGameStateInitialValue('current_round', 1);
+        $this->setGameStateInitialValue('current_round', 1);      // Total days
+        $this->setGameStateInitialValue('chapter_round', 1);     // Days in chapter
         $this->setGameStateInitialValue('selected_tile', 0);
+        $this->setGameStateInitialValue('first_player', 0);
 
         // Init game statistics
         $this->initializeStatistics($players);
@@ -161,10 +165,17 @@ class Windwalkers extends Table
     {
         $result = [];
         $current_player_id = $this->getCurrentPlayerId();
+        
+        // DEBUG: Log current state
+        $stateId = $this->gamestate->state_id();
+        $stateName = $this->gamestate->state()['name'] ?? 'unknown';
+        $this->trace("getAllDatas - Current state: $stateId ($stateName)");
 
-        // Get chapter from player record
-        $chapter = $this->getValidatedPlayerChapter($current_player_id);
+        // Get chapter from game state
+        $chapter = $this->getValidatedChapter();
         $result['current_chapter'] = $chapter;
+        
+        $this->trace("getAllDatas - Chapter: $chapter");
         
         // Ensure tiles exist
         $this->ensureTilesExist($chapter);
@@ -212,6 +223,14 @@ class Windwalkers extends Table
         if ($selected_tile_id > 0) {
             $result['selected_tile'] = $this->getObjectFromDB("SELECT * FROM tile WHERE tile_id = $selected_tile_id");
         }
+        
+        // Game state info - two day counters
+        $totalDays = $this->getGameStateValue('current_round');
+        $chapterDay = $this->getGameStateValue('chapter_round');
+        $result['current_round'] = $totalDays ?: 1;     // Total days (for scoring)
+        $result['chapter_round'] = $chapterDay ?: 1;    // Days in current chapter
+        
+        $this->trace("getAllDatas - total_days: $totalDays, chapter_day: $chapterDay, chapter: $chapter");
 
         return $result;
     }
@@ -589,7 +608,23 @@ class Windwalkers extends Table
     function stEndRound(): void
     {
         // End of round - all players have taken their turn
-        // For now, just start a new round
+        // Increment total day counter (for scoring)
+        $totalDays = $this->getGameStateValue('current_round');
+        $totalDays++;
+        $this->setGameStateValue('current_round', $totalDays);
+        
+        // Increment chapter day counter
+        $chapterDay = $this->getGameStateValue('chapter_round');
+        $chapterDay++;
+        $this->setGameStateValue('chapter_round', $chapterDay);
+        
+        // Notify players of new day
+        $this->notifyAllPlayers('newDay', clienttranslate('Day ${chapter_day} of chapter (${total_days} total) begins'), [
+            'chapter_day' => $chapterDay,
+            'total_days' => $totalDays
+        ]);
+        
+        // Start a new round
         $this->gamestate->nextState('newRound');
     }
 
@@ -670,9 +705,13 @@ class Windwalkers extends Table
 
     function stSetupNextChapter(): void
     {
+        $stateId = $this->gamestate->state_id();
+        $this->trace("stSetupNextChapter - Starting, current state: $stateId");
+        
         $this->transitionToNextChapter();
         
         $chapter = $this->getGameStateValue('current_chapter');
+        $this->trace("stSetupNextChapter - Chapter is now: $chapter");
         
         // Get the new tiles
         $tiles = $this->getCollectionFromDb(
@@ -682,6 +721,9 @@ class Windwalkers extends Table
              tile_black_dice black_dice, tile_moral_effect moral_effect
              FROM tile WHERE tile_chapter = $chapter"
         );
+        
+        $tileCount = count($tiles);
+        $this->trace("stSetupNextChapter - Found $tileCount tiles for chapter $chapter");
         
         // Get player positions (they are now at start city of new chapter)
         $players = $this->loadPlayersBasicInfos();
@@ -700,10 +742,15 @@ class Windwalkers extends Table
             'players' => $players
         ]);
         
-        // Activate first player for the new chapter
+        // Store first player for chapter draft rotation tracking
         $this->activeNextPlayer();
+        $first_player = $this->getActivePlayerId();
+        $this->setGameStateValue('first_player', $first_player);
         
-        $this->gamestate->nextState('chapterReady');
+        $this->trace("stSetupNextChapter - First player set to: $first_player, transitioning to chapterDraft");
+        
+        // Go to chapter draft phase
+        $this->gamestate->nextState('chapterDraft');
     }
 
     function argSetupNextChapter(): array

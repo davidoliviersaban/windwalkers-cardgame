@@ -262,6 +262,12 @@
     padding: 5px;
 }
 
+.ww_stat_row {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
 .ww_moral_container,
 .ww_dice_container {
     display: flex;
@@ -270,11 +276,43 @@
 }
 
 .ww_moral_icon {
-    width: 20px;
-    height: 20px;
-    background: var(--color-moral);
+    width: 22px;
+    height: 22px;
+    background: linear-gradient(135deg, #ff6b6b 0%, #c92a2a 100%);
     border-radius: 50%;
     display: inline-block;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    position: relative;
+}
+
+.ww_moral_icon::after {
+    content: '❤';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 12px;
+    color: white;
+}
+
+.ww_dice_icon_small {
+    width: 20px;
+    height: 20px;
+    background: linear-gradient(135deg, #64b5f6 0%, #1976d2 100%);
+    border-radius: 4px;
+    display: inline-block;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    position: relative;
+}
+
+.ww_dice_icon_small::after {
+    content: '⚄';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 14px;
+    color: white;
 }
 
 .ww_dice_icon {
@@ -300,9 +338,68 @@
     50% { transform: scale(1.3); color: var(--color-moral); }
 }
 
-.ww_position {
+/* Game Info Panel (Chapter, Day) */
+#ww_game_info_panel {
+    display: flex;
+    gap: 20px;
+    padding: 10px 15px;
+    background: linear-gradient(135deg, #2d3436 0%, #1e272e 100%);
+    border-radius: 8px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+.ww_chapter_info,
+.ww_day_info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ww_chapter_icon,
+.ww_day_icon,
+.ww_total_icon {
+    font-size: 20px;
+}
+
+.ww_chapter_label,
+.ww_day_label,
+.ww_total_label {
     font-size: 11px;
-    color: #888;
+    color: #b2bec3;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.ww_chapter_value {
+    font-size: 22px;
+    font-weight: bold;
+    color: #ffeaa7;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    min-width: 20px;
+}
+
+.ww_day_value {
+    font-size: 22px;
+    font-weight: bold;
+    color: #a29bfe;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    min-width: 20px;
+}
+
+.ww_total_days_info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.ww_total_value {
+    font-size: 22px;
+    font-weight: bold;
+    color: #74b9ff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    min-width: 20px;
 }
 
 /* ==========================================
@@ -713,11 +810,13 @@
 }
 
 .ww_dice_black {
+    /* Black dice = Fatalité (challenge) */
     background: linear-gradient(135deg, #616161 0%, #212121 100%);
     color: white;
 }
 
 .ww_dice_violet {
+    /* Violet dice = Destin (player, counters black dice) */
     background: linear-gradient(135deg, #ba68c8 0%, #7b1fa2 100%);
     color: white;
 }

@@ -97,10 +97,11 @@ trait WW_Movement
     private function validateTileAdjacent(int $player_id, int $tile_id): void
     {
         $player = $this->getObjectFromDB("SELECT * FROM player WHERE player_id = $player_id");
-        $chapter = (int)($player['player_chapter'] ?? 0);
         
+        // Use game state chapter, not player record
+        $chapter = (int)$this->getGameStateValue('current_chapter');
         if ($chapter < 1) {
-            throw new BgaVisibleSystemException("Invalid chapter value ($chapter) for player $player_id - database may be corrupted");
+            $chapter = 1;
         }
         
         $adjacent = $this->getAdjacentTiles($player['player_position_q'], $player['player_position_r'], $chapter);
@@ -130,9 +131,10 @@ trait WW_Movement
         $player_id = $this->getActivePlayerId();
         $player = $this->getObjectFromDB("SELECT * FROM player WHERE player_id = $player_id");
         
-        $chapter = (int)($player['player_chapter'] ?? 0);
+        // Use game state chapter, not player record
+        $chapter = (int)$this->getGameStateValue('current_chapter');
         if ($chapter < 1) {
-            throw new BgaVisibleSystemException("Invalid chapter value ($chapter) for player $player_id - database may be corrupted");
+            $chapter = 1;  // Default fallback
         }
         
         // Ensure tiles exist
@@ -144,6 +146,9 @@ trait WW_Movement
         $q = (int)$player['player_position_q'];
         $r = (int)$player['player_position_r'];
         $adjacent = $this->getAdjacentTiles($q, $r, $chapter);
+        
+        // Debug logging
+        $this->trace("argPlayerTurn - player at ($q, $r), chapter $chapter, found " . count($adjacent) . " adjacent tiles");
         
         return [
             'position' => ['q' => $q, 'r' => $r],

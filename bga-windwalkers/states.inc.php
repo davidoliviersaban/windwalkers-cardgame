@@ -213,7 +213,34 @@ $machinestates = [
         "action" => "stSetupNextChapter",
         "args" => "argSetupNextChapter",
         "transitions" => [
-            "chapterReady" => 10  // Go to playerTurn for new chapter (no draft needed)
+            "chapterDraft" => 66,  // Go to chapter draft phase
+            "chapterReady" => 10   // Legacy: skip draft for existing games
+        ]
+    ],
+
+    // ==================== CHAPTER DRAFT ====================
+
+    66 => [
+        "name" => "chapterDraft",
+        "description" => clienttranslate('${actplayer} may recruit up to 2 characters of each type'),
+        "descriptionmyturn" => clienttranslate('${you} may recruit up to 2 characters of each type (click cards to recruit)'),
+        "type" => "activeplayer",
+        "possibleactions" => ["actChapterDraftRecruit", "actChapterDraftDone"],
+        "args" => "argChapterDraft",
+        "transitions" => [
+            "recruited" => 66,  // Stay in same state to recruit more
+            "done" => 67  // Player finished drafting
+        ]
+    ],
+
+    67 => [
+        "name" => "nextChapterDraft",
+        "description" => "",
+        "type" => "game",
+        "action" => "stNextChapterDraft",
+        "transitions" => [
+            "nextPlayer" => 66,  // Next player drafts
+            "allDrafted" => 10   // All players done, start chapter
         ]
     ],
 
