@@ -337,9 +337,9 @@ function (dojo, declare) {
     // WW_Hex - Hex grid utilities
     // ============================================================
     var WW_Hex = {
-        HEX_SIZE: 50,
-        HEX_WIDTH: 100,
-        HEX_HEIGHT: 86.6,
+        HEX_SIZE: 75,
+        HEX_WIDTH: 150,
+        HEX_HEIGHT: 129,
         Q_OFFSET: 3,
         R_OFFSET: 14,
         MAP_CENTER_X: 1500,  // Center of 3000px scrollable area
@@ -390,8 +390,15 @@ function (dojo, declare) {
             
             var terrainName = WW_State.getTerrainName(tile.subtype);
             
+            // Build tile image URL based on type/subtype
+            var tileImageUrl = this.getTileImageUrl(tile.type, tile.subtype);
+            var styleAttr = 'left:' + pos.x + 'px; top:' + pos.y + 'px;';
+            if (tileImageUrl) {
+                styleAttr += ' background-image: url(' + tileImageUrl + ');';
+            }
+            
             var tileHtml = '<div id="tile_' + tile.id + '" class="' + tileClass + '" ' +
-                           'style="left:' + pos.x + 'px; top:' + pos.y + 'px;">' +
+                           'style="' + styleAttr + '">' +
                            '<div class="ww_tile_name">' + terrainName + '</div>' +
                            windHtml + '</div>';
             
@@ -399,11 +406,63 @@ function (dojo, declare) {
             return $('tile_' + tile.id);
         },
         
+        /**
+         * Get tile image URL based on type and subtype
+         * Images follow naming convention:
+         * - tile.normal.{terrain}.png (forest, desert, mountain, hut, steppe, swamp, water)
+         * - tile.city.{name}.png (aberlaas, alticcio, campboban, chawondasee, portchoon)
+         * - tile.village.{color}.png (blue, green, red) or tile.village.png
+         * - tile.special.{name}.png (portedhurle, tourfontaine)
+         */
+        getTileImageUrl: function(type, subtype) {
+            // Use BGA's g_gamethemeurl to get the correct path to game resources
+            var basePath = (typeof g_gamethemeurl !== 'undefined' ? g_gamethemeurl : '') + 'img/tile.';
+            
+            // Normalize subtype (lowercase, keep underscores for village parsing)
+            var normalizedSubtype = (subtype || '').toLowerCase();
+            
+            if (type === 'city') {
+                // Cities: tile.city.{name}.png
+                return basePath + 'city.' + normalizedSubtype + '.png';
+            } else if (type === 'village') {
+                // Villages: village_green -> tile.village.green.png
+                if (normalizedSubtype.indexOf('village_') === 0) {
+                    var color = normalizedSubtype.replace('village_', '');
+                    return basePath + 'village.' + color + '.png';
+                }
+                // Default village
+                return basePath + 'village.png';
+            } else if (type === 'special' || normalizedSubtype === 'tourfontaine' || normalizedSubtype === 'portedhurle') {
+                // Special tiles
+                return basePath + 'special.' + normalizedSubtype + '.png';
+            } else {
+                // Normal terrain tiles: tile.normal.{terrain}.png
+                // Map common terrain names to available images
+                var terrainMap = {
+                    'plain': 'steppe',
+                    'steppe': 'steppe',
+                    'forest': 'forest',
+                    'mountain': 'mountain',
+                    'hut': 'hut',
+                    'water': 'water',
+                    'lake': 'water',
+                    'desert': 'desert',
+                    'swamp': 'swamp',
+                    'marsh': 'swamp',
+                    'nordska': 'mountain'  // Use mountain as fallback for nordska
+                };
+                var mappedTerrain = terrainMap[normalizedSubtype] || normalizedSubtype;
+                return basePath + 'normal.' + mappedTerrain + '.png';
+            }
+        },
+        
         createPlayerToken: function(playerId, player) {
             var pos = this.hexToPixelCenter(player.pos_q, player.pos_r);
             
+            // Sprite offset: player 1 = 0px, player 2 = -30px, etc.
+            var spriteOffset = ((player.player_no || 1) - 1) * 30;
             var tokenHtml = '<div id="player_token_' + playerId + '" class="ww_player_token" ' +
-                            'style="left:' + pos.x + 'px; top:' + pos.y + 'px; background-color:#' + player.color + ';">' +
+                            'style="left:' + pos.x + 'px; top:' + pos.y + 'px; --sprite-offset: -' + spriteOffset + 'px;">' +
                             '</div>';
             
             WW_DOM.place(tokenHtml, 'ww_map_scrollable_oversurface');
@@ -976,8 +1035,8 @@ function (dojo, declare) {
             WW_DOM.hide('ww_draft_panel');
         },
         
-        // Chapter Draft Interface (start of each chapter)
-        showChapterDraftInterface: function(args, onCardClick) {
+        // Chapter Draft Interface (like village recruitment)
+        showChapterDraftInterface: function(args, onRecruitClick, onReleaseClick) {
             if (!args) return;
             
             WW_DOM.show('ww_draft_panel');
@@ -985,45 +1044,54 @@ function (dojo, declare) {
             WW_DOM.clear('ww_draft_selected');
             
             var titleEl = dojo.query('#ww_draft_panel h3')[0];
-            if (titleEl) WW_DOM.setHtml(titleEl, _('Chapter ') + (args.chapter || 1) + _(' - Recruit new characters (up to 2 each type)'));
+            if (titleEl) WW_DOM.setHtml(titleEl, _('Chapter ') + (args.chapter || 1) + _(' - Click pool cards to recruit, horde cards to release'));
             
-            // Show available cards
             var self = this;
-            var requirements = args.requirements || {};
-            var draftedCounts = args.drafted_counts || {};
+            var hordeCounts = args.horde_counts || {};
+            var hordeRequirements = args.horde_requirements || { 'traceur': 1, 'fer': 2, 'pack': 3, 'traine': 2 };
+            var hordeTotal = args.horde_total || 0;
+            var hordeMax = args.horde_max || 8;
             
-            if (args.available) {
-                for (var cardId in args.available) {
-                    var card = args.available[cardId];
-                    var cardType = card.card_type || card.type || '';
-                    var currentDrafted = draftedCounts[cardType] || 0;
-                    var maxAllowed = requirements[cardType] || 2;
-                    var isDisabled = currentDrafted >= maxAllowed;
-                    
-                    this.createCard({
+            // Show recruit pool (available cards)
+            if (args.recruitPool) {
+                var typeOrder = { 'fer': 1, 'pack': 2, 'traine': 3 };
+                var sortedCards = Object.values(args.recruitPool).sort(function(a, b) {
+                    var typeA = a.char_type || a.type || 'traine';
+                    var typeB = b.char_type || b.type || 'traine';
+                    return (typeOrder[typeA] || 4) - (typeOrder[typeB] || 4);
+                });
+                
+                sortedCards.forEach(function(card) {
+                    var cardId = card.id || card.card_id;
+                    self.createCard({
                         prefix: 'chapter_draft_card',
                         card: card,
                         containerId: 'ww_available_characters',
-                        extraClass: isDisabled ? 'ww_card_disabled' : '',
-                        onClick: isDisabled ? null : function(cid) { onCardClick(cid); }
+                        extraClass: '',
+                        onClick: function(cid) { onRecruitClick(cid); }
                     });
-                }
+                });
             }
             
-            // Show drafted cards (cards selected this turn)
-            if (args.drafted) {
-                for (var cardId in args.drafted) {
+            // Show current horde (can click to release)
+            if (args.horde) {
+                for (var cardId in args.horde) {
+                    var card = args.horde[cardId];
+                    var cardType = card.char_type || card.type || '';
+                    var isTraceur = cardType === 'traceur';
+                    
                     this.createCard({
-                        prefix: 'chapter_draft_card',
-                        card: args.drafted[cardId],
+                        prefix: 'chapter_draft_horde',
+                        card: card,
                         containerId: 'ww_draft_selected',
-                        extraClass: 'ww_selected'
+                        extraClass: isTraceur ? 'ww_card_disabled' : '',
+                        onClick: isTraceur ? null : function(cid) { onReleaseClick(cid); }
                     });
                 }
             }
             
-            // Update counts to show chapter draft requirements
-            this.updateChapterDraftCounts(draftedCounts, requirements);
+            // Update counts display
+            this.updateChapterDraftCounts(hordeCounts, hordeRequirements, hordeTotal, hordeMax);
         },
         
         hideChapterDraftInterface: function() {
@@ -1034,21 +1102,46 @@ function (dojo, declare) {
             });
         },
         
-        updateChapterDraftCounts: function(counts, requirements) {
-            if (!counts || !requirements) return;
+        updateChapterDraftCounts: function(hordeCounts, hordeRequirements, hordeTotal, hordeMax) {
+            if (!hordeCounts) return;
             
             var types = ['traceur', 'fer', 'pack', 'traine'];
             for (var i = 0; i < types.length; i++) {
                 var type = types[i];
-                var countEl = $('count_' + type);
-                if (countEl) WW_DOM.setHtml(countEl, counts[type] || 0);
+                var count = hordeCounts[type] || 0;
+                var max = (hordeRequirements && hordeRequirements[type]) || 3;
                 
                 var reqEl = $('req_' + type);
                 if (reqEl) {
-                    var current = counts[type] || 0;
-                    var max = requirements[type] || 2;
-                    WW_DOM.removeClass(reqEl, 'ww_complete ww_incomplete');
-                    WW_DOM.addClass(reqEl, current >= max ? 'ww_complete' : 'ww_incomplete');
+                    WW_DOM.show(reqEl);
+                    var typeName = type.charAt(0).toUpperCase() + type.slice(1);
+                    if (type === 'traine') typeName = 'Traîne';
+                    
+                    // Show: "Type: count/max"
+                    var text = typeName + ': ' + count + '/' + max;
+                    WW_DOM.setHtml(reqEl, text);
+                    
+                    WW_DOM.removeClass(reqEl, 'ww_complete ww_incomplete ww_warning');
+                    if (count > max) {
+                        WW_DOM.addClass(reqEl, 'ww_warning');  // Over limit
+                    } else if (count === max) {
+                        WW_DOM.addClass(reqEl, 'ww_complete');
+                    } else {
+                        WW_DOM.addClass(reqEl, 'ww_incomplete');
+                    }
+                }
+            }
+            
+            // Show total horde count
+            var totalEl = $('req_total');
+            if (totalEl) {
+                WW_DOM.show(totalEl);
+                WW_DOM.setHtml(totalEl, _('Total: ') + hordeTotal + '/' + hordeMax);
+                WW_DOM.removeClass(totalEl, 'ww_complete ww_incomplete ww_warning');
+                if (hordeTotal > hordeMax) {
+                    WW_DOM.addClass(totalEl, 'ww_warning');
+                } else {
+                    WW_DOM.addClass(totalEl, 'ww_complete');
                 }
             }
         },
@@ -1500,6 +1593,17 @@ function (dojo, declare) {
                     break;
                 case 'chapterDraft':
                     this.addActionButton('btn_chapter_draft_done', _('Finish Recruiting'), 'onChapterDraftDone', null, false, 'blue');
+                    // Disable button if horde exceeds limits (reuse existing function)
+                    if (args) {
+                        var validity = WW_State.checkHordeValidity(
+                            args.horde_total || 0,
+                            args.horde_counts,
+                            args.horde_requirements
+                        );
+                        if (!validity.canSkip) {
+                            dojo.addClass('btn_chapter_draft_done', 'disabled');
+                        }
+                    }
                     break;
                 case 'playerTurn':
                     if (args && args.has_moved > 0) {
@@ -1563,19 +1667,15 @@ function (dojo, declare) {
         enterChapterDraftState: function(args) {
             var self = this;
             
-            // Show the draft interface for chapter recruitment
-            WW_Cards.showChapterDraftInterface(args, function(cardId) {
-                self.onChapterDraftRecruit(cardId);
-            });
+            // Show the draft interface for chapter recruitment (like village)
+            WW_Cards.showChapterDraftInterface(args, 
+                function(cardId) { self.onChapterDraftRecruit(cardId); },
+                function(cardId) { self.onChapterDraftRelease(cardId); }
+            );
             
             // Show message about what's available
             var chapter = args.chapter || 1;
-            var total = 0;
-            var requirements = args.requirements || {};
-            for (var type in requirements) {
-                total += requirements[type];
-            }
-            this.showMessage(_("Chapter ") + chapter + _(": Recruit up to 2 characters of each type (max 8 total)"), "info");
+            this.showMessage(_("Chapter ") + chapter + _(": Click pool cards to recruit, horde cards to release"), "info");
         },
         
         enterPlayerTurnState: function(args) {
@@ -1753,6 +1853,14 @@ function (dojo, declare) {
             if (!this.isCurrentPlayerActive()) return;
             
             this.performAction('actChapterDraftRecruit', {
+                card_id: cardId
+            });
+        },
+        
+        onChapterDraftRelease: function(cardId) {
+            if (!this.isCurrentPlayerActive()) return;
+            
+            this.performAction('actChapterDraftRelease', {
                 card_id: cardId
             });
         },

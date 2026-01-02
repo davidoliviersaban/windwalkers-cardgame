@@ -13,8 +13,8 @@
  * Table styling constants
  */
 :root {
-    --hex-width: 100px;
-    --hex-height: 86px;
+    --hex-width: 150px;
+    --hex-height: 129px;
     --dice-size: 38px;
     --card-width: 80px;
     --card-height: 120px;
@@ -91,8 +91,8 @@
     position: absolute;
     width: var(--hex-width);
     height: var(--hex-height);
-    /* FLAT-TOP hexagon clip-path */
-    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+    /* FLAT-TOP hexagon clip-path - adjusted to crop extra pixels */
+    clip-path: polygon(27% 1%, 73% 1%, 98% 50%, 73% 99%, 27% 99%, 2% 50%);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -103,6 +103,10 @@
     text-align: center;
     color: white;
     text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    /* Tile image background */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
 .ww_tile:hover {
@@ -135,38 +139,44 @@
     50% { filter: brightness(1.5) drop-shadow(0 0 12px gold); }
 }
 
-/* Tile types */
-.ww_tile_terrain { background: #7cb342; }
-.ww_tile_village { background: #8d6e63; }
-.ww_tile_city { background: #5d4037; border: 3px solid gold; }
+/* Tile types - fallback colors if images don't load */
+.ww_tile_terrain { background-color: #7cb342; }
+.ww_tile_village { background-color: #8d6e63; }
+.ww_tile_city { background-color: #5d4037; }
 
-/* Terrain subtypes */
-.ww_tile_plain { background: linear-gradient(180deg, #8bc34a 0%, #689f38 100%); }
-.ww_tile_mountain { background: linear-gradient(180deg, #78909c 0%, #455a64 100%); }
-.ww_tile_forest { background: linear-gradient(180deg, #388e3c 0%, #1b5e20 100%); }
-.ww_tile_hut { background: linear-gradient(180deg, #a1887f 0%, #6d4c41 100%); }
-.ww_tile_water { background: linear-gradient(180deg, #29b6f6 0%, #0288d1 100%); }
-.ww_tile_desert { background: linear-gradient(180deg, #ffb74d 0%, #f57c00 100%); }
-.ww_tile_marsh { background: linear-gradient(180deg, #558b2f 0%, #33691e 100%); }
-.ww_tile_tourfontaine { background: linear-gradient(180deg, #e1bee7 0%, #7b1fa2 100%); }
-.ww_tile_portedhurle { background: linear-gradient(180deg, #ff5252 0%, #d32f2f 100%); }
+/* Terrain subtypes - images set via JS, fallback colors */
+.ww_tile_plain { background-color: #8bc34a; }
+.ww_tile_steppe { background-color: #8bc34a; }
+.ww_tile_mountain { background-color: #78909c; }
+.ww_tile_forest { background-color: #388e3c; }
+.ww_tile_hut { background-color: #a1887f; }
+.ww_tile_water { background-color: #29b6f6; }
+.ww_tile_desert { background-color: #ffb74d; }
+.ww_tile_swamp { background-color: #558b2f; }
+.ww_tile_marsh { background-color: #558b2f; }
+.ww_tile_tourfontaine { background-color: #e1bee7; }
+.ww_tile_portedhurle { background-color: #ff5252; }
 
-/* Villages */
-.ww_tile_village_green { background: linear-gradient(180deg, #66bb6a 0%, #43a047 100%); }
-.ww_tile_village_red { background: linear-gradient(180deg, #ef5350 0%, #c62828 100%); }
-.ww_tile_village_blue { background: linear-gradient(180deg, #42a5f5 0%, #1976d2 100%); }
+/* Villages - fallback colors */
+.ww_tile_village_green { background-color: #66bb6a; }
+.ww_tile_village_red { background-color: #ef5350; }
+.ww_tile_village_blue { background-color: #42a5f5; }
 
-/* Cities */
-.ww_tile_aberlaas { background: linear-gradient(180deg, #ffd54f 0%, #f9a825 100%); }
-.ww_tile_port_choon { background: linear-gradient(180deg, #4fc3f7 0%, #0288d1 100%); }
-.ww_tile_chawondasee { background: linear-gradient(180deg, #81c784 0%, #388e3c 100%); }
-.ww_tile_alticcio { background: linear-gradient(180deg, #ba68c8 0%, #7b1fa2 100%); }
-.ww_tile_camp_boban { background: linear-gradient(180deg, #ef5350 0%, #c62828 100%); }
+/* Cities - fallback colors */
+.ww_tile_aberlaas { background-color: #ffd54f; }
+.ww_tile_portchoon { background-color: #4fc3f7; }
+.ww_tile_port_choon { background-color: #4fc3f7; }
+.ww_tile_chawondasee { background-color: #81c784; }
+.ww_tile_alticcio { background-color: #ba68c8; }
+.ww_tile_campboban { background-color: #ef5350; }
+.ww_tile_camp_boban { background-color: #ef5350; }
 
 .ww_tile_name {
     font-weight: bold;
     font-size: 9px;
     margin-top: 5px;
+    /* Hide tile name when using images - the images already contain the name */
+    display: none;
 }
 
 /* Discovered tiles */
@@ -200,7 +210,7 @@
 .ww_wind_token {
     position: absolute;
     top: 5px;
-    right: 5px;
+    right: 25px;
     width: var(--wind-token-size);
     height: var(--wind-token-size);
     border-radius: 50%;
@@ -243,12 +253,14 @@
     position: absolute;
     width: 30px;
     height: 30px;
-    border-radius: 50%;
-    border: 3px solid white;
-    box-shadow: 2px 2px 6px rgba(0,0,0,0.5);
     transform: translate(-15px, -15px);
     transition: left 0.5s, top 0.5s;
     z-index: 100;
+    background-image: url('https://en.doc.boardgamearena.com/images/4/4c/30_30_meeple.png');
+    background-size: 300px 30px;
+    background-repeat: no-repeat;
+    background-position: var(--sprite-offset, 0px) 0;
+    background-color: transparent;
 }
 
 /* ==========================================
@@ -1179,4 +1191,50 @@
 #pagesection_gameresult {
     position: relative;
     z-index: 999;
+}
+
+/* Ensure BGA final result sections can expand full width */
+#pagesection_gameresult {
+    width: 100%;
+    max-width: 100%;
+}
+
+/* Keep the header tabs visible and not compressed */
+.pageheader_menu {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+    overflow: visible !important;
+    padding: 6px 0;
+}
+
+.pageheader_menuitem {
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    position: relative;
+    z-index: 1001;
+}
+
+.pageheader_menuitemselected {
+    font-weight: 700;
+}
+
+/* Ensure parent containers don't clip the menu */
+#maingameview_menuheader,
+.pageheader_menuitembar,
+.pageheader_menu_wrapper {
+    overflow: visible !important;
+}
+
+/* Force buy link visible if present */
+#pageheader_buy {
+    display: inline-flex !important;
+    align-items: center;
+    padding: 6px 12px;
+    position: relative;
+    z-index: 1001;
 }

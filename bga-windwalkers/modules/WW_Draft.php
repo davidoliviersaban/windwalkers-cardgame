@@ -283,11 +283,79 @@ trait WW_Draft
     function getChapterDraftRequirements(): array
     {
         return [
-            'traceur' => 2,
             'fer' => 2,
             'pack' => 2,
             'traine' => 2
         ];
+    }
+
+    /**
+     * Setup the chapter draft pool with new characters
+     * Creates 2 fer, 2 pack, 2 traine for recruitment
+     */
+    function setupChapterDraftPool(): void
+    {
+        $chapter = $this->getGameStateValue('current_chapter');
+        $this->trace("setupChapterDraftPool - Setting up pool for chapter $chapter");
+        
+        // Clear any existing pool
+        $this->cards->moveAllCardsInLocation('chapter_draft_pool', 'box');
+        
+        // Get characters by type that are not already in any player's horde
+        $usedCharIds = [];
+        $players = $this->loadPlayersBasicInfos();
+        foreach ($players as $player_id => $player) {
+            $horde = $this->cards->getCardsInLocation('horde_' . $player_id);
+            foreach ($horde as $card) {
+                $usedCharIds[] = (int)($card['type_arg'] ?? $card['card_type_arg'] ?? 0);
+            }
+        }
+        
+        $this->trace("setupChapterDraftPool - Used char IDs: " . implode(',', $usedCharIds));
+        
+        // Find available characters by type
+        $availableByType = ['fer' => [], 'pack' => [], 'traine' => []];
+        foreach ($this->characters as $char_id => $char) {
+            if (!in_array((int)$char_id, $usedCharIds) && isset($availableByType[$char['type']])) {
+                $availableByType[$char['type']][] = $char_id;
+            }
+        }
+        
+        $this->trace("setupChapterDraftPool - Available fer: " . count($availableByType['fer']) . 
+                     ", pack: " . count($availableByType['pack']) . 
+                     ", traine: " . count($availableByType['traine']));
+        
+        // Pick 2 of each type for the pool
+        $poolCharIds = [];
+        foreach (['fer', 'pack', 'traine'] as $type) {
+            shuffle($availableByType[$type]);
+            $count = min(2, count($availableByType[$type]));
+            for ($i = 0; $i < $count; $i++) {
+                $poolCharIds[] = $availableByType[$type][$i];
+            }
+        }
+        
+        $this->trace("setupChapterDraftPool - Pool char IDs to add: " . implode(',', $poolCharIds));
+        
+        // Create cards in pool (or move from existing location if they exist)
+        foreach ($poolCharIds as $char_id) {
+            // Find if card exists anywhere
+            $card = $this->getObjectFromDB("SELECT card_id, card_location FROM card WHERE card_type_arg = '$char_id' LIMIT 1");
+            if ($card) {
+                $this->trace("setupChapterDraftPool - Moving card {$card['card_id']} (char $char_id) from {$card['card_location']} to pool");
+                $this->cards->moveCard($card['card_id'], 'chapter_draft_pool');
+            } else {
+                // Card doesn't exist, create it
+                $this->trace("setupChapterDraftPool - Creating new card for char $char_id");
+                $char = $this->characters[$char_id];
+                $this->cards->createCards([
+                    ['type' => $char['type'], 'type_arg' => $char_id, 'nbr' => 1]
+                ], 'chapter_draft_pool');
+            }
+        }
+        
+        $poolCount = count($this->cards->getCardsInLocation('chapter_draft_pool'));
+        $this->trace("setupChapterDraftPool - Final pool has $poolCount cards");
     }
 
     /**
@@ -298,86 +366,136 @@ trait WW_Draft
         $player_id = $this->getActivePlayerId();
         $chapter = $this->getGameStateValue('current_chapter');
         
-        $stateId = $this->gamestate->state_id();
-        $this->trace("argChapterDraft - State: $stateId, Chapter: $chapter, Player: $player_id");
+        $this->trace("argChapterDraft - Chapter: $chapter, Player: $player_id");
         
-        // Get cards drafted this chapter by this player (stored in chapter_draft location)
-        $drafted = $this->cards->getCardsInLocation('chapter_draft_' . $player_id);
-        $draftedCounts = $this->countHordeByType($drafted);
+        // Chapter draft uses the pool (like village recruitment)
+        $chapterDraftPool = $this->cards->getCardsInLocation('chapter_draft_pool');
         
-        // Get available cards from the deck
-        $available = $this->getEnrichedCards($this->cards->getCardsInLocation('deck'));
+        if (count($chapterDraftPool) == 0) {
+            // Generate chapter draft pool: 2 fer, 2 pack, 2 traine from unused characters
+            $this->setupChapterDraftPool();
+            $chapterDraftPool = $this->cards->getCardsInLocation('chapter_draft_pool');
+        }
         
-        $availableCount = count($available);
-        $this->trace("argChapterDraft - Available cards: $availableCount");
+        $available = $this->getEnrichedCards($chapterDraftPool);
+        
+        // Sort cards by color: fer (red) first, then pack (blue), then traine (green)
+        $typeOrder = ['fer' => 1, 'pack' => 2, 'traine' => 3];
+        uasort($available, function($a, $b) use ($typeOrder) {
+            $typeA = $a['char_type'] ?? $a['type'] ?? 'traine';
+            $typeB = $b['char_type'] ?? $b['type'] ?? 'traine';
+            return ($typeOrder[$typeA] ?? 4) - ($typeOrder[$typeB] ?? 4);
+        });
         
         // Get current horde for display
         $horde = $this->getHordeWithPowerStatus($player_id);
         $hordeCounts = $this->countHordeByType($horde);
+        $hordeTotal = count($horde);
         
-        $requirements = $this->getChapterDraftRequirements();
+        // Horde limits
+        $hordeRequirements = $this->getHordeRequirements();
         
         return [
             'chapter' => $chapter,
-            'available' => $available,
-            'drafted' => $this->getEnrichedCards($drafted),
-            'drafted_counts' => $draftedCounts,
+            'recruitPool' => $available,  // Same format as village recruitment
             'horde' => $horde,
             'horde_counts' => $hordeCounts,
-            'requirements' => $requirements
+            'horde_total' => $hordeTotal,
+            'horde_max' => 8,
+            'horde_requirements' => $hordeRequirements
         ];
     }
 
     /**
-     * Recruit a character during chapter draft
+     * Recruit a character during chapter draft (same as village)
      */
     function actChapterDraftRecruit(int $card_id): void
     {
         $this->checkAction('actChapterDraftRecruit');
         $player_id = $this->getActivePlayerId();
         
-        // Verify card exists and is in deck
+        // Verify card exists and is in chapter_draft_pool
         $card = $this->cards->getCard($card_id);
         if (!$card) {
             throw new BgaUserException($this->_("Card not found"));
         }
         
-        $location = $card['card_location'] ?? '';
-        if ($location !== 'deck') {
+        $location = $card['location'] ?? $card['card_location'] ?? '';
+        if ($location !== 'chapter_draft_pool') {
             throw new BgaUserException($this->_("This card is not available"));
         }
         
-        // Check draft limits
-        $card_type = $card['card_type'] ?? '';
-        $drafted = $this->cards->getCardsInLocation('chapter_draft_' . $player_id);
-        $draftedCounts = $this->countHordeByType($drafted);
-        $requirements = $this->getChapterDraftRequirements();
+        // Move card directly to player's horde (like village recruitment)
+        // Player can release hordiers later to balance
+        $this->cards->moveCard($card_id, 'horde_' . $player_id);
         
-        if (($draftedCounts[$card_type] ?? 0) >= ($requirements[$card_type] ?? 0)) {
-            throw new BgaUserException(sprintf(
-                $this->_("You can only recruit %d %s this chapter"),
-                $requirements[$card_type] ?? 0,
-                $card_type
-            ));
-        }
-        
-        // Move card to chapter_draft temporary location
-        $this->cards->moveCard($card_id, 'chapter_draft_' . $player_id);
-        
-        $type_arg = $card['card_type_arg'] ?? '';
+        $type_arg = $card['type_arg'] ?? $card['card_type_arg'] ?? '';
+        $card_type = $card['type'] ?? $card['card_type'] ?? '';
         $char_info = $this->characters[$type_arg] ?? ['name' => 'Unknown'];
         
-        $this->notifyAllPlayers('chapterDraftRecruit', clienttranslate('${player_name} drafts ${character_name}'), [
+        $this->notifyAllPlayers('hordierRecruited', clienttranslate('${player_name} recruits ${character_name}'), [
             'player_id' => $player_id,
             'player_name' => $this->getActivePlayerName(),
             'card_id' => $card_id,
             'card_type' => $card_type,
             'card_type_arg' => $type_arg,
             'character_name' => $char_info['name'],
-            'card' => $this->getEnrichedCards([$card])[$card_id]
+            'card' => [
+                'card_id' => $card_id,
+                'card_type' => $card_type,
+                'card_type_arg' => $type_arg
+            ]
         ]);
         
-        $this->gamestate->nextState('recruited');
+        // Check if player now has more than 8 hordiers
+        $hordeCount = count($this->cards->getCardsInLocation('horde_' . $player_id));
+        if ($hordeCount > 8) {
+            $this->gamestate->nextState('mustRelease');
+        } else {
+            $this->gamestate->nextState('recruited');
+        }
+    }
+    
+    /**
+     * Release a hordier during chapter draft (goes back to pool)
+     */
+    function actChapterDraftRelease(int $card_id): void
+    {
+        $this->checkAction('actChapterDraftRelease');
+        $player_id = $this->getActivePlayerId();
+        
+        $card = $this->cards->getCard($card_id);
+        $location = $card['location'] ?? $card['card_location'] ?? '';
+        if (!$card || $location != 'horde_' . $player_id) {
+            throw new BgaUserException($this->_("This card is not in your horde"));
+        }
+        
+        // Can't release traceur (leader)
+        $card_type = $card['type'] ?? $card['card_type'] ?? '';
+        if ($card_type === 'traceur') {
+            throw new BgaUserException($this->_("You cannot release your Traceur"));
+        }
+        
+        // Move card back to chapter draft pool
+        $this->cards->moveCard($card_id, 'chapter_draft_pool');
+        
+        $type_arg = $card['type_arg'] ?? $card['card_type_arg'] ?? '';
+        $char_info = $this->characters[$type_arg] ?? ['name' => 'Unknown'];
+        
+        $this->notifyAllPlayers('hordierReleased', clienttranslate('${player_name} releases ${character_name}'), [
+            'player_id' => $player_id,
+            'player_name' => $this->getActivePlayerName(),
+            'card_id' => $card_id,
+            'character_name' => $char_info['name'],
+            'destination' => 'chapter draft pool',
+            'card' => [
+                'card_id' => $card_id,
+                'card_type' => $card_type,
+                'card_type_arg' => $type_arg
+            ]
+        ]);
+        
+        $this->gamestate->nextState('released');
     }
 
     /**
@@ -388,30 +506,37 @@ trait WW_Draft
         $this->checkAction('actChapterDraftDone');
         $player_id = $this->getActivePlayerId();
         
-        // Move all drafted cards from chapter_draft to horde
-        $drafted = $this->cards->getCardsInLocation('chapter_draft_' . $player_id);
+        // Validate horde composition
+        $horde = $this->cards->getCardsInLocation('horde_' . $player_id);
+        $hordeCounts = $this->countHordeByType($horde);
+        $hordeRequirements = $this->getHordeRequirements();
         
-        foreach ($drafted as $card) {
-            $card_id = $card['card_id'] ?? $card['id'];
-            $this->cards->moveCard($card_id, 'horde_' . $player_id);
+        // Check we don't exceed max for any type
+        foreach ($hordeCounts as $type => $count) {
+            $max = $hordeRequirements[$type] ?? 3;
+            if ($count > $max) {
+                throw new BgaUserException(sprintf(
+                    $this->_("You have too many %s (%d/%d). Release some before finishing."),
+                    $type,
+                    $count,
+                    $max
+                ));
+            }
         }
         
-        $count = count($drafted);
-        if ($count > 0) {
-            $this->notifyAllPlayers('chapterDraftComplete', clienttranslate('${player_name} adds ${count} characters to their horde'), [
-                'player_id' => $player_id,
-                'player_name' => $this->getActivePlayerName(),
-                'count' => $count,
-                'cards' => $this->getEnrichedCards($drafted)
-            ]);
-        } else {
-            $this->notifyAllPlayers('chapterDraftComplete', clienttranslate('${player_name} does not recruit any characters'), [
-                'player_id' => $player_id,
-                'player_name' => $this->getActivePlayerName(),
-                'count' => 0,
-                'cards' => []
-            ]);
+        // Check total horde size (max 8)
+        $hordeTotal = count($horde);
+        if ($hordeTotal > 8) {
+            throw new BgaUserException(sprintf(
+                $this->_("Your horde is too large (%d/8). Release some hordiers before finishing."),
+                $hordeTotal
+            ));
         }
+        
+        $this->notifyAllPlayers('chapterDraftComplete', clienttranslate('${player_name} finishes recruiting'), [
+            'player_id' => $player_id,
+            'player_name' => $this->getActivePlayerName()
+        ]);
         
         $this->gamestate->nextState('done');
     }

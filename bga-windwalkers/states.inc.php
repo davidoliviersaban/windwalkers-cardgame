@@ -160,7 +160,7 @@ $machinestates = [
         "type" => "game",
         "action" => "stPlayerElimination",
         "transitions" => [
-            "gameOver" => 99     // End game
+            "finalScoring" => 98  // Go to final scoring before gameEnd
         ]
     ],
 
@@ -202,6 +202,7 @@ $machinestates = [
         "args" => "argEndChapter",
         "transitions" => [
             "nextChapter" => 65,
+            "finalScoring" => 98,
             "gameEnd" => 99
         ]
     ],
@@ -222,13 +223,15 @@ $machinestates = [
 
     66 => [
         "name" => "chapterDraft",
-        "description" => clienttranslate('${actplayer} may recruit up to 2 characters of each type'),
-        "descriptionmyturn" => clienttranslate('${you} may recruit up to 2 characters of each type (click cards to recruit)'),
+        "description" => clienttranslate('${actplayer} may recruit or release characters'),
+        "descriptionmyturn" => clienttranslate('${you} may recruit or release characters. Click pool cards to recruit, horde cards to release.'),
         "type" => "activeplayer",
-        "possibleactions" => ["actChapterDraftRecruit", "actChapterDraftDone"],
+        "possibleactions" => ["actChapterDraftRecruit", "actChapterDraftRelease", "actChapterDraftDone"],
         "args" => "argChapterDraft",
         "transitions" => [
             "recruited" => 66,  // Stay in same state to recruit more
+            "released" => 66,   // Stay in same state after releasing
+            "mustRelease" => 66, // Must release (too many hordiers)
             "done" => 67  // Player finished drafting
         ]
     ],
@@ -266,14 +269,27 @@ $machinestates = [
             "newRound" => 10
         ]
     ],
+            
+    // ==================== FINAL SCORING BRIDGE ====================
 
+    98 => [
+        "name" => "finalScoring",
+        "description" => clienttranslate('Computing final scores...'),
+        "type" => "game",
+        "action" => "stFinalScoring",
+        "transitions" => [
+            "gameEnd" => 99
+        ]
+    ],
+    
     // ==================== GAME END ====================
 
     99 => [
         "name" => "gameEnd",
         "description" => clienttranslate('Game Over'),
         "type" => "manager",
-        "action" => "stGameEnd"
+        "action" => "stGameEnd",
+        "args" => "argGameEnd"
     ]
 
 ];

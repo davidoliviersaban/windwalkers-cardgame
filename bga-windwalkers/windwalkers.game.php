@@ -103,6 +103,10 @@ class Windwalkers extends Table
 
         // Activate first player
         $this->activeNextPlayer();
+        
+        // Store first player for round tracking
+        $firstPlayer = $this->getActivePlayerId();
+        $this->setGameStateValue('first_player', $firstPlayer);
 
         // Start at draft phase
         return 2;
@@ -187,6 +191,12 @@ class Windwalkers extends Table
             if (isset($enriched[$player_id])) {
                 $player = array_merge($player, $enriched[$player_id]);
             }
+            // Guard missing score in some contexts (e.g., abandonment before score computation)
+            if (!isset($player['player_score'])) {
+                $player['player_score'] = 0;
+            }
+            // BGA client often reads `score`; mirror the value
+            $player['score'] = (int)$player['player_score'];
         }
         unset($player);
 
@@ -231,6 +241,12 @@ class Windwalkers extends Table
         $result['chapter_round'] = $chapterDay ?: 1;    // Days in current chapter
         
         $this->trace("getAllDatas - total_days: $totalDays, chapter_day: $chapterDay, chapter: $chapter");
+        
+        // Add player scores (required for game end display)
+        $result['scores'] = [];
+        foreach ($result['players'] as $player_id => $player) {
+            $result['scores'][$player_id] = (int)($player['player_score'] ?? 0);
+        }
 
         return $result;
     }
@@ -470,6 +486,20 @@ class Windwalkers extends Table
         $player_id = $this->getActivePlayerId();
         $this->DbQuery("UPDATE player SET player_has_moved = 0, player_surpass_count = 0 WHERE player_id = $player_id");
         
+        // Increment day counters when a player rests
+        $totalDays = $this->getGameStateValue('current_round');
+        $totalDays++;
+        $this->setGameStateValue('current_round', $totalDays);
+        
+        $chapterDay = $this->getGameStateValue('chapter_round');
+        $chapterDay++;
+        $this->setGameStateValue('chapter_round', $chapterDay);
+        
+        $this->notifyAllPlayers('newDay', clienttranslate('Day ${chapter_day} of chapter (${total_days} total)'), [
+            'chapter_day' => $chapterDay,
+            'total_days' => $totalDays
+        ]);
+        
         // Get current tile to check if in city
         $player = $this->getObjectFromDB("SELECT * FROM player WHERE player_id = $player_id");
         $tile = $this->getTileAt((int)$player['player_position_q'], (int)$player['player_position_r'], (int)$player['player_chapter']);
@@ -581,17 +611,14 @@ class Windwalkers extends Table
             return;
         }
         
-        // Check for recruitment or special
+        // Check for recruitment
         if ($tile['tile_type'] == 'village' || $tile['tile_type'] == 'city') {
             $this->gamestate->nextState('recruit');
             return;
         }
         
-        if ($tile['tile_type'] == 'special') {
-            $this->gamestate->nextState('special_tile');
-            return;
-        }
-        
+        // Special tiles (Tour Fontaine, Porte d'Hurle, etc.) and normal tiles
+        // - no specific action needed, just continue to next player
         $this->gamestate->nextState('continue');
     }
 
@@ -607,24 +634,8 @@ class Windwalkers extends Table
 
     function stEndRound(): void
     {
-        // End of round - all players have taken their turn
-        // Increment total day counter (for scoring)
-        $totalDays = $this->getGameStateValue('current_round');
-        $totalDays++;
-        $this->setGameStateValue('current_round', $totalDays);
-        
-        // Increment chapter day counter
-        $chapterDay = $this->getGameStateValue('chapter_round');
-        $chapterDay++;
-        $this->setGameStateValue('chapter_round', $chapterDay);
-        
-        // Notify players of new day
-        $this->notifyAllPlayers('newDay', clienttranslate('Day ${chapter_day} of chapter (${total_days} total) begins'), [
-            'chapter_day' => $chapterDay,
-            'total_days' => $totalDays
-        ]);
-        
-        // Start a new round
+        // End of round - kept for compatibility
+        // Days are now incremented in stRest() when players rest
         $this->gamestate->nextState('newRound');
     }
 
@@ -652,13 +663,33 @@ class Windwalkers extends Table
         ]);
         
         if ($chapter >= 4) {
-            // Game over - calculate final scores
-            $this->calculateFinalScores();
-            $this->gamestate->nextState('gameEnd');
+            // Game over - route to final scoring state before framework gameEnd (99)
+            $this->gamestate->nextState('finalScoring');
             return;
         }
         
         $this->gamestate->nextState('nextChapter');
+    }
+
+    /**
+     * Final scoring state executed before the framework's final gameEnd state (99).
+     * Needed because Table::stGameEnd is final, so we compute here and then transition to 99.
+     */
+    function stFinalScoring(): void
+    {
+        // Ensure final scores are computed and persisted (avoid null/0 on abandon)
+        $this->calculateFinalScores();
+
+        // Force eliminated players (if any) to score 0
+        $players = $this->loadPlayersBasicInfos();
+        foreach ($players as $player_id => $player) {
+            if (isset($player['player_eliminated']) && $player['player_eliminated']) {
+                $this->DbQuery("UPDATE player SET player_score = 0 WHERE player_id = $player_id");
+            }
+        }
+
+        // Move to the framework-managed gameEnd state
+        $this->gamestate->nextState('gameEnd');
     }
 
     function argEndChapter(): array
