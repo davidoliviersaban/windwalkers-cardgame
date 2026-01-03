@@ -296,7 +296,7 @@ trait WW_Draft
     function setupChapterDraftPool(): void
     {
         $chapter = $this->getGameStateValue('current_chapter');
-        $this->trace("setupChapterDraftPool - Setting up pool for chapter $chapter");
+        // $this->trace("setupChapterDraftPool - Setting up pool for chapter $chapter");
         
         // Clear any existing pool
         $this->cards->moveAllCardsInLocation('chapter_draft_pool', 'box');
@@ -311,7 +311,7 @@ trait WW_Draft
             }
         }
         
-        $this->trace("setupChapterDraftPool - Used char IDs: " . implode(',', $usedCharIds));
+        // $this->trace("setupChapterDraftPool - Used char IDs: " . implode(',', $usedCharIds));
         
         // Find available characters by type
         $availableByType = ['fer' => [], 'pack' => [], 'traine' => []];
@@ -321,9 +321,9 @@ trait WW_Draft
             }
         }
         
-        $this->trace("setupChapterDraftPool - Available fer: " . count($availableByType['fer']) . 
-                     ", pack: " . count($availableByType['pack']) . 
-                     ", traine: " . count($availableByType['traine']));
+        // $this->trace("setupChapterDraftPool - Available fer: " . count($availableByType['fer']) . 
+        //              ", pack: " . count($availableByType['pack']) . 
+        //              ", traine: " . count($availableByType['traine']));
         
         // Pick 2 of each type for the pool
         $poolCharIds = [];
@@ -335,18 +335,18 @@ trait WW_Draft
             }
         }
         
-        $this->trace("setupChapterDraftPool - Pool char IDs to add: " . implode(',', $poolCharIds));
+        // $this->trace("setupChapterDraftPool - Pool char IDs to add: " . implode(',', $poolCharIds));
         
         // Create cards in pool (or move from existing location if they exist)
         foreach ($poolCharIds as $char_id) {
             // Find if card exists anywhere
             $card = $this->getObjectFromDB("SELECT card_id, card_location FROM card WHERE card_type_arg = '$char_id' LIMIT 1");
             if ($card) {
-                $this->trace("setupChapterDraftPool - Moving card {$card['card_id']} (char $char_id) from {$card['card_location']} to pool");
+                // $this->trace("setupChapterDraftPool - Moving card {$card['card_id']} (char $char_id) from {$card['card_location']} to pool");
                 $this->cards->moveCard($card['card_id'], 'chapter_draft_pool');
             } else {
                 // Card doesn't exist, create it
-                $this->trace("setupChapterDraftPool - Creating new card for char $char_id");
+                // $this->trace("setupChapterDraftPool - Creating new card for char $char_id");
                 $char = $this->characters[$char_id];
                 $this->cards->createCards([
                     ['type' => $char['type'], 'type_arg' => $char_id, 'nbr' => 1]
@@ -355,7 +355,7 @@ trait WW_Draft
         }
         
         $poolCount = count($this->cards->getCardsInLocation('chapter_draft_pool'));
-        $this->trace("setupChapterDraftPool - Final pool has $poolCount cards");
+        // $this->trace("setupChapterDraftPool - Final pool has $poolCount cards");
     }
 
     /**
@@ -366,7 +366,7 @@ trait WW_Draft
         $player_id = $this->getActivePlayerId();
         $chapter = $this->getGameStateValue('current_chapter');
         
-        $this->trace("argChapterDraft - Chapter: $chapter, Player: $player_id");
+        // $this->trace("argChapterDraft - Chapter: $chapter, Player: $player_id");
         
         // Chapter draft uses the pool (like village recruitment)
         // Pool should already be set up by stSetupNextChapter, but check as fallback
@@ -374,11 +374,11 @@ trait WW_Draft
         
         if (count($chapterDraftPool) == 0) {
             // Fallback: Generate chapter draft pool if not already done
-            $this->trace("argChapterDraft - WARNING: Pool was empty, setting up now (should have been done in stSetupNextChapter)");
+            // $this->trace("argChapterDraft - WARNING: Pool was empty, setting up now (should have been done in stSetupNextChapter)");
             $this->setupChapterDraftPool();
             $chapterDraftPool = $this->cards->getCardsInLocation('chapter_draft_pool');
         } else {
-            $this->trace("argChapterDraft - Pool already has " . count($chapterDraftPool) . " cards");
+            // $this->trace("argChapterDraft - Pool already has " . count($chapterDraftPool) . " cards");
         }
         
         $available = $this->getEnrichedCards($chapterDraftPool);

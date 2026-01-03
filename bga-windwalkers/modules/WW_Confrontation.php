@@ -6,6 +6,30 @@
 trait WW_Confrontation
 {
     //////////////////////////////////////////////////////////////////////////////
+    // Constants
+    //////////////////////////////////////////////////////////////////////////////
+    
+    const MAX_HORDE_SIZE = 8;
+    
+    //////////////////////////////////////////////////////////////////////////////
+    // Helper Functions
+    //////////////////////////////////////////////////////////////////////////////
+    
+    /**
+     * Get the number of missing hordiers for a player
+     * Max horde size is 8, so missing = 8 - current horde count
+     * @param int $player_id Player ID
+     * @return int Number of missing hordiers (0 to 8)
+     */
+    private function getMissingHordiersCount(int $player_id): int
+    {
+        $horde_count = (int)$this->getUniqueValueFromDB(
+            "SELECT COUNT(*) FROM card WHERE card_location = 'horde_$player_id'"
+        );
+        return max(0, self::MAX_HORDE_SIZE - $horde_count);
+    }
+    
+    //////////////////////////////////////////////////////////////////////////////
     // Dice Actions
     //////////////////////////////////////////////////////////////////////////////
     
@@ -223,13 +247,18 @@ trait WW_Confrontation
         $new_moral = (int)$this->getUniqueValueFromDB("SELECT player_moral FROM player WHERE player_id = $player_id");
         $updated_dice = $this->getCollectionFromDb("SELECT * FROM dice_roll WHERE dice_owner = 'player'");
         
+        // Get ignored dice IDs to send to client
+        $ignored_dice_json = $this->getGlobalVariable('uther_ignored_dice');
+        $ignored_dice = $ignored_dice_json ? json_decode($ignored_dice_json, true) : [];
+        
         if (count($actions_array) > 0) {
-            $this->notifyAllPlayers('batchActionsApplied', clienttranslate('\${player_name} applied \${count} actions'), [
+            $this->notifyAllPlayers('batchActionsApplied', clienttranslate('${player_name} applied ${count} actions'), [
                 'player_id' => $player_id,
                 'player_name' => $this->getActivePlayerName(),
                 'count' => count($actions_array),
                 'new_moral' => $new_moral,
-                'updated_dice' => array_values($updated_dice)
+                'updated_dice' => array_values($updated_dice),
+                'ignored_dice' => $ignored_dice
             ]);
         }
         
@@ -386,12 +415,51 @@ trait WW_Confrontation
                 // Benelim: Lancez +1 dé horde par carte PACK
                 $this->applyBenelimPower($player_id);
                 break;
+            case 'galas_power':
+                // Galas Thunderflayer: Si force = 6 (FUREVENT), rest-all (except himself)
+                $this->applyGalasPower($player_id, $card_id);
+                break;
                 
             // Add more powers here as they are implemented
             default:
                 // Unknown or unimplemented power - no effect
                 break;
         }
+    }
+    
+    /**
+     * Galas Thunderflayer's power: If wind force is 6 (FUREVENT), rest all hordiers except himself
+     * :tap:: Si :force-x: = FUREVENT :force-6:, :rest-all:
+     */
+    private function applyGalasPower(int $player_id, int $galas_card_id): void
+    {
+        // Get the selected tile to check wind force
+        $tile_id = $this->getGameStateValue('selected_tile');
+        if (!$tile_id) {
+            throw new BgaUserException($this->_("No tile selected"));
+        }
+        
+        $tile = $this->getObjectFromDB("SELECT * FROM tile WHERE tile_id = $tile_id");
+        if (!$tile) {
+            throw new BgaUserException($this->_("Tile not found"));
+        }
+        
+        $wind_force = (int)($tile['tile_wind_force'] ?? 0);
+        
+        // Check if it's a FUREVENT (force = 6)
+        if ($wind_force != 6) {
+            throw new BgaUserException($this->_("This power only works on FUREVENT tiles (wind force 6)"));
+        }
+        
+        // Rest all hordiers EXCEPT Galas himself (set card_power_used = 0)
+        $this->DbQuery("UPDATE card SET card_power_used = 0 WHERE card_location = 'horde_$player_id' AND card_id != $galas_card_id");
+        
+        // Notify all players
+        $this->notifyAllPlayers('allHordiersRested', clienttranslate('${player_name} uses Galas\' power: All other hordiers are rested!'), [
+            'player_id' => $player_id,
+            'player_name' => $this->getActivePlayerName(),
+            'except_card_id' => $galas_card_id
+        ]);
     }
     
     /**
@@ -435,9 +503,8 @@ trait WW_Confrontation
         $ignored_dice = $params['ignored_dice'] ?? [];
         
         if (!empty($ignored_dice)) {
-            // Count missing hordiers (max horde is 8)
-            $horde_count = (int)$this->getUniqueValueFromDB("SELECT COUNT(*) FROM card WHERE card_location = 'horde_$player_id'");
-            $missing_count = 8 - $horde_count;
+            // Uther: can ignore 3 dice per missing hordier
+            $missing_count = $this->getMissingHordiersCount($player_id);
             $max_ignore = 3 * $missing_count;
             
             // Validate not ignoring more than allowed
@@ -445,15 +512,12 @@ trait WW_Confrontation
                 throw new BgaUserException(sprintf($this->_("You can only ignore %d dice"), $max_ignore));
             }
             
-            // Mark dice as ignored (locked) - they won't count in confrontation
-            foreach ($ignored_dice as $dice_id) {
-                // dice_id from client is like "white_0", "green_1", etc.
-                // We need to find the actual database dice_id
-                // For now, we store ignored dice IDs in a game state variable
-            }
+            // Get current ignored dice and merge with new ones (to support multiple ignore powers)
+            $current_ignored = json_decode($this->getGlobalVariable('uther_ignored_dice') ?? '[]', true);
+            $current_ignored = array_merge($current_ignored, $ignored_dice);
             
             // Store ignored dice IDs for confrontation calculation
-            $this->setGlobalVariable('uther_ignored_dice', json_encode($ignored_dice));
+            $this->setGlobalVariable('uther_ignored_dice', json_encode($current_ignored));
             
             $this->notifyAllPlayers('diceIgnored', clienttranslate('${count} challenge dice ignored!'), [
                 'player_id' => $player_id,
@@ -475,13 +539,13 @@ trait WW_Confrontation
         $stateName = $state['name'] ?? '';
         $inConfrontation = in_array($stateName, ['diceResult', 'resolveConfrontation', 'confrontation']);
         
-        $this->trace("applySaskiaPower - state: $stateName, inConfrontation: " . ($inConfrontation ? 'yes' : 'no') . ", chapter: $chapter");
+        // $this->trace("applySaskiaPower - state: $stateName, inConfrontation: " . ($inConfrontation ? 'yes' : 'no') . ", chapter: $chapter");
         
         if ($inConfrontation) {
             // During confrontation - use selected tile
             $tile_id = $this->getGameStateValue('selected_tile');
             $tile = $this->getObjectFromDB("SELECT * FROM tile WHERE tile_id = $tile_id");
-            $this->trace("applySaskiaPower - Using selected tile $tile_id");
+            // $this->trace("applySaskiaPower - Using selected tile $tile_id");
         } else {
             // Outside confrontation - use player's current tile
             $player = $this->getObjectFromDB("SELECT player_position_q, player_position_r FROM player WHERE player_id = $player_id");
@@ -490,14 +554,14 @@ trait WW_Confrontation
             }
             $q = $player['player_position_q'];
             $r = $player['player_position_r'];
-            $this->trace("applySaskiaPower - Player at ($q, $r), chapter $chapter");
+            // $this->trace("applySaskiaPower - Player at ($q, $r), chapter $chapter");
             
             $tile = $this->getObjectFromDB(
                 "SELECT * FROM tile WHERE tile_q = $q AND tile_r = $r AND tile_chapter = $chapter"
             );
             
             if ($tile) {
-                $this->trace("applySaskiaPower - Found tile: subtype=" . ($tile['tile_subtype'] ?? 'unknown') . ", green_dice=" . ($tile['tile_green_dice'] ?? 0));
+                // $this->trace("applySaskiaPower - Found tile: subtype=" . ($tile['tile_subtype'] ?? 'unknown') . ", green_dice=" . ($tile['tile_green_dice'] ?? 0));
             }
         }
         
@@ -507,7 +571,7 @@ trait WW_Confrontation
         
         // Count green dice only
         $greenDice = (int)$tile['tile_green_dice'];
-        $this->trace("applySaskiaPower - greenDice: $greenDice");
+        // $this->trace("applySaskiaPower - greenDice: $greenDice");
         
         if ($greenDice !== 2) {
             throw new BgaUserException(sprintf(
@@ -1027,11 +1091,8 @@ trait WW_Confrontation
     {
         $ignored_dice = $params['ignored_dice'] ?? [];
         
-        // Count missing hordiers (max 7 - current horde size)
-        $horde_count = (int)$this->getUniqueValueFromDB(
-            "SELECT COUNT(*) FROM card WHERE card_location = 'horde_$player_id'"
-        );
-        $max_ignore = max(0, 7 - $horde_count);
+        // Waldo: can ignore 1 GREEN die per missing hordier
+        $max_ignore = $this->getMissingHordiersCount($player_id);
         
         if (count($ignored_dice) > $max_ignore) {
             throw new BgaUserException(sprintf(
@@ -1042,6 +1103,14 @@ trait WW_Confrontation
         
         if (empty($ignored_dice)) {
             return; // Nothing to ignore
+        }
+        
+        // Validate that all selected dice are GREEN (terrain dice)
+        foreach ($ignored_dice as $dice_id) {
+            $dice = $this->getObjectFromDB("SELECT * FROM dice_roll WHERE dice_id = " . (int)$dice_id);
+            if (!$dice || $dice['dice_type'] !== 'green') {
+                throw new BgaUserException($this->_("Waldo can only ignore green terrain dice"));
+            }
         }
         
         // Get current ignored dice and add these
@@ -1447,21 +1516,21 @@ trait WW_Confrontation
         $horde_dice = $this->getCollectionFromDb("SELECT * FROM dice_roll WHERE dice_owner = 'player'");
         $wind_dice = $this->getCollectionFromDb("SELECT * FROM dice_roll WHERE dice_owner = 'challenge'");
         
-        $this->trace("stResolveConfrontation - wind_dice count before filter: " . count($wind_dice));
-        $this->trace("stResolveConfrontation - wind_dice keys: " . json_encode(array_keys($wind_dice)));
+        // $this->trace("stResolveConfrontation - wind_dice count before filter: " . count($wind_dice));
+        // $this->trace("stResolveConfrontation - wind_dice keys: " . json_encode(array_keys($wind_dice)));
         
         // Filter out ignored dice (from Uther's power)
         $ignored_dice_json = $this->getGlobalVariable('uther_ignored_dice');
-        $this->trace("stResolveConfrontation - ignored_dice_json: " . ($ignored_dice_json ?? 'null'));
+        // $this->trace("stResolveConfrontation - ignored_dice_json: " . ($ignored_dice_json ?? 'null'));
         
         if ($ignored_dice_json) {
             $ignored_dice = json_decode($ignored_dice_json, true) ?? [];
-            $this->trace("stResolveConfrontation - ignored_dice decoded: " . json_encode($ignored_dice));
+            // $this->trace("stResolveConfrontation - ignored_dice decoded: " . json_encode($ignored_dice));
             
             if (!empty($ignored_dice)) {
                 // Convert to integers for comparison
                 $ignored_dice_int = array_map('intval', $ignored_dice);
-                $this->trace("stResolveConfrontation - ignored_dice_int: " . json_encode($ignored_dice_int));
+                // $this->trace("stResolveConfrontation - ignored_dice_int: " . json_encode($ignored_dice_int));
                 
                 $wind_dice = array_filter($wind_dice, function($dice) use ($ignored_dice_int) {
                     $dice_id = (int)$dice['dice_id'];
@@ -1473,7 +1542,7 @@ trait WW_Confrontation
             }
         }
         
-        $this->trace("stResolveConfrontation - wind_dice count after filter: " . count($wind_dice));
+        // $this->trace("stResolveConfrontation - wind_dice count after filter: " . count($wind_dice));
         
         $tile_id = $this->getGameStateValue('selected_tile');
         $tile = $this->getObjectFromDB("SELECT * FROM tile WHERE tile_id = $tile_id");

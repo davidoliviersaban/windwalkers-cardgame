@@ -178,6 +178,11 @@ function (dojo, declare) {
     // ============================================================
     // WW_State - Client-side state management
     // ============================================================
+    // Constants
+    var WW_CONST = {
+        MAX_HORDE_SIZE: 8
+    };
+    
     var WW_State = {
         // Private state
         _data: {
@@ -320,6 +325,25 @@ function (dojo, declare) {
         
         removeHordeCard: function(cardId) {
             delete this._data.hordeCards[cardId];
+        },
+        
+        /**
+         * Get the current horde count
+         * @return {number} Number of hordiers in the horde (0 to 8)
+         */
+        getHordeCount: function() {
+            return Object.keys(this._data.hordeCards || {}).length;
+        },
+        
+        /**
+         * Get the number of missing hordiers
+         * Max horde size is 8, so missing = 8 - current horde count
+         * @param {number} adjustment Optional adjustment (e.g., -1 if a hordier is about to be sacrificed)
+         * @return {number} Number of missing hordiers (0 to 8)
+         */
+        getMissingHordiersCount: function(adjustment) {
+            var hordeCount = this.getHordeCount() + (adjustment || 0);
+            return Math.max(0, WW_CONST.MAX_HORDE_SIZE - hordeCount);
         },
         
         // State
@@ -771,6 +795,21 @@ function (dojo, declare) {
                         // Update confrontation preview
                         WW_Dice.updateConfrontationPreview();
                     }
+                    // Handle powers that ignore dice (Wanda, Waldo)
+                    if (visual.ignored_dice && Array.isArray(visual.ignored_dice)) {
+                        visual.ignored_dice.forEach(function(diceId) {
+                            var diceEl = $('dice_' + diceId);
+                            if (diceEl) {
+                                if (apply) {
+                                    WW_DOM.addClass(diceEl, 'ww_dice_ignored');
+                                } else {
+                                    WW_DOM.removeClass(diceEl, 'ww_dice_ignored');
+                                }
+                            }
+                        });
+                        // Update confrontation preview
+                        WW_Dice.updateConfrontationPreview();
+                    }
                     // Handle powers that affect other cards
                     if (action.params.target_card_id) {
                         var targetEl = $('ww_horde_item_' + action.params.target_card_id);
@@ -1096,7 +1135,7 @@ function (dojo, declare) {
                 var tileEl = $('tile_' + tileId);
                 if (tileEl) {
                     WW_DOM.addClass('tile_' + tileId, 'ww_selectable');
-                    console.log('[WW] Highlighted tile_' + tileId);
+                    // console.log('[WW] Highlighted tile_' + tileId);
                 } else {
                     console.error('[WW] Tile not found: tile_' + tileId, 'Tile data:', tiles[i]);
                 }
@@ -1603,15 +1642,15 @@ function (dojo, declare) {
                 WW_DOM.addClass(cardEl, 'ww_card_releasable');
                 
                 var cardId = cardEl.id.replace('ww_horde_item_', '');
-                console.log('[WW] Making card releasable:', cardEl.id, 'cardId:', cardId);
+                // console.log('[WW] Making card releasable:', cardEl.id, 'cardId:', cardId);
                 WW_DOM.connectWithId(cardEl.id, 'onclick', null, function(evt) {
-                    console.log('[WW] Card clicked!', cardId);
+                    // console.log('[WW] Card clicked!', cardId);
                     WW_DOM.stopEvent(evt);
                     onReleaseCard(cardId);
                 });
                 count++;
             });
-            console.log('[WW] Made', count, 'cards releasable');
+            // console.log('[WW] Made', count, 'cards releasable');
         },
         
         clearHordeReleasable: function() {
@@ -1658,15 +1697,24 @@ function (dojo, declare) {
         
         /**
          * Set all cards of a player as rested
+         * @param playerId - Player ID (not currently used, but kept for consistency)
+         * @param exceptCardId - Optional card ID to exclude from resting (e.g., Galas himself)
          */
-        setAllCardsRested: function(playerId) {
+        setAllCardsRested: function(playerId, exceptCardId) {
             var self = this;
             WW_DOM.forEach('.ww_horde_card_item', function(cardEl) {
+                // Skip the excluded card (e.g., Galas himself)
+                if (exceptCardId && cardEl.id === 'ww_horde_item_' + exceptCardId) {
+                    return;
+                }
                 WW_DOM.removeClass(cardEl, 'ww_card_exhausted');
                 WW_DOM.addClass(cardEl, 'ww_card_rested');
             });
-            // Animation for all cards
+            // Animation for all cards (except excluded)
             WW_DOM.forEach('.ww_horde_card_item', function(cardEl) {
+                if (exceptCardId && cardEl.id === 'ww_horde_item_' + exceptCardId) {
+                    return;
+                }
                 WW_DOM.animateClass(cardEl, 'ww_card_pulse', 500);
             });
         },
@@ -2824,7 +2872,7 @@ function (dojo, declare) {
          * Check if a power requires special UI interaction
          */
         powerRequiresSpecialUI: function(powerCode) {
-            var specialPowers = ['gianni_power', 'wanda_power', 'xavio_power', 'yavo_power', 'kyo_power', 'thomassin_power', 'blanchette_power', 'waldo_power', 'belkacem_power'];
+            var specialPowers = ['gianni_power', 'wanda_power', 'xavio_power', 'yavo_power', 'kyo_power', 'thomassin_power', 'blanchette_power', 'waldo_power', 'belkacem_power', 'galas_power'];
             return specialPowers.indexOf(powerCode) !== -1;
         },
         
@@ -2859,6 +2907,44 @@ function (dojo, declare) {
                 case 'belkacem_power':
                     this.enterBelkacemPowerMode(cardId);
                     break;
+                case 'galas_power':
+                    // Galas: simple tap power - send directly to server
+                    this.executeSimplePower(cardId);
+                    break;
+            }
+        },
+        
+        /**
+         * Execute a simple tap power immediately (no special UI)
+         * Powers like Galas that affect other cards must resolve pending actions first
+         */
+        executeSimplePower: function(cardId) {
+            var self = this;
+            
+            // If there are pending actions, resolve them first before executing this power
+            if (WW_PendingActions.isEnabled && WW_PendingActions.isEnabled() && WW_PendingActions.hasPending()) {
+                var actions = WW_PendingActions.getActions();
+                
+                // Send batch actions first, then execute this power
+                this.bgaPerformAction('actBatchActions', {
+                    actions: JSON.stringify(actions),
+                    andConfirm: 0  // Don't confirm roll, just apply the actions
+                }).then(function() {
+                    WW_PendingActions.clear();
+                    // Now execute the power
+                    self.performAction('actUsePower', {
+                        card_id: parseInt(cardId),
+                        params: JSON.stringify({})
+                    });
+                }).catch(function() {
+                    WW_PendingActions.undoAll();
+                });
+            } else {
+                // No pending actions, just execute directly
+                this.performAction('actUsePower', {
+                    card_id: parseInt(cardId),
+                    params: JSON.stringify({})
+                });
             }
         },
         
@@ -2876,495 +2962,87 @@ function (dojo, declare) {
          * Gianni: Select a blue die then choose its new value (1-6)
          */
         enterGianniPowerMode: function(cardId) {
-            var self = this;
-            
-            WW_State.setSpecialPowerMode({
-                card_id: cardId,
-                power_code: 'gianni_power',
-                selected_dice: null,
-                step: 'select_dice'
+            this.enterDiceValuePowerMode(cardId, 'gianni_power', {
+                diceContainer: '#ww_horde_dice',
+                diceClass: 'ww_dice_blue',
+                selectMessage: _("Gianni: Select a blue die to set its value"),
+                valueMessage: _("Gianni: Select the new value for this die")
             });
-            
-            this.showMessage(_("Select a blue die to set its value"), "info");
-            this.makeHordeDiceSelectableForGianni();
-            
-            this.removeActionButtons();
-            this.addActionButton('btn_cancel_gianni', _('Cancel'), function() {
-                self.cancelSpecialPowerMode();
-            }, null, false, 'gray');
-        },
-        
-        makeHordeDiceSelectableForGianni: function() {
-            var self = this;
-            
-            WW_DOM.forEach('#ww_horde_dice .ww_dice', function(diceEl) {
-                // Only blue dice
-                if (!WW_DOM.hasClass(diceEl, 'ww_dice_blue')) return;
-                
-                WW_DOM.addClass(diceEl, 'ww_dice_selectable');
-                diceEl.onclick = function(evt) {
-                    WW_DOM.stopEvent(evt);
-                    self.onGianniDiceSelect(diceEl);
-                };
-            });
-        },
-        
-        onGianniDiceSelect: function(diceEl) {
-            var self = this;
-            var mode = WW_State.getSpecialPowerMode();
-            if (!mode || mode.power_code !== 'gianni_power') return;
-            
-            var diceId = diceEl.id.replace('dice_', '');
-            mode.selected_dice = diceId;
-            mode.step = 'select_value';
-            
-            // Highlight selected die
-            WW_DOM.removeClassFromAll('.ww_dice_selected', 'ww_dice_selected');
-            WW_DOM.addClass(diceEl, 'ww_dice_selected');
-            
-            // Show value selection buttons
-            this.showMessage(_("Select the new value for this die"), "info");
-            this.removeActionButtons();
-            
-            for (var v = 1; v <= 6; v++) {
-                (function(value) {
-                    self.addActionButton('btn_gianni_' + value, value.toString(), function() {
-                        self.confirmGianniPower(mode.card_id, diceId, value);
-                    });
-                })(v);
-            }
-            
-            this.addActionButton('btn_cancel_gianni', _('Cancel'), function() {
-                self.cancelSpecialPowerMode();
-            }, null, false, 'gray');
-        },
-        
-        confirmGianniPower: function(cardId, diceId, diceValue) {
-            // First clean up the special mode UI
-            WW_State.setSpecialPowerMode(null);
-            WW_DOM.removeClassFromAll('.ww_dice_selectable', 'ww_dice_selectable');
-            WW_DOM.removeClassFromAll('.ww_dice_selected', 'ww_dice_selected');
-            WW_DOM.forEach('#ww_horde_dice .ww_dice', function(diceEl) {
-                diceEl.onclick = null;
-            });
-            
-            // Restore original page title
-            if (this.gamedatas.gamestate.descriptionmyturnaliased) {
-                this.gamedatas.gamestate.descriptionmyturn = this.gamedatas.gamestate.descriptionmyturnaliased;
-            }
-            this.updatePageTitle();
-            
-            // Restore action buttons
-            this.removeActionButtons();
-            this.onUpdateActionButtons(this.gamedatas.gamestate.name, this.gamedatas.gamestate.args);
-            
-            var inPendingActionsMode = WW_PendingActions.isEnabled && WW_PendingActions.isEnabled();
-            
-            if (inPendingActionsMode) {
-                WW_PendingActions.push('usePower', {
-                    card_id: parseInt(cardId),
-                    params: JSON.stringify({ dice_id: parseInt(diceId), dice_value: diceValue })
-                }, { dice_id: parseInt(diceId), dice_value: diceValue });
-            } else {
-                this.performAction('actUsePower', {
-                    card_id: parseInt(cardId),
-                    params: JSON.stringify({ dice_id: parseInt(diceId), dice_value: diceValue })
-                });
-            }
         },
         
         /**
          * Wanda: Select 1 challenge die to ignore
          */
         enterWandaPowerMode: function(cardId) {
-            var self = this;
-            
-            WW_State.setSpecialPowerMode({
-                card_id: cardId,
-                power_code: 'wanda_power',
-                selected_dice: []
+            this.enterDiceIgnorePowerMode(cardId, 'wanda_power', {
+                maxIgnore: 1,
+                exactCount: true,
+                message: _("Wanda: Select 1 challenge die to ignore")
             });
-            
-            this.showMessage(_("Select 1 challenge die to ignore"), "info");
-            this.makeChallengeDiceSelectable();
-            
-            this.removeActionButtons();
-            this.addActionButton('btn_confirm_wanda', _('Confirm'), function() {
-                self.confirmWandaPower(cardId);
-            });
-            this.addActionButton('btn_cancel_wanda', _('Cancel'), function() {
-                self.cancelSpecialPowerMode();
-            }, null, false, 'gray');
-        },
-        
-        confirmWandaPower: function(cardId) {
-            var mode = WW_State.getSpecialPowerMode();
-            if (!mode || mode.selected_dice.length !== 1) {
-                this.showMessage(_("You must select exactly 1 die"), "error");
-                return;
-            }
-            
-            var inPendingActionsMode = WW_PendingActions.isEnabled && WW_PendingActions.isEnabled();
-            
-            if (inPendingActionsMode) {
-                WW_PendingActions.push('usePower', {
-                    card_id: parseInt(cardId),
-                    params: JSON.stringify({ ignored_dice: mode.selected_dice })
-                }, { ignored_dice: mode.selected_dice });
-            } else {
-                this.performAction('actUsePower', {
-                    card_id: parseInt(cardId),
-                    params: JSON.stringify({ ignored_dice: mode.selected_dice })
-                });
-            }
-            this.cancelSpecialPowerMode();
         },
         
         /**
          * Thomassin: ±1 on each blue horde die
          */
         enterThomassinPowerMode: function(cardId) {
-            var self = this;
-            
-            WW_State.setSpecialPowerMode({
-                card_id: cardId,
-                power_code: 'thomassin_power',
-                dice_modifiers: {}  // dice_id -> modifier (+1 or -1)
+            this.enterDiceModifierPowerMode(cardId, 'thomassin_power', {
+                maxDice: 999,  // No limit
+                requireAtLeastOne: true,
+                message: _("Thomassin: Click blue dice to toggle +1/-1, then confirm")
             });
-            
-            this.showMessage(_("Click blue dice to toggle +1/-1, then confirm"), "info");
-            this.makeHordeDiceModifiable();
-            
-            this.removeActionButtons();
-            this.addActionButton('btn_confirm_thomassin', _('Confirm'), function() {
-                self.confirmThomassinPower(cardId);
-            });
-            this.addActionButton('btn_cancel_thomassin', _('Cancel'), function() {
-                self.cancelSpecialPowerMode();
-            }, null, false, 'gray');
-        },
-        
-        confirmThomassinPower: function(cardId) {
-            var mode = WW_State.getSpecialPowerMode();
-            if (!mode) return;
-            
-            // Convert dice_modifiers object to array
-            var modifiers = [];
-            for (var diceId in mode.dice_modifiers) {
-                modifiers.push({
-                    dice_id: parseInt(diceId),
-                    modifier: mode.dice_modifiers[diceId]
-                });
-            }
-            
-            if (modifiers.length === 0) {
-                this.showMessage(_("You must modify at least one die"), "error");
-                return;
-            }
-            
-            var inPendingActionsMode = WW_PendingActions.isEnabled && WW_PendingActions.isEnabled();
-            
-            if (inPendingActionsMode) {
-                WW_PendingActions.push('usePower', {
-                    card_id: parseInt(cardId),
-                    params: JSON.stringify({ dice_modifiers: modifiers })
-                }, { dice_modifiers: modifiers });
-            } else {
-                this.performAction('actUsePower', {
-                    card_id: parseInt(cardId),
-                    params: JSON.stringify({ dice_modifiers: modifiers })
-                });
-            }
-            this.cancelSpecialPowerMode();
         },
         
         /**
          * Blanchette: ±1 on X blue dice (X = wind force)
          */
         enterBlanchettePowerMode: function(cardId) {
-            var self = this;
-            
-            // Get wind force from current state
             var windForce = WW_State.getWindForce() || 0;
             
-            WW_State.setSpecialPowerMode({
-                card_id: cardId,
-                power_code: 'blanchette_power',
-                max_dice: windForce,
-                dice_modifiers: {}
+            this.enterDiceModifierPowerMode(cardId, 'blanchette_power', {
+                maxDice: windForce,
+                requireAtLeastOne: false,
+                preventDoubleClick: true,
+                message: dojo.string.substitute(_("Blanchette: Click up to ${max} blue dice to toggle +1/-1"), {max: windForce})
             });
-            
-            // Save original page title
-            if (!this.gamedatas.gamestate.descriptionmyturnaliased) {
-                this.gamedatas.gamestate.descriptionmyturnaliased = this.gamedatas.gamestate.descriptionmyturn;
-            }
-            
-            this.showMessage(dojo.string.substitute(_("Click up to ${max} blue dice to toggle +1/-1"), {max: windForce}), "info");
-            this.makeHordeDiceModifiable();
-            
-            this.removeActionButtons();
-            this.addActionButton('btn_confirm_blanchette', _('Confirm'), function() {
-                self.confirmBlanchettePower(cardId);
-            });
-            this.addActionButton('btn_cancel_blanchette', _('Cancel'), function() {
-                self.cancelSpecialPowerMode();
-            }, null, false, 'gray');
-        },
-        
-        confirmBlanchettePower: function(cardId) {
-            var mode = WW_State.getSpecialPowerMode();
-            if (!mode) return;
-            
-            // Immediately clear the mode to prevent double-clicks
-            WW_State.setSpecialPowerMode(null);
-            
-            var modifiers = [];
-            for (var diceId in mode.dice_modifiers) {
-                modifiers.push({
-                    dice_id: parseInt(diceId),
-                    modifier: mode.dice_modifiers[diceId]
-                });
-            }
-            
-            if (modifiers.length > mode.max_dice) {
-                this.showMessage(dojo.string.substitute(_("You can only modify ${max} dice"), {max: mode.max_dice}), "error");
-                this.cancelSpecialPowerMode();
-                return;
-            }
-            
-            // Clean up UI
-            WW_DOM.removeClassFromAll('.ww_dice_modifiable', 'ww_dice_modifiable');
-            WW_DOM.removeClassFromAll('.ww_dice_mod_plus', 'ww_dice_mod_plus');
-            WW_DOM.removeClassFromAll('.ww_dice_mod_minus', 'ww_dice_mod_minus');
-            WW_DOM.forEach('#ww_horde_dice .ww_dice', function(diceEl) {
-                diceEl.onclick = null;
-            });
-            
-            // Restore original page title
-            if (this.gamedatas.gamestate.descriptionmyturnaliased) {
-                this.gamedatas.gamestate.descriptionmyturn = this.gamedatas.gamestate.descriptionmyturnaliased;
-            }
-            this.updatePageTitle();
-            
-            // Restore action buttons
-            this.removeActionButtons();
-            this.onUpdateActionButtons(this.gamedatas.gamestate.name, this.gamedatas.gamestate.args);
-            
-            var inPendingActionsMode = WW_PendingActions.isEnabled && WW_PendingActions.isEnabled();
-            
-            if (inPendingActionsMode) {
-                WW_PendingActions.push('usePower', {
-                    card_id: parseInt(cardId),
-                    params: JSON.stringify({ dice_modifiers: modifiers })
-                }, { dice_modifiers: modifiers });
-            } else {
-                this.performAction('actUsePower', {
-                    card_id: parseInt(cardId),
-                    params: JSON.stringify({ dice_modifiers: modifiers })
-                });
-            }
         },
         
         /**
-         * Waldo power: Ignore 1 challenge die per missing hordier
+         * Waldo power: Ignore 1 green terrain die per missing hordier
          */
         enterWaldoPowerMode: function(cardId) {
-            var self = this;
-            
-            // Calculate max ignore = 7 - horde_count
-            var hordeCount = WW_DOM.queryAll('#ww_player_horde .ww_horde_item').length;
-            var maxIgnore = Math.max(0, 7 - hordeCount);
+            // Waldo: can ignore 1 green die per missing hordier
+            var maxIgnore = WW_State.getMissingHordiersCount();
             
             if (maxIgnore === 0) {
                 this.showMessage(_("No missing hordiers - cannot ignore any dice"), "error");
                 return;
             }
             
-            WW_State.setSpecialPowerMode({
-                card_id: cardId,
-                power_code: 'waldo_power',
-                max_ignore: maxIgnore,
-                selected_dice: []
-            });
-            
-            this.showMessage(dojo.string.substitute(_("Select up to ${max} challenge dice to ignore"), {max: maxIgnore}), "info");
-            this.makeChallengeDiceSelectableForWaldo();
-            
-            this.removeActionButtons();
-            this.addActionButton('btn_confirm_waldo', _('Confirm'), function() {
-                self.confirmWaldoPower(cardId);
-            });
-            this.addActionButton('btn_cancel_waldo', _('Cancel'), function() {
-                self.cancelSpecialPowerMode();
-            }, null, false, 'gray');
-        },
-        
-        makeChallengeDiceSelectableForWaldo: function() {
-            var self = this;
-            
-            WW_DOM.forEach('#ww_wind_dice .ww_dice', function(diceEl) {
-                WW_DOM.addClass(diceEl, 'ww_dice_selectable');
-                diceEl.onclick = function(evt) {
-                    WW_DOM.stopEvent(evt);
-                    self.onWaldoDiceClick(diceEl);
-                };
-            });
-        },
-        
-        onWaldoDiceClick: function(diceEl) {
-            var mode = WW_State.getSpecialPowerMode();
-            if (!mode || mode.power_code !== 'waldo_power') return;
-            
-            var diceId = diceEl.id.replace('dice_', '');
-            var idx = mode.selected_dice.indexOf(diceId);
-            
-            if (idx >= 0) {
-                // Deselect
-                mode.selected_dice.splice(idx, 1);
-                WW_DOM.removeClass(diceEl, 'ww_dice_selected');
-            } else if (mode.selected_dice.length < mode.max_ignore) {
-                // Select
-                mode.selected_dice.push(diceId);
-                WW_DOM.addClass(diceEl, 'ww_dice_selected');
-            } else {
-                this.showMessage(dojo.string.substitute(_("Maximum ${max} dice"), {max: mode.max_ignore}), "info");
-            }
-        },
-        
-        confirmWaldoPower: function(cardId) {
-            var mode = WW_State.getSpecialPowerMode();
-            if (!mode) return;
-            
-            if (mode.selected_dice.length === 0) {
-                this.showMessage(_("Select at least one die to ignore"), "error");
+            // Check if there are any green dice to ignore
+            var greenDiceCount = dojo.query('#ww_wind_dice .ww_dice_green').length;
+            if (greenDiceCount === 0) {
+                this.showMessage(_("No green terrain dice to ignore"), "error");
                 return;
             }
             
-            var ignoredDice = mode.selected_dice.map(function(id) { return parseInt(id); });
-            
-            var inPendingActionsMode = WW_PendingActions.isEnabled && WW_PendingActions.isEnabled();
-            
-            if (inPendingActionsMode) {
-                WW_PendingActions.push('usePower', {
-                    card_id: parseInt(cardId),
-                    params: JSON.stringify({ ignored_dice: ignoredDice })
-                }, { ignored_dice: ignoredDice });
-            } else {
-                this.performAction('actUsePower', {
-                    card_id: parseInt(cardId),
-                    params: JSON.stringify({ ignored_dice: ignoredDice })
-                });
-            }
-            this.cancelSpecialPowerMode();
+            this.enterDiceIgnorePowerMode(cardId, 'waldo_power', {
+                maxIgnore: Math.min(maxIgnore, greenDiceCount),
+                exactCount: false,
+                diceFilter: 'ww_dice_green', // Only green dice
+                message: dojo.string.substitute(_("Waldo: Select up to ${max} green terrain dice to ignore"), {max: Math.min(maxIgnore, greenDiceCount)})
+            });
         },
         
         /**
-         * Belkacem power: Add 1 challenge die with chosen value
+         * Belkacem power: Set a green terrain die to chosen value
          */
         enterBelkacemPowerMode: function(cardId) {
-            var self = this;
-            
-            WW_State.setSpecialPowerMode({
-                card_id: cardId,
-                power_code: 'belkacem_power',
-                selected_dice: null,
-                step: 'select_dice'
+            this.enterDiceValuePowerMode(cardId, 'belkacem_power', {
+                diceContainer: '#ww_wind_dice',
+                diceClass: 'ww_dice_green',
+                selectMessage: _("Belkacem: Select a green die to set its value"),
+                valueMessage: _("Belkacem: Select the new value for this die")
             });
-            
-            // Save original page title and update to show Belkacem mode
-            if (!this.gamedatas.gamestate.descriptionmyturnaliased) {
-                this.gamedatas.gamestate.descriptionmyturnaliased = this.gamedatas.gamestate.descriptionmyturn;
-            }
-            this.gamedatas.gamestate.descriptionmyturn = _("Belkacem: Select a green die to set its value");
-            this.updatePageTitle();
-            
-            this.makeHordeDiceSelectableForBelkacem();
-            
-            this.removeActionButtons();
-            this.addActionButton('btn_cancel_belkacem', _('Cancel'), function() {
-                self.cancelSpecialPowerMode();
-            }, null, false, 'gray');
-        },
-        
-        makeHordeDiceSelectableForBelkacem: function() {
-            var self = this;
-            
-            // Green dice are terrain dice - they are in ww_wind_dice (challenge dice area)
-            WW_DOM.forEach('#ww_wind_dice .ww_dice', function(diceEl) {
-                // Only green dice
-                if (!WW_DOM.hasClass(diceEl, 'ww_dice_green')) return;
-                
-                WW_DOM.addClass(diceEl, 'ww_dice_selectable');
-                diceEl.onclick = function(evt) {
-                    WW_DOM.stopEvent(evt);
-                    self.onBelkacemDiceSelect(diceEl);
-                };
-            });
-        },
-        
-        onBelkacemDiceSelect: function(diceEl) {
-            var self = this;
-            var mode = WW_State.getSpecialPowerMode();
-            if (!mode || mode.power_code !== 'belkacem_power') return;
-            
-            var diceId = diceEl.id.replace('dice_', '');
-            mode.selected_dice = diceId;
-            mode.step = 'select_value';
-            
-            // Highlight selected die
-            WW_DOM.removeClassFromAll('.ww_dice_selected', 'ww_dice_selected');
-            WW_DOM.addClass(diceEl, 'ww_dice_selected');
-            
-            // Update title and show value selection buttons
-            this.gamedatas.gamestate.descriptionmyturn = _("Belkacem: Select the new value for this die");
-            this.updatePageTitle();
-            this.removeActionButtons();
-            
-            for (var v = 1; v <= 6; v++) {
-                (function(value) {
-                    self.addActionButton('btn_belkacem_' + value, value.toString(), function() {
-                        self.confirmBelkacemPower(mode.card_id, diceId, value);
-                    });
-                })(v);
-            }
-            
-            this.addActionButton('btn_cancel_belkacem', _('Cancel'), function() {
-                self.cancelSpecialPowerMode();
-            }, null, false, 'gray');
-        },
-        
-        confirmBelkacemPower: function(cardId, diceId, diceValue) {
-            // First clean up the special mode UI
-            WW_State.setSpecialPowerMode(null);
-            WW_DOM.removeClassFromAll('.ww_dice_selectable', 'ww_dice_selectable');
-            WW_DOM.removeClassFromAll('.ww_dice_selected', 'ww_dice_selected');
-            WW_DOM.forEach('#ww_wind_dice .ww_dice', function(diceEl) {
-                diceEl.onclick = null;
-            });
-            
-            // Restore original page title
-            if (this.gamedatas.gamestate.descriptionmyturnaliased) {
-                this.gamedatas.gamestate.descriptionmyturn = this.gamedatas.gamestate.descriptionmyturnaliased;
-            }
-            this.updatePageTitle();
-            
-            // Restore action buttons
-            this.removeActionButtons();
-            this.onUpdateActionButtons(this.gamedatas.gamestate.name, this.gamedatas.gamestate.args);
-            
-            var inPendingActionsMode = WW_PendingActions.isEnabled && WW_PendingActions.isEnabled();
-            
-            if (inPendingActionsMode) {
-                WW_PendingActions.push('usePower', {
-                    card_id: parseInt(cardId),
-                    params: JSON.stringify({ dice_id: parseInt(diceId), dice_value: diceValue })
-                }, { dice_id: parseInt(diceId), dice_value: diceValue });
-            } else {
-                this.performAction('actUsePower', {
-                    card_id: parseInt(cardId),
-                    params: JSON.stringify({ dice_id: parseInt(diceId), dice_value: diceValue })
-                });
-            }
         },
         
         /**
@@ -3464,33 +3142,335 @@ function (dojo, declare) {
         },
         
         /**
-         * Cancel special power mode
+         * Clean up all power mode UI elements (shared helper)
          */
-        cancelSpecialPowerMode: function() {
-            // Clean up Belkacem dice picker if present
-            this.cleanupBelkacemPicker();
-            
-            WW_State.setSpecialPowerMode(null);
+        cleanupPowerModeUI: function() {
             WW_DOM.removeClassFromAll('.ww_dice_modifiable', 'ww_dice_modifiable');
             WW_DOM.removeClassFromAll('.ww_dice_mod_plus', 'ww_dice_mod_plus');
             WW_DOM.removeClassFromAll('.ww_dice_mod_minus', 'ww_dice_mod_minus');
             WW_DOM.removeClassFromAll('.ww_dice_selectable', 'ww_dice_selectable');
             WW_DOM.removeClassFromAll('.ww_dice_selected', 'ww_dice_selected');
-            // Clear onclick handlers on dice
             WW_DOM.forEach('#ww_horde_dice .ww_dice', function(diceEl) {
                 diceEl.onclick = null;
             });
             WW_DOM.forEach('#ww_wind_dice .ww_dice', function(diceEl) {
                 diceEl.onclick = null;
             });
-            // Restore original page title from gamestate
+        },
+        
+        /**
+         * Restore page title and action buttons after power mode
+         */
+        restorePowerModeUI: function() {
             if (this.gamedatas.gamestate.descriptionmyturnaliased) {
                 this.gamedatas.gamestate.descriptionmyturn = this.gamedatas.gamestate.descriptionmyturnaliased;
             }
             this.updatePageTitle();
-            // Clear all action buttons before restoring state buttons
             this.removeActionButtons();
             this.onUpdateActionButtons(this.gamedatas.gamestate.name, this.gamedatas.gamestate.args);
+        },
+        
+        /**
+         * Save original page title (call before modifying)
+         */
+        saveOriginalPageTitle: function() {
+            if (!this.gamedatas.gamestate.descriptionmyturnaliased) {
+                this.gamedatas.gamestate.descriptionmyturnaliased = this.gamedatas.gamestate.descriptionmyturn;
+            }
+        },
+        
+        // ============================================================
+        // GENERIC POWER HANDLERS - Dice Value Selection (Gianni/Belkacem)
+        // ============================================================
+        
+        /**
+         * Enter dice value selection mode (select die then choose 1-6)
+         * Used by: Gianni (blue horde dice), Belkacem (green challenge dice)
+         */
+        enterDiceValuePowerMode: function(cardId, powerCode, config) {
+            var self = this;
+            
+            WW_State.setSpecialPowerMode({
+                card_id: cardId,
+                power_code: powerCode,
+                selected_dice: null,
+                step: 'select_dice'
+            });
+            
+            this.saveOriginalPageTitle();
+            this.gamedatas.gamestate.descriptionmyturn = config.selectMessage;
+            this.updatePageTitle();
+            
+            // Make dice selectable based on config
+            var container = config.diceContainer;
+            var diceClass = config.diceClass;
+            
+            WW_DOM.forEach(container + ' .ww_dice', function(diceEl) {
+                if (diceClass && !WW_DOM.hasClass(diceEl, diceClass)) return;
+                
+                WW_DOM.addClass(diceEl, 'ww_dice_selectable');
+                diceEl.onclick = function(evt) {
+                    WW_DOM.stopEvent(evt);
+                    self.onDiceValuePowerSelect(diceEl, config);
+                };
+            });
+            
+            this.removeActionButtons();
+            this.addActionButton('btn_cancel_power', _('Cancel'), function() {
+                self.cancelSpecialPowerMode();
+            }, null, false, 'gray');
+        },
+        
+        /**
+         * Handle dice selection in value power mode
+         */
+        onDiceValuePowerSelect: function(diceEl, config) {
+            var self = this;
+            var mode = WW_State.getSpecialPowerMode();
+            if (!mode) return;
+            
+            var diceId = diceEl.id.replace('dice_', '');
+            mode.selected_dice = diceId;
+            mode.step = 'select_value';
+            
+            WW_DOM.removeClassFromAll('.ww_dice_selected', 'ww_dice_selected');
+            WW_DOM.addClass(diceEl, 'ww_dice_selected');
+            
+            this.gamedatas.gamestate.descriptionmyturn = config.valueMessage;
+            this.updatePageTitle();
+            this.removeActionButtons();
+            
+            for (var v = 1; v <= 6; v++) {
+                (function(value) {
+                    self.addActionButton('btn_value_' + value, value.toString(), function() {
+                        self.confirmDiceValuePower(mode.card_id, diceId, value, config);
+                    });
+                })(v);
+            }
+            
+            this.addActionButton('btn_cancel_power', _('Cancel'), function() {
+                self.cancelSpecialPowerMode();
+            }, null, false, 'gray');
+        },
+        
+        /**
+         * Confirm dice value power (shared by Gianni/Belkacem)
+         */
+        confirmDiceValuePower: function(cardId, diceId, diceValue, config) {
+            WW_State.setSpecialPowerMode(null);
+            this.cleanupPowerModeUI();
+            this.restorePowerModeUI();
+            
+            var inPendingActionsMode = WW_PendingActions.isEnabled && WW_PendingActions.isEnabled();
+            var params = { dice_id: parseInt(diceId), dice_value: diceValue };
+            
+            if (inPendingActionsMode) {
+                WW_PendingActions.push('usePower', {
+                    card_id: parseInt(cardId),
+                    params: JSON.stringify(params)
+                }, { dice_id: parseInt(diceId), dice_value: diceValue });
+            } else {
+                this.performAction('actUsePower', {
+                    card_id: parseInt(cardId),
+                    params: JSON.stringify(params)
+                });
+            }
+        },
+        
+        // ============================================================
+        // GENERIC POWER HANDLERS - Dice Modifier (Thomassin/Blanchette)
+        // ============================================================
+        
+        /**
+         * Enter dice modifier mode (click to toggle +1/-1)
+         * Used by: Thomassin (all blue dice), Blanchette (up to X blue dice)
+         */
+        enterDiceModifierPowerMode: function(cardId, powerCode, config) {
+            var self = this;
+            
+            WW_State.setSpecialPowerMode({
+                card_id: cardId,
+                power_code: powerCode,
+                max_dice: config.maxDice || 999,
+                dice_modifiers: {}
+            });
+            
+            this.saveOriginalPageTitle();
+            this.showMessage(config.message, "info");
+            this.makeHordeDiceModifiable();
+            
+            this.removeActionButtons();
+            this.addActionButton('btn_confirm_modifier', _('Confirm'), function() {
+                self.confirmDiceModifierPower(cardId, config);
+            });
+            this.addActionButton('btn_cancel_power', _('Cancel'), function() {
+                self.cancelSpecialPowerMode();
+            }, null, false, 'gray');
+        },
+        
+        /**
+         * Confirm dice modifier power (shared by Thomassin/Blanchette)
+         */
+        confirmDiceModifierPower: function(cardId, config) {
+            var mode = WW_State.getSpecialPowerMode();
+            if (!mode) return;
+            
+            // For Blanchette, immediately clear mode to prevent double-clicks
+            if (config.preventDoubleClick) {
+                WW_State.setSpecialPowerMode(null);
+            }
+            
+            var modifiers = [];
+            for (var diceId in mode.dice_modifiers) {
+                modifiers.push({
+                    dice_id: parseInt(diceId),
+                    modifier: mode.dice_modifiers[diceId]
+                });
+            }
+            
+            if (config.requireAtLeastOne && modifiers.length === 0) {
+                this.showMessage(_("You must modify at least one die"), "error");
+                return;
+            }
+            
+            if (config.maxDice && modifiers.length > config.maxDice) {
+                this.showMessage(dojo.string.substitute(_("You can only modify ${max} dice"), {max: config.maxDice}), "error");
+                if (!config.preventDoubleClick) {
+                    WW_State.setSpecialPowerMode(mode); // Restore mode if we cleared it
+                }
+                return;
+            }
+            
+            // Clean up UI
+            WW_State.setSpecialPowerMode(null);
+            this.cleanupPowerModeUI();
+            this.restorePowerModeUI();
+            
+            var inPendingActionsMode = WW_PendingActions.isEnabled && WW_PendingActions.isEnabled();
+            
+            if (inPendingActionsMode) {
+                WW_PendingActions.push('usePower', {
+                    card_id: parseInt(cardId),
+                    params: JSON.stringify({ dice_modifiers: modifiers })
+                }, { dice_modifiers: modifiers });
+            } else {
+                this.performAction('actUsePower', {
+                    card_id: parseInt(cardId),
+                    params: JSON.stringify({ dice_modifiers: modifiers })
+                });
+            }
+        },
+        
+        // ============================================================
+        // GENERIC POWER HANDLERS - Dice Ignore (Wanda/Waldo)
+        // ============================================================
+        
+        /**
+         * Enter dice ignore mode (select challenge dice to ignore)
+         * Used by: Wanda (1 die), Waldo (up to X green dice based on missing hordiers)
+         */
+        enterDiceIgnorePowerMode: function(cardId, powerCode, config) {
+            var self = this;
+            
+            WW_State.setSpecialPowerMode({
+                card_id: cardId,
+                power_code: powerCode,
+                max_ignore: config.maxIgnore,
+                exact_count: config.exactCount || false,
+                dice_filter: config.diceFilter || null,
+                selected_dice: []
+            });
+            
+            this.showMessage(config.message, "info");
+            
+            // Make challenge dice selectable (optionally filtered by class)
+            var selector = '#ww_wind_dice .ww_dice';
+            if (config.diceFilter) {
+                selector = '#ww_wind_dice .' + config.diceFilter;
+            }
+            
+            WW_DOM.forEach(selector, function(diceEl) {
+                WW_DOM.addClass(diceEl, 'ww_dice_selectable');
+                diceEl.onclick = function(evt) {
+                    WW_DOM.stopEvent(evt);
+                    self.onDiceIgnorePowerClick(diceEl, config);
+                };
+            });
+            
+            this.removeActionButtons();
+            this.addActionButton('btn_confirm_ignore', _('Confirm'), function() {
+                self.confirmDiceIgnorePower(cardId, config);
+            });
+            this.addActionButton('btn_cancel_power', _('Cancel'), function() {
+                self.cancelSpecialPowerMode();
+            }, null, false, 'gray');
+        },
+        
+        /**
+         * Handle dice click in ignore mode
+         */
+        onDiceIgnorePowerClick: function(diceEl, config) {
+            var mode = WW_State.getSpecialPowerMode();
+            if (!mode) return;
+            
+            var diceId = diceEl.id.replace('dice_', '');
+            var idx = mode.selected_dice.indexOf(diceId);
+            
+            if (idx >= 0) {
+                mode.selected_dice.splice(idx, 1);
+                WW_DOM.removeClass(diceEl, 'ww_dice_selected');
+            } else if (mode.selected_dice.length < mode.max_ignore) {
+                mode.selected_dice.push(diceId);
+                WW_DOM.addClass(diceEl, 'ww_dice_selected');
+            } else {
+                this.showMessage(dojo.string.substitute(_("Maximum ${max} dice"), {max: mode.max_ignore}), "info");
+            }
+        },
+        
+        /**
+         * Confirm dice ignore power (shared by Wanda/Waldo)
+         */
+        confirmDiceIgnorePower: function(cardId, config) {
+            var mode = WW_State.getSpecialPowerMode();
+            if (!mode) return;
+            
+            if (config.exactCount && mode.selected_dice.length !== config.maxIgnore) {
+                this.showMessage(dojo.string.substitute(_("You must select exactly ${count} dice"), {count: config.maxIgnore}), "error");
+                return;
+            }
+            
+            if (mode.selected_dice.length === 0) {
+                this.showMessage(_("Select at least one die to ignore"), "error");
+                return;
+            }
+            
+            var ignoredDice = mode.selected_dice.map(function(id) { return parseInt(id); });
+            
+            // Clean up
+            this.cancelSpecialPowerMode();
+            
+            var inPendingActionsMode = WW_PendingActions.isEnabled && WW_PendingActions.isEnabled();
+            
+            if (inPendingActionsMode) {
+                WW_PendingActions.push('usePower', {
+                    card_id: parseInt(cardId),
+                    params: JSON.stringify({ ignored_dice: ignoredDice })
+                }, { ignored_dice: ignoredDice });
+            } else {
+                this.performAction('actUsePower', {
+                    card_id: parseInt(cardId),
+                    params: JSON.stringify({ ignored_dice: ignoredDice })
+                });
+            }
+        },
+        
+        /**
+         * Cancel special power mode
+         */
+        cancelSpecialPowerMode: function() {
+            WW_State.setSpecialPowerMode(null);
+            this.cleanupPowerModeUI();
+            this.restorePowerModeUI();
         },
         
         /**
@@ -3662,10 +3642,8 @@ function (dojo, declare) {
         enterUtherDiceSelectionMode: function(sourceCardId, targetCardId) {
             var self = this;
             
-            // Calculate how many dice can be ignored (3 per missing hordier after sacrifice)
-            var hordeCards = WW_State.getHordeCards();
-            var hordeCount = Object.keys(hordeCards).length - 1; // -1 for the sacrifice
-            var missingCount = 8 - hordeCount;
+            // Uther: can ignore 3 dice per missing hordier (including the one being sacrificed)
+            var missingCount = WW_State.getMissingHordiersCount(-1); // -1 for the sacrifice
             var maxIgnore = 3 * missingCount;
             
             // Store state for dice selection
@@ -3712,10 +3690,10 @@ function (dojo, declare) {
             var self = this;
             dojo.query('#ww_wind_dice .ww_dice').forEach(function(diceEl) {
                 WW_DOM.addClass(diceEl, 'ww_dice_selectable');
-                WW_DOM.connect(diceEl, 'onclick', null, function(evt) {
+                diceEl.onclick = function(evt) {
                     WW_DOM.stopEvent(evt);
                     self.onChallengeDiceClick(diceEl.id.replace('dice_', ''));
-                });
+                };
             });
         },
         
@@ -3795,21 +3773,35 @@ function (dojo, declare) {
                 WW_DOM.removeClass(sourceEl, 'ww_pending_exhausted');
             }
             
-            // Clean up
+            // Remove ww_dice_ignored ONLY from dice selected by Uther (cancel means they shouldn't be ignored)
+            if (mode.selected_dice && mode.selected_dice.length > 0) {
+                mode.selected_dice.forEach(function(diceId) {
+                    var diceEl = $('dice_' + diceId);
+                    if (diceEl) {
+                        WW_DOM.removeClass(diceEl, 'ww_dice_ignored');
+                    }
+                });
+            }
+            
+            // Clean up (without removing ww_dice_ignored - we already did it selectively above)
             this.cleanUpUtherDiceMode();
+            
+            // Update preview since dice are no longer ignored
+            WW_Dice.updateConfrontationPreview();
             
             // Restore normal action buttons
             this.restoreConfrontationButtons();
         },
         
         /**
-         * Clean up Uther dice selection mode
+         * Clean up Uther dice selection mode (just removes selectable styling and click handlers)
          */
         cleanUpUtherDiceMode: function() {
-            // Remove dice selection styling
+            // Remove dice selection styling and click handlers
+            // Don't touch ww_dice_ignored - it's handled by the caller (confirm/cancel)
             dojo.query('#ww_wind_dice .ww_dice').forEach(function(diceEl) {
                 WW_DOM.removeClass(diceEl, 'ww_dice_selectable');
-                WW_DOM.disconnect(diceEl, 'onclick');
+                diceEl.onclick = null;
             });
             
             // Clear state
@@ -4178,6 +4170,17 @@ function (dojo, declare) {
                 }
             }
             
+            // Re-apply ignored dice visual (from Uther/Waldo/Wanda powers)
+            if (notif.args.ignored_dice && notif.args.ignored_dice.length > 0) {
+                for (var i = 0; i < notif.args.ignored_dice.length; i++) {
+                    var diceEl = $('dice_' + notif.args.ignored_dice[i]);
+                    if (diceEl) {
+                        WW_DOM.addClass(diceEl, 'ww_dice_ignored');
+                    }
+                }
+                WW_Dice.updateConfrontationPreview();
+            }
+            
             // Update moral display
             if (notif.args.new_moral !== undefined) {
                 WW_Player.updateMoral(notif.args.player_id, notif.args.new_moral);
@@ -4390,7 +4393,22 @@ function (dojo, declare) {
         },
         
         notif_allHordiersRested: function(notif) {
-            WW_Cards.setAllCardsRested(notif.args.player_id);
+            var exceptCardId = notif.args.except_card_id;
+            WW_Cards.setAllCardsRested(notif.args.player_id, exceptCardId);
+            
+            // Also update WW_State for all horde cards (except the excluded one)
+            var hordeCards = WW_State.getHordeCards();
+            for (var cardId in hordeCards) {
+                if (exceptCardId && parseInt(cardId) === parseInt(exceptCardId)) {
+                    continue; // Skip excluded card (e.g., Galas himself)
+                }
+                var card = hordeCards[cardId];
+                if (card) {
+                    card.power_used = 0;
+                    card.powerUsed = false;
+                    card.card_power_used = 0;
+                }
+            }
         },
         
         notif_challengeDiceModified: function(notif) {
