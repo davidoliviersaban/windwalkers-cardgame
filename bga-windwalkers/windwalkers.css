@@ -874,6 +874,79 @@
     box-shadow: 0 0 10px rgba(255, 100, 100, 0.8);
 }
 
+/* Dice picker (Belkacem) */
+.ww_dice_picker {
+    display: inline-flex;
+    gap: 8px;
+    margin-right: 15px;
+    vertical-align: middle;
+}
+
+.ww_dice_picker .ww_dice {
+    cursor: pointer;
+}
+
+.ww_dice_picker .ww_dice:hover {
+    transform: scale(1.2);
+    box-shadow: 0 0 12px rgba(100, 200, 100, 0.9);
+}
+
+/* Selected dice (Wanda, Uther) */
+.ww_dice.ww_dice_selected {
+    box-shadow: 0 0 15px rgba(255, 215, 0, 1) !important;
+    transform: scale(1.1);
+    border: 3px solid gold;
+}
+
+/* Modifiable dice (Thomassin, Blanchette) */
+.ww_dice.ww_dice_modifiable {
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.ww_dice.ww_dice_modifiable:hover {
+    transform: scale(1.15);
+    box-shadow: 0 0 10px rgba(100, 150, 255, 0.8);
+}
+
+/* Dice with +1 modifier */
+.ww_dice.ww_dice_mod_plus {
+    box-shadow: 0 0 12px rgba(0, 200, 0, 1) !important;
+    border: 3px solid lime;
+}
+
+.ww_dice.ww_dice_mod_plus::after {
+    content: '+1';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: lime;
+    color: black;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+
+/* Dice with -1 modifier */
+.ww_dice.ww_dice_mod_minus {
+    box-shadow: 0 0 12px rgba(255, 100, 0, 1) !important;
+    border: 3px solid orange;
+}
+
+.ww_dice.ww_dice_mod_minus::after {
+    content: '-1';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: orange;
+    color: black;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+
 /* Ignored dice (Uther's power) */
 .ww_dice.ww_dice_ignored {
     opacity: 0.3;
@@ -898,7 +971,7 @@
    ========================================== */
 
 #ww_info_panel {
-    background: #fff3e0;
+    background: transparent;
     border-radius: 8px;
     padding: 15px;
     margin-bottom: 10px;
@@ -912,12 +985,13 @@
 
 #ww_wind_force_display label {
     font-weight: bold;
+    color: #fff;
 }
 
 #ww_wind_force {
     font-size: 24px;
     font-weight: bold;
-    color: #c62828;
+    color: #fff;
 }
 
 /* ==========================================

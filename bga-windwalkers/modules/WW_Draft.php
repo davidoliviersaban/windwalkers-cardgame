@@ -855,10 +855,19 @@ trait WW_Draft
     /**
      * Use a character power
      */
-    function actUsePower(int $card_id): void
+    function actUsePower(int $card_id, ?int $target_card_id = null, ?string $params = null): void
     {
         $this->checkAction('actUsePower');
         $player_id = $this->getActivePlayerId();
+        
+        // Decode params if JSON string
+        $params_array = [];
+        if ($params) {
+            $decoded = json_decode($params, true);
+            if (is_array($decoded)) {
+                $params_array = $decoded;
+            }
+        }
         
         $card = $this->cards->getCard($card_id);
         $location = $card['card_location'] ?? $card['location'] ?? '';
@@ -872,11 +881,13 @@ trait WW_Draft
             throw new BgaUserException($this->_("This power has already been used"));
         }
         
-        // Mark power as used
-        $this->DbQuery("UPDATE card SET card_power_used = 1 WHERE card_id = $card_id");
-        
+        // Get character info
         $type_arg = $card['card_type_arg'] ?? $card['type_arg'] ?? null;
-        $char_info = $this->characters[$type_arg] ?? ['name' => 'Hordier', 'power' => ''];
+        $char_info = $this->characters[$type_arg] ?? ['name' => 'Hordier', 'power' => '', 'power_code' => ''];
+        $power_code = $char_info['power_code'] ?? '';
+        
+        // Mark power as used (exhaust the card)
+        $this->DbQuery("UPDATE card SET card_power_used = 1 WHERE card_id = $card_id");
         
         $this->notifyAllPlayers('powerUsed', clienttranslate('${player_name} uses ${character_name}\'s power'), [
             'player_id' => $player_id,
@@ -886,8 +897,10 @@ trait WW_Draft
             'power' => $char_info['power'] ?? ''
         ]);
         
-        // TODO: Implement specific power effects based on character
-        // For now, just stay in current state
+        // Apply the power effect (defined in WW_Confrontation trait)
+        if ($power_code) {
+            $this->applyPowerEffect($player_id, $card_id, $power_code, $target_card_id, $params_array);
+        }
     }
     
     /**

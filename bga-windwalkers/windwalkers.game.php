@@ -492,18 +492,31 @@ class Windwalkers extends Table
     {
         $player_id = $this->getActivePlayerId();
         
+        // Check if current player has completed their horde
         $horde = $this->cards->getCardsInLocation('horde_' . $player_id);
         if (count($horde) < 8) {
+            // Current player hasn't finished yet, stay in draft
             $this->gamestate->nextState('nextPlayer');
             return;
         }
         
-        $this->activeNextPlayer();
-        $next_player = $this->getActivePlayerId();
+        // Current player finished - check if ALL players have completed their hordes
+        $players = $this->loadPlayersBasicInfos();
+        $allDrafted = true;
+        foreach ($players as $pid => $player) {
+            $playerHorde = $this->cards->getCardsInLocation('horde_' . $pid);
+            if (count($playerHorde) < 8) {
+                $allDrafted = false;
+                break;
+            }
+        }
         
-        if ($next_player == $this->getPlayerAfter($this->getPlayerBefore($player_id))) {
+        if ($allDrafted) {
+            // All players have completed their hordes
             $this->gamestate->nextState('allDrafted');
         } else {
+            // Move to next player who hasn't finished
+            $this->activeNextPlayer();
             $this->gamestate->nextState('nextPlayer');
         }
     }
@@ -574,6 +587,20 @@ class Windwalkers extends Table
         $player_id = $this->getActivePlayerId();
         $tile_id = $this->getGameStateValue('selected_tile');
         $tile = $this->getTileById($tile_id);
+        
+        // IMPORTANT: Update player position to this tile
+        // This is needed for tiles without wind (villages/cities) where
+        // handleConfrontationSuccess is not called
+        $this->DbQuery("UPDATE player SET player_position_q = {$tile['tile_q']}, player_position_r = {$tile['tile_r']} WHERE player_id = $player_id");
+        
+        // Notify clients to refresh player position
+        $this->notifyAllPlayers('playerMoves', clienttranslate('${player_name} moves to ${terrain_name}'), [
+            'player_id' => $player_id,
+            'player_name' => $this->getActivePlayerName(),
+            'q' => (int)$tile['tile_q'],
+            'r' => (int)$tile['tile_r'],
+            'terrain_name' => $tile['tile_subtype']
+        ]);
         
         // Get terrain/building name
         $terrain_name = $tile['tile_subtype'];

@@ -147,6 +147,9 @@ trait WW_Movement
         $r = (int)$player['player_position_r'];
         $adjacent = $this->getAdjacentTiles($q, $r, $chapter);
         
+        // Get horde with power status so UI knows which cards can be clicked
+        $horde = $this->getHordeWithPowerStatus($player_id);
+        
         // Debug logging
         $this->trace("argPlayerTurn - player at ($q, $r), chapter $chapter, found " . count($adjacent) . " adjacent tiles");
         
@@ -155,7 +158,8 @@ trait WW_Movement
             'adjacent' => $adjacent,
             'moral' => $player['player_moral'],
             'has_moved' => $player['player_has_moved'],
-            'can_surpass' => $player['player_has_moved'] > 0
+            'can_surpass' => $player['player_has_moved'] > 0,
+            'horde' => $horde
         ];
     }
 
