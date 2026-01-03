@@ -157,6 +157,137 @@ trait WW_Confrontation
     }
 
     /**
+     * Process batch actions from client (undo-able actions)
+     * Client sends all pending actions at once for validation
+     * @param string $actions JSON array of actions
+     * @param int $andConfirm If 1, also confirm the roll after applying actions
+     */
+    function actBatchActions(string $actions, int $andConfirm = 0): void
+    {
+        $this->checkAction('actBatchActions');
+        $player_id = $this->getActivePlayerId();
+        
+        $actions_array = json_decode($actions, true);
+        if (!is_array($actions_array)) {
+            throw new BgaUserException($this->_("Invalid actions format"));
+        }
+        
+        // Get current state for validation
+        $moral = (int)$this->getUniqueValueFromDB("SELECT player_moral FROM player WHERE player_id = $player_id");
+        $total_moral_cost = 0;
+        
+        // First pass: validate all actions can be executed
+        foreach ($actions_array as $action) {
+            $type = $action['type'] ?? '';
+            $params = $action['params'] ?? [];
+            
+            switch ($type) {
+                case 'modifyDice':
+                    $total_moral_cost += 1;
+                    break;
+                case 'usePower':
+                    // Check card exists and belongs to player
+                    $card_id = (int)($params['card_id'] ?? 0);
+                    $card = $this->getObjectFromDB("SELECT * FROM card WHERE card_id = $card_id AND card_location = 'horde_$player_id'");
+                    if (!$card) {
+                        throw new BgaUserException($this->_("Invalid card"));
+                    }
+                    break;
+                case 'rerollAll':
+                    $total_moral_cost += 1;
+                    break;
+            }
+        }
+        
+        // Check total moral cost (need more moral than cost, keep at least 1)
+        if ($total_moral_cost > 0 && $moral <= $total_moral_cost) {
+            throw new BgaUserException($this->_("Not enough moral for all actions"));
+        }
+        
+        // Second pass: execute all actions
+        foreach ($actions_array as $action) {
+            $type = $action['type'] ?? '';
+            $params = $action['params'] ?? [];
+            
+            switch ($type) {
+                case 'modifyDice':
+                    $this->executeBatchModifyDice($player_id, $params);
+                    break;
+                case 'usePower':
+                    $this->executeBatchUsePower($player_id, $params);
+                    break;
+            }
+        }
+        
+        // Send summary notification with updated dice values
+        $new_moral = (int)$this->getUniqueValueFromDB("SELECT player_moral FROM player WHERE player_id = $player_id");
+        $updated_dice = $this->getCollectionFromDb("SELECT * FROM dice_roll WHERE dice_owner = 'player'");
+        
+        if (count($actions_array) > 0) {
+            $this->notifyAllPlayers('batchActionsApplied', clienttranslate('\${player_name} applied \${count} actions'), [
+                'player_id' => $player_id,
+                'player_name' => $this->getActivePlayerName(),
+                'count' => count($actions_array),
+                'new_moral' => $new_moral,
+                'updated_dice' => array_values($updated_dice)
+            ]);
+        }
+        
+        // If andConfirm is true, proceed to check result instead of staying in diceResult
+        if ($andConfirm) {
+            $this->gamestate->nextState('checkResult');
+        } else {
+            $this->gamestate->nextState('modified');
+        }
+    }
+    
+    /**
+     * Execute a single modifyDice action from batch
+     */
+    private function executeBatchModifyDice(int $player_id, array $params): void
+    {
+        $dice_id = (int)($params['dice_id'] ?? 0);
+        $modifier = (int)($params['modifier'] ?? 0);
+        
+        if ($modifier != -1 && $modifier != 1) {
+            throw new BgaUserException($this->_("Invalid modifier"));
+        }
+        
+        $dice = $this->getObjectFromDB("SELECT * FROM dice_roll WHERE dice_id = $dice_id");
+        if (!$dice || $dice['dice_owner'] != 'player') {
+            throw new BgaUserException($this->_("Invalid dice"));
+        }
+        
+        $new_value = max(1, min(6, $dice['dice_value'] + $modifier));
+        $this->DbQuery("UPDATE dice_roll SET dice_value = $new_value WHERE dice_id = $dice_id");
+        $this->DbQuery("UPDATE player SET player_moral = player_moral - 1 WHERE player_id = $player_id");
+        $this->incStat(1, 'moral_spent', $player_id);
+    }
+    
+    /**
+     * Execute a single usePower action from batch
+     */
+    private function executeBatchUsePower(int $player_id, array $params): void
+    {
+        $card_id = (int)($params['card_id'] ?? 0);
+        
+        $card = $this->getObjectFromDB("SELECT * FROM card WHERE card_id = $card_id AND card_location = 'horde_$player_id'");
+        if (!$card) {
+            throw new BgaUserException($this->_("Invalid card"));
+        }
+        
+        if ($card['card_power_used']) {
+            throw new BgaUserException($this->_("Power already used"));
+        }
+        
+        // Mark power as used
+        $this->DbQuery("UPDATE card SET card_power_used = 1 WHERE card_id = $card_id");
+        
+        // TODO: Apply power effect based on character
+        // This will be implemented when character powers are fully defined
+    }
+
+    /**
      * Confirm dice roll
      */
     function actConfirmRoll(): void
@@ -467,6 +598,7 @@ trait WW_Confrontation
         $player_id = $this->getActivePlayerId();
         $tile_id = $this->getGameStateValue('selected_tile');
         $tile = $this->getObjectFromDB("SELECT * FROM tile WHERE tile_id = $tile_id");
+        $player = $this->getObjectFromDB("SELECT player_moral FROM player WHERE player_id = $player_id");
         
         $horde_dice = $this->getCollectionFromDb("SELECT * FROM dice_roll WHERE dice_owner = 'player'");
         $challenge_dice = $this->getCollectionFromDb("SELECT * FROM dice_roll WHERE dice_owner = 'challenge'");
@@ -474,8 +606,9 @@ trait WW_Confrontation
         return [
             'tile' => $tile,
             'wind_force' => $tile['tile_wind_force'],
-            'horde_dice' => $horde_dice,
-            'challenge_dice' => $challenge_dice,
+            'moral' => (int)$player['player_moral'],
+            'horde_dice' => array_values($horde_dice),
+            'challenge_dice' => array_values($challenge_dice),
             'horde' => $this->getHordeWithPowerStatus($player_id)
         ];
     }

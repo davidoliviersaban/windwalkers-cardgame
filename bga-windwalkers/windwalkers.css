@@ -1116,17 +1116,20 @@
 .ww_draft_card {
     width: var(--card-width);
     height: var(--card-height);
-    padding: 6px;
     margin: 5px;
     border: 2px solid #ccc;
     border-radius: 8px;
-    background: #fff;
+    background-color: #fff;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     cursor: pointer;
     transition: all 0.2s;
     display: inline-block;
     vertical-align: top;
     box-sizing: border-box;
     overflow: hidden;
+    position: relative;
 }
 
 .ww_draft_card:hover {
@@ -1156,24 +1159,186 @@
     border-left: 5px solid #4caf50;
 }
 
+.ww_draft_card_overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0,0,0,0.7));
+    padding: 20px 6px 6px 6px;
+    color: #fff;
+}
+
 .ww_draft_card_name {
     font-weight: bold;
     font-size: 11px;
     margin-bottom: 3px;
-    color: #333;
+    color: #fff;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
 }
 
 .ww_draft_card_type {
     font-size: 9px;
-    color: #666;
+    color: #ddd;
     text-transform: uppercase;
     margin-bottom: 4px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
 }
 
 .ww_draft_card_power {
     font-size: 9px;
     color: #555;
     line-height: 1.2;
+}
+
+/* ==========================================
+   CARD PREVIEW TOOLTIP (hover 1 second)
+   ========================================== */
+
+.ww_card_preview_overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.ww_card_preview_overlay.ww_visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.ww_card_preview {
+    max-width: 90vw;
+    max-height: 90vh;
+    width: auto;
+    height: auto;
+    border-radius: 12px;
+    box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+    transform: scale(0.8);
+    transition: transform 0.3s ease;
+}
+
+.ww_card_preview_overlay.ww_visible .ww_card_preview {
+    transform: scale(1);
+}
+
+.ww_card_preview_info {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 15px 25px;
+    border-radius: 8px;
+    text-align: center;
+    max-width: 80%;
+}
+
+.ww_card_preview_name {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.ww_card_preview_type {
+    font-size: 14px;
+    text-transform: uppercase;
+    color: #aaa;
+    margin-bottom: 10px;
+}
+
+.ww_card_preview_power {
+    font-size: 16px;
+    line-height: 1.4;
+    color: #ddd;
+}
+
+/* ==========================================
+   PENDING ACTIONS VISUAL STATES
+   ========================================== */
+
+/* Dice modified but not yet confirmed */
+.ww_pending_modified {
+    position: relative;
+    animation: pendingPulse 1.5s ease-in-out infinite;
+}
+
+.ww_pending_modified::after {
+    content: '✎';
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    font-size: 12px;
+    background: #ff9800;
+    color: white;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@keyframes pendingPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.4); }
+    50% { box-shadow: 0 0 0 8px rgba(255, 152, 0, 0); }
+}
+
+/* Card power pending use (not yet confirmed) */
+.ww_pending_exhausted {
+    opacity: 0.7;
+    filter: grayscale(50%);
+    position: relative;
+}
+
+.ww_pending_exhausted::after {
+    content: '⏳';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 32px;
+    text-shadow: 0 0 10px rgba(0,0,0,0.8);
+}
+
+/* Moral value changed but not confirmed */
+.ww_pending_changed {
+    color: #ff9800 !important;
+    font-weight: bold;
+    animation: pendingBlink 1s ease-in-out infinite;
+}
+
+@keyframes pendingBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+/* Undo button styling */
+#btn_undo_action,
+#btn_undo_all {
+    transition: opacity 0.3s;
+}
+
+#btn_undo_action.disabled,
+#btn_undo_all.disabled {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+#ww_pending_count {
+    font-size: 11px;
+    color: #ff9800;
+    font-weight: bold;
 }
 
 /* ==========================================

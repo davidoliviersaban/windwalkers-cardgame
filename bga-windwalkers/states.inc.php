@@ -92,7 +92,8 @@ $machinestates = [
             "actUseMoral",
             "actRerollAll",
             "actConfirmRoll",
-            "actUsePower"
+            "actUsePower",
+            "actBatchActions"
         ],
         "args" => "argConfrontation",
         "transitions" => [

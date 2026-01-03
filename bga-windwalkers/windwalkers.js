@@ -330,6 +330,468 @@ function (dojo, declare) {
         getDisplayType: function(typeArg) {
             var charInfo = this.getCharacter(typeArg);
             return charInfo.is_leader ? 'traceur' : (charInfo.type || 'pack');
+        },
+        
+        /**
+         * Get card image URL based on character ID
+         * Images follow naming convention: {ID}.{Type}.{Name}.T{tier}.{index}.png
+         * Example: 001.Traceur.Uther le Fonceur.T3.00.png
+         */
+        getCardImageUrl: function(charId) {
+            var basePath = (typeof g_gamethemeurl !== 'undefined' ? g_gamethemeurl : '') + 'img/cards/';
+            var charInfo = this.getCharacter(charId);
+            if (!charInfo) return basePath + 'card_back.png';
+            
+            // Pad ID to 3 digits
+            var paddedId = String(charId).padStart(3, '0');
+            
+            // Get type name (capitalized)
+            var typeName = charInfo.position || 'Pack';
+            typeName = typeName.charAt(0).toUpperCase() + typeName.slice(1);
+            
+            // Get character name
+            var charName = charInfo.name || 'Unknown';
+            
+            // Get tier
+            var tier = charInfo.tier || 2;
+            
+            // Index is charId - 1 (0-based)
+            var index = String(parseInt(charId) - 1).padStart(2, '0');
+            
+            return basePath + paddedId + '.' + typeName + '.' + charName + '.T' + tier + '.' + index + '.png';
+        }
+    };
+    
+    // ============================================================
+    // WW_CardPreview - Card preview tooltip on hover
+    // ============================================================
+    var WW_CardPreview = {
+        hoverTimer: null,
+        previewVisible: false,
+        HOVER_DELAY: 1000, // 1 second
+        
+        init: function() {
+            // Create overlay if not exists
+            if (!$('ww_card_preview_overlay')) {
+                var overlayHtml = '<div id="ww_card_preview_overlay" class="ww_card_preview_overlay">' +
+                                  '<img id="ww_card_preview_image" class="ww_card_preview" src="" />' +
+                                  '<div id="ww_card_preview_info" class="ww_card_preview_info">' +
+                                  '<div id="ww_card_preview_name" class="ww_card_preview_name"></div>' +
+                                  '<div id="ww_card_preview_type" class="ww_card_preview_type"></div>' +
+                                  '<div id="ww_card_preview_power" class="ww_card_preview_power"></div>' +
+                                  '</div>' +
+                                  '</div>';
+                WW_DOM.place(overlayHtml, document.body, 'last');
+                
+                // Click on overlay to close
+                WW_DOM.connect('ww_card_preview_overlay', 'onclick', null, function() {
+                    WW_CardPreview.hide();
+                });
+            }
+        },
+        
+        setupHover: function(cardEl, typeArg) {
+            var self = this;
+            
+            // Mouse enter - start timer
+            dojo.connect(cardEl, 'onmouseenter', function() {
+                self.cancelTimer();
+                self.hoverTimer = setTimeout(function() {
+                    self.show(typeArg);
+                }, self.HOVER_DELAY);
+            });
+            
+            // Mouse leave - cancel timer
+            dojo.connect(cardEl, 'onmouseleave', function() {
+                self.cancelTimer();
+            });
+            
+            // Click - cancel timer (don't show preview on click)
+            dojo.connect(cardEl, 'onclick', function() {
+                self.cancelTimer();
+            });
+        },
+        
+        cancelTimer: function() {
+            if (this.hoverTimer) {
+                clearTimeout(this.hoverTimer);
+                this.hoverTimer = null;
+            }
+        },
+        
+        show: function(typeArg) {
+            this.init(); // Ensure overlay exists
+            
+            var charInfo = WW_State.getCharacter(typeArg);
+            var cardImageUrl = WW_State.getCardImageUrl(typeArg);
+            var displayType = WW_State.getDisplayType(typeArg);
+            
+            $('ww_card_preview_image').src = cardImageUrl;
+            WW_DOM.setHtml('ww_card_preview_name', charInfo.name || 'Unknown');
+            WW_DOM.setHtml('ww_card_preview_type', WW_State.capitalizeFirst(displayType));
+            WW_DOM.setHtml('ww_card_preview_power', charInfo.power || '');
+            
+            WW_DOM.addClass('ww_card_preview_overlay', 'ww_visible');
+            this.previewVisible = true;
+        },
+        
+        hide: function() {
+            WW_DOM.removeClass('ww_card_preview_overlay', 'ww_visible');
+            this.previewVisible = false;
+        }
+    };
+    
+    // ============================================================
+    // WW_PendingActions - Client-side action queue with undo
+    // Actions are stored locally and sent to server on confirm
+    // ============================================================
+    var WW_PendingActions = {
+        actions: [],           // Queue of pending actions
+        originalState: null,   // Snapshot of state before any action
+        gameInstance: null,    // Reference to main game object
+        enabled: false,        // Whether pending mode is active
+        
+        /**
+         * Initialize pending actions system
+         */
+        init: function(gameInstance) {
+            this.gameInstance = gameInstance;
+            this.clear();
+        },
+        
+        /**
+         * Enable pending mode and save current state
+         */
+        enable: function(initialState) {
+            this.enabled = true;
+            this.originalState = JSON.parse(JSON.stringify(initialState));
+            this.actions = [];
+            this.updateUI();
+        },
+        
+        /**
+         * Disable pending mode
+         */
+        disable: function() {
+            this.enabled = false;
+            this.clear();
+            this.updateUI();
+        },
+        
+        /**
+         * Check if pending mode is active
+         */
+        isEnabled: function() {
+            return this.enabled;
+        },
+        
+        /**
+         * Add an action to the queue
+         * @param {string} type - Action type (e.g., 'modifyDice', 'usePower')
+         * @param {object} params - Action parameters
+         * @param {object} visualEffect - How to show this action in UI
+         */
+        push: function(type, params, visualEffect) {
+            if (!this.enabled) return false;
+            
+            var action = {
+                id: Date.now() + '_' + this.actions.length,
+                type: type,
+                params: params,
+                visual: visualEffect || {}
+            };
+            
+            this.actions.push(action);
+            this.applyVisualEffect(action, true);
+            this.updateUI();
+            this.updateConfrontationStatus();
+            
+            return action.id;
+        },
+        
+        /**
+         * Undo the last action
+         */
+        undo: function() {
+            if (this.actions.length === 0) return false;
+            
+            var action = this.actions.pop();
+            this.applyVisualEffect(action, false);
+            this.updateUI();
+            this.updateConfrontationStatus();
+            
+            return action;
+        },
+        
+        /**
+         * Undo all actions (restore original state)
+         */
+        undoAll: function() {
+            while (this.actions.length > 0) {
+                this.undo();
+            }
+            this.restoreOriginalVisual();
+            this.updateConfrontationStatus();
+        },
+        
+        /**
+         * Clear all pending actions without undoing visuals
+         */
+        clear: function() {
+            this.actions = [];
+            this.originalState = null;
+            this.updateUI();
+        },
+        
+        /**
+         * Get all pending actions for server submission
+         */
+        getActions: function() {
+            return this.actions.map(function(a) {
+                return { type: a.type, params: a.params };
+            });
+        },
+        
+        /**
+         * Check if there are pending actions
+         */
+        hasPending: function() {
+            return this.actions.length > 0;
+        },
+        
+        /**
+         * Get count of pending actions
+         */
+        count: function() {
+            return this.actions.length;
+        },
+        
+        /**
+         * Get computed state after all pending actions
+         */
+        getComputedState: function() {
+            if (!this.originalState) return null;
+            
+            var state = JSON.parse(JSON.stringify(this.originalState));
+            
+            for (var i = 0; i < this.actions.length; i++) {
+                var action = this.actions[i];
+                this.applyActionToState(state, action);
+            }
+            
+            return state;
+        },
+        
+        /**
+         * Apply an action to state object (for local computation)
+         */
+        applyActionToState: function(state, action) {
+            switch (action.type) {
+                case 'modifyDice':
+                    if (state.dice && state.dice[action.params.dice_id]) {
+                        state.dice[action.params.dice_id].value += action.params.modifier;
+                        state.dice[action.params.dice_id].value = Math.max(1, Math.min(6, state.dice[action.params.dice_id].value));
+                    }
+                    if (state.moral !== undefined) {
+                        state.moral -= 1;
+                    }
+                    break;
+                    
+                case 'usePower':
+                    if (state.horde && state.horde[action.params.card_id]) {
+                        state.horde[action.params.card_id].power_used = 1;
+                    }
+                    // Power effects vary by card - handled in visual
+                    break;
+                    
+                case 'rerollAll':
+                    if (state.moral !== undefined) {
+                        state.moral -= 1;
+                    }
+                    // Dice values would come from server
+                    break;
+            }
+        },
+        
+        /**
+         * Apply visual effect for an action
+         */
+        applyVisualEffect: function(action, apply) {
+            var visual = action.visual;
+            
+            switch (action.type) {
+                case 'modifyDice':
+                    var diceEl = $('dice_' + action.params.dice_id);
+                    if (diceEl) {
+                        if (apply) {
+                            var currentValue = parseInt(WW_DOM.getAttr(diceEl, 'data-value')) || parseInt(WW_DOM.getHtml(diceEl)) || 0;
+                            var newValue = Math.max(1, Math.min(6, currentValue + action.params.modifier));
+                            WW_DOM.setHtml(diceEl, newValue);
+                            WW_DOM.setAttr(diceEl, 'data-value', newValue);
+                            WW_DOM.addClass(diceEl, 'ww_pending_modified');
+                        } else {
+                            // Revert to previous value
+                            var currentValue = parseInt(WW_DOM.getAttr(diceEl, 'data-value')) || 0;
+                            var revertValue = visual.originalValue !== undefined ? visual.originalValue : (currentValue - action.params.modifier);
+                            WW_DOM.setHtml(diceEl, revertValue);
+                            WW_DOM.setAttr(diceEl, 'data-value', revertValue);
+                            // Only remove class if no other modify actions on this dice
+                            if (!this.hasPendingForDice(action.params.dice_id)) {
+                                WW_DOM.removeClass(diceEl, 'ww_pending_modified');
+                            }
+                        }
+                    }
+                    // Update moral display
+                    this.updatePendingMoral(apply ? -1 : 1);
+                    break;
+                    
+                case 'usePower':
+                    var cardEl = $('ww_horde_item_' + action.params.card_id);
+                    if (cardEl) {
+                        if (apply) {
+                            WW_DOM.addClass(cardEl, 'ww_pending_exhausted');
+                        } else {
+                            WW_DOM.removeClass(cardEl, 'ww_pending_exhausted');
+                        }
+                    }
+                    break;
+            }
+        },
+        
+        /**
+         * Check if there's a pending action for a specific dice
+         */
+        hasPendingForDice: function(diceId) {
+            return this.actions.some(function(a) {
+                return a.type === 'modifyDice' && a.params.dice_id === diceId;
+            });
+        },
+        
+        /**
+         * Update moral display with pending changes
+         */
+        updatePendingMoral: function(change) {
+            var moralEl = $('ww_player_moral_value');
+            if (moralEl) {
+                var currentMoral = parseInt(WW_DOM.getHtml(moralEl)) || 0;
+                WW_DOM.setHtml(moralEl, currentMoral + change);
+                if (this.hasPending()) {
+                    WW_DOM.addClass(moralEl, 'ww_pending_changed');
+                } else {
+                    WW_DOM.removeClass(moralEl, 'ww_pending_changed');
+                }
+            }
+        },
+        
+        /**
+         * Restore all visuals to original state
+         */
+        restoreOriginalVisual: function() {
+            // Remove all pending classes
+            dojo.query('.ww_pending_modified').forEach(function(el) {
+                WW_DOM.removeClass(el, 'ww_pending_modified');
+            });
+            dojo.query('.ww_pending_exhausted').forEach(function(el) {
+                WW_DOM.removeClass(el, 'ww_pending_exhausted');
+            });
+            dojo.query('.ww_pending_changed').forEach(function(el) {
+                WW_DOM.removeClass(el, 'ww_pending_changed');
+            });
+            
+            // Restore original values if we have them
+            if (this.originalState) {
+                // Restore moral
+                if (this.originalState.moral !== undefined) {
+                    var moralEl = $('ww_player_moral_value');
+                    if (moralEl) {
+                        WW_DOM.setHtml(moralEl, this.originalState.moral);
+                    }
+                }
+                
+                // Restore dice values
+                if (this.originalState.dice) {
+                    for (var diceId in this.originalState.dice) {
+                        var diceEl = $('dice_' + diceId);
+                        if (diceEl) {
+                            var originalValue = this.originalState.dice[diceId].value;
+                            WW_DOM.setHtml(diceEl, originalValue);
+                            WW_DOM.setAttr(diceEl, 'data-value', originalValue);
+                        }
+                    }
+                }
+            }
+        },
+        
+        /**
+         * Update undo button visibility
+         */
+        updateUI: function() {
+            var undoBtn = $('btn_undo_action');
+            var undoAllBtn = $('btn_undo_all');
+            var pendingCount = $('ww_pending_count');
+            
+            if (undoBtn) {
+                WW_DOM.toggleClass(undoBtn, 'disabled', !this.hasPending());
+            }
+            if (undoAllBtn) {
+                WW_DOM.toggleClass(undoAllBtn, 'disabled', !this.hasPending());
+            }
+            if (pendingCount) {
+                WW_DOM.setHtml(pendingCount, this.count() > 0 ? '(' + this.count() + ')' : '');
+            }
+        },
+        
+        /**
+         * Update confrontation preview and Confirm button color based on current state
+         */
+        updateConfrontationStatus: function() {
+            // Update dice preview
+            WW_Dice.updateConfrontationPreview();
+            
+            // Update Confirm button color based on result
+            var confirmBtn = $('btn_confirm_roll');
+            if (confirmBtn) {
+                var hordeDice = WW_Dice.getHordeDice();
+                var windDice = WW_Dice.getWindDice();
+                var windForce = parseInt(WW_DOM.getHtml('ww_wind_force')) || 0;
+                
+                if (hordeDice.length > 0 && windDice.length > 0) {
+                    var result = WW_Dice.calculateConfrontationResult(hordeDice, windDice, windForce);
+                    
+                    // Remove existing color classes and add new one
+                    WW_DOM.removeClass(confirmBtn, 'bgabutton_blue bgabutton_red bgabutton_green');
+                    WW_DOM.addClass(confirmBtn, result.success ? 'bgabutton_blue' : 'bgabutton_red');
+                }
+            }
+        },
+        
+        /**
+         * Send all pending actions to server
+         */
+        confirm: function(callback) {
+            if (!this.gameInstance) return;
+            
+            var actions = this.getActions();
+            var self = this;
+            
+            if (actions.length === 0) {
+                // No pending actions, just proceed
+                if (callback) callback(true);
+                return;
+            }
+            
+            // Send batch to server using bgaPerformAction (returns promise)
+            var self = this;
+            this.gameInstance.bgaPerformAction('actBatchActions', {
+                actions: JSON.stringify(actions)
+            }).then(function() {
+                self.clear();
+                if (callback) callback(true);
+            }).catch(function() {
+                // Server rejected - restore original
+                self.undoAll();
+                if (callback) callback(false);
+            });
         }
     };
     
@@ -416,7 +878,7 @@ function (dojo, declare) {
          */
         getTileImageUrl: function(type, subtype) {
             // Use BGA's g_gamethemeurl to get the correct path to game resources
-            var basePath = (typeof g_gamethemeurl !== 'undefined' ? g_gamethemeurl : '') + 'img/tile.';
+            var basePath = (typeof g_gamethemeurl !== 'undefined' ? g_gamethemeurl : '') + 'img/tiles/tile.';
             
             // Normalize subtype (lowercase, keep underscores for village parsing)
             var normalizedSubtype = (subtype || '').toLowerCase();
@@ -567,6 +1029,11 @@ function (dojo, declare) {
             WW_DOM.removeClassFromAll('#ww_horde_dice .ww_dice', 'ww_selected');
             WW_DOM.addClass('dice_' + diceId, 'ww_selected');
             WW_State.setSelectedDice([diceId]);
+        },
+        
+        deselectAllDice: function() {
+            WW_DOM.removeClassFromAll('#ww_horde_dice .ww_dice', 'ww_selected');
+            WW_State.clearSelectedDice();
         },
         
         updateDiceValue: function(diceId, newValue) {
@@ -776,18 +1243,26 @@ function (dojo, declare) {
             
             var charInfo = WW_State.getCharacter(typeArg);
             var displayType = WW_State.getDisplayType(typeArg);
+            var cardImageUrl = WW_State.getCardImageUrl(typeArg);
             
             var cardHtml = '<div id="' + options.prefix + '_' + cardId + '" ' +
                            'class="ww_draft_card ' + (options.extraClass || '') + '" ' +
                            'data-card-id="' + cardId + '" ' +
                            'data-type="' + displayType + '" ' +
-                           'data-type-arg="' + typeArg + '">' +
+                           'data-type-arg="' + typeArg + '" ' +
+                           'style="background-image: url(\'' + cardImageUrl + '\');">' +
+                           '<div class="ww_draft_card_overlay">' +
                            '<div class="ww_draft_card_name">' + (charInfo.name || 'Unknown') + '</div>' +
                            '<div class="ww_draft_card_type">' + WW_State.capitalizeFirst(displayType) + '</div>' +
-                           '<div class="ww_draft_card_power">' + (charInfo.power || '') + '</div>' +
+                           '</div>' +
                            '</div>';
             
             WW_DOM.place(cardHtml, options.containerId);
+            
+            var cardEl = $(options.prefix + '_' + cardId);
+            
+            // Setup hover preview (1 second delay)
+            WW_CardPreview.setupHover(cardEl, typeArg);
             
             if (options.onClick) {
                 WW_DOM.connect(options.prefix + '_' + cardId, 'onclick', null, function(evt) {
@@ -796,7 +1271,7 @@ function (dojo, declare) {
                 });
             }
             
-            return $(options.prefix + '_' + cardId);
+            return cardEl;
         },
         
         // Horde Management
@@ -1619,6 +2094,11 @@ function (dojo, declare) {
                 case 'diceResult':
                     this.addActionButton('btn_moral_plus', _('+1 (spend moral)'), 'onMoralPlus');
                     this.addActionButton('btn_moral_minus', _('-1 (spend moral)'), 'onMoralMinus');
+                    
+                    // Add Undo buttons
+                    this.addActionButton('btn_undo_action', _('↩ Undo') + ' <span id="ww_pending_count"></span>', 'onUndoAction', null, false, 'gray');
+                    this.addActionButton('btn_undo_all', _('↩↩ Undo All'), 'onUndoAll', null, false, 'gray');
+                    
                     // Check confrontation result to set button color
                     var hordeDice = WW_Dice.getHordeDice();
                     var windDice = WW_Dice.getWindDice();
@@ -1629,6 +2109,9 @@ function (dojo, declare) {
                         buttonColor = (result && result.success) ? 'blue' : 'red';
                     }
                     this.addActionButton('btn_confirm_roll', _('Confirm'), 'onConfirmRoll', null, false, buttonColor);
+                    
+                    // Update undo button state
+                    WW_PendingActions.updateUI();
                     break;
                 case 'recruitment':
                     // Can finish recruitment only if horde meets all constraints
@@ -1740,6 +2223,34 @@ function (dojo, declare) {
             // Update horde exhausted state from server data
             if (args && args.horde) {
                 WW_Cards.updateHordeExhaustedState(args.horde);
+            }
+            
+            // Enable pending actions mode with current state
+            if (this.isCurrentPlayerActive() && args) {
+                var initialState = {
+                    moral: args.moral || 0,
+                    dice: {},
+                    horde: {}
+                };
+                
+                // Capture current dice state
+                if (args.horde_dice) {
+                    for (var i = 0; i < args.horde_dice.length; i++) {
+                        var d = args.horde_dice[i];
+                        initialState.dice[d.dice_id] = { value: d.dice_value, type: d.dice_type };
+                    }
+                }
+                
+                // Capture horde state
+                if (args.horde) {
+                    for (var cardId in args.horde) {
+                        var c = args.horde[cardId];
+                        initialState.horde[cardId] = { power_used: parseInt(c.card_power_used || 0) };
+                    }
+                }
+                
+                WW_PendingActions.init(this);
+                WW_PendingActions.enable(initialState);
             }
             
             // Make horde cards clickable to use powers
@@ -1888,10 +2399,34 @@ function (dojo, declare) {
                 return;
             }
             
-            this.performAction('actUseMoral', {
-                dice_id: parseInt(WW_State.getFirstSelectedDice()),
+            var diceId = parseInt(WW_State.getFirstSelectedDice());
+            var diceEl = $('dice_' + diceId);
+            var currentValue = diceEl ? (parseInt(WW_DOM.getAttr(diceEl, 'data-value')) || parseInt(WW_DOM.getHtml(diceEl)) || 0) : 0;
+            
+            // Check computed moral from pending state
+            var computedState = WW_PendingActions.getComputedState();
+            var currentMoral = computedState ? computedState.moral : (this.gamedatas.players[this.player_id] || {}).moral || 0;
+            
+            if (currentMoral <= 1) {
+                this.showMessage(_("Not enough moral"), "error");
+                return;
+            }
+            
+            if (currentValue >= 6) {
+                this.showMessage(_("Die already at maximum"), "info");
+                return;
+            }
+            
+            // Add to pending actions instead of sending to server
+            WW_PendingActions.push('modifyDice', {
+                dice_id: diceId,
                 modifier: 1
+            }, {
+                originalValue: currentValue
             });
+            
+            // Deselect dice (remove orange border)
+            WW_Dice.deselectAllDice();
         },
         
         onMoralMinus: function(evt) {
@@ -1902,15 +2437,67 @@ function (dojo, declare) {
                 return;
             }
             
-            this.performAction('actUseMoral', {
-                dice_id: parseInt(WW_State.getFirstSelectedDice()),
+            var diceId = parseInt(WW_State.getFirstSelectedDice());
+            var diceEl = $('dice_' + diceId);
+            var currentValue = diceEl ? (parseInt(WW_DOM.getAttr(diceEl, 'data-value')) || parseInt(WW_DOM.getHtml(diceEl)) || 0) : 0;
+            
+            // Check computed moral from pending state
+            var computedState = WW_PendingActions.getComputedState();
+            var currentMoral = computedState ? computedState.moral : (this.gamedatas.players[this.player_id] || {}).moral || 0;
+            
+            if (currentMoral <= 1) {
+                this.showMessage(_("Not enough moral"), "error");
+                return;
+            }
+            
+            if (currentValue <= 1) {
+                this.showMessage(_("Die already at minimum"), "info");
+                return;
+            }
+            
+            // Add to pending actions instead of sending to server
+            WW_PendingActions.push('modifyDice', {
+                dice_id: diceId,
                 modifier: -1
+            }, {
+                originalValue: currentValue
             });
+            
+            // Deselect dice (remove orange border)
+            WW_Dice.deselectAllDice();
+        },
+        
+        onUndoAction: function(evt) {
+            WW_DOM.stopEvent(evt);
+            WW_PendingActions.undo();
+        },
+        
+        onUndoAll: function(evt) {
+            WW_DOM.stopEvent(evt);
+            WW_PendingActions.undoAll();
         },
         
         onConfirmRoll: function(evt) {
             WW_DOM.stopEvent(evt);
-            this.performAction('actConfirmRoll', {});
+            
+            // If pending actions exist, send them with andConfirm=1
+            if (WW_PendingActions.hasPending()) {
+                var self = this;
+                var actions = WW_PendingActions.getActions();
+                
+                // Send batch actions with confirm flag - single request
+                // Use 1 instead of true for BGA compatibility
+                this.bgaPerformAction('actBatchActions', {
+                    actions: JSON.stringify(actions),
+                    andConfirm: 1
+                }).then(function() {
+                    WW_PendingActions.clear();
+                }).catch(function() {
+                    WW_PendingActions.undoAll();
+                });
+            } else {
+                this.performAction('actConfirmRoll', {});
+            }
         },
         
         onRest: function(evt) {
@@ -1919,7 +2506,17 @@ function (dojo, declare) {
         },
         
         onUsePower: function(cardId) {
-            this.performAction('actUsePower', { card_id: parseInt(cardId) });
+            // Check if card already has pending exhaustion
+            var computedState = WW_PendingActions.getComputedState();
+            if (computedState && computedState.horde && computedState.horde[cardId] && computedState.horde[cardId].power_used) {
+                this.showMessage(_("Power already used"), "info");
+                return;
+            }
+            
+            // Add to pending actions
+            WW_PendingActions.push('usePower', {
+                card_id: parseInt(cardId)
+            }, {});
         },
         
         onConfirmDraft: function(evt) {
@@ -1973,6 +2570,9 @@ function (dojo, declare) {
             
             dojo.subscribe('moralUsed', this, "notif_moralUsed");
             this.notifqueue.setSynchronous('moralUsed', 300);
+            
+            dojo.subscribe('batchActionsApplied', this, "notif_batchActionsApplied");
+            this.notifqueue.setSynchronous('batchActionsApplied', 300);
             
             dojo.subscribe('playerSurpasses', this, "notif_playerSurpasses");
             dojo.subscribe('playerRests', this, "notif_playerRests");
@@ -2098,6 +2698,39 @@ function (dojo, declare) {
             WW_Player.updateMoral(notif.args.player_id, notif.args.new_moral);
             WW_Dice.updateDiceValue(notif.args.dice_id, notif.args.new_value);
             WW_Dice.updateConfrontationPreview();
+        },
+        
+        notif_batchActionsApplied: function(notif) {
+            // Clear pending visual states - server has confirmed the actions
+            dojo.query('.ww_pending_modified').forEach(function(el) {
+                WW_DOM.removeClass(el, 'ww_pending_modified');
+            });
+            dojo.query('.ww_pending_exhausted').forEach(function(el) {
+                WW_DOM.removeClass(el, 'ww_pending_exhausted');
+                WW_DOM.addClass(el, 'ww_card_exhausted');
+            });
+            dojo.query('.ww_pending_changed').forEach(function(el) {
+                WW_DOM.removeClass(el, 'ww_pending_changed');
+            });
+            
+            // Update dice display with server-confirmed values
+            if (notif.args.updated_dice) {
+                for (var i = 0; i < notif.args.updated_dice.length; i++) {
+                    var dice = notif.args.updated_dice[i];
+                    var diceEl = $('dice_' + dice.dice_id);
+                    if (diceEl) {
+                        WW_DOM.setHtml(diceEl, dice.dice_value);
+                    }
+                }
+            }
+            
+            // Update moral display
+            if (notif.args.new_moral !== undefined) {
+                WW_Player.updateMoral(notif.args.player_id, notif.args.new_moral);
+            }
+            
+            // Disable pending mode
+            WW_PendingActions.disable();
         },
         
         notif_playerSurpasses: function(notif) {

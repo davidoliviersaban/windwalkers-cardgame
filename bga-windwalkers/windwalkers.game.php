@@ -319,17 +319,24 @@ class Windwalkers extends Table
      */
     private function getVillageRecruitPool(array $tile): array
     {
-        switch ($tile['tile_subtype']) {
+        $subtype = $tile['tile_subtype'];
+        $this->trace("getVillageRecruitPool - tile_subtype: $subtype");
+        
+        switch ($subtype) {
             case 'village_green':
                 // Village vert: 2 traîne (vert)
+                $this->trace("getVillageRecruitPool - Creating pool for GREEN village: 0 fer, 0 pack, 2 traine");
                 return $this->getOrCreateRecruitPool($tile, 0, 0, 2);
             case 'village_red':
                 // Village rouge: 2 fer (rouge)
+                $this->trace("getVillageRecruitPool - Creating pool for RED village: 2 fer, 0 pack, 0 traine");
                 return $this->getOrCreateRecruitPool($tile, 2, 0, 0);
             case 'village_blue':
                 // Village bleu: 2 pack (bleu)
+                $this->trace("getVillageRecruitPool - Creating pool for BLUE village: 0 fer, 2 pack, 0 traine");
                 return $this->getOrCreateRecruitPool($tile, 0, 2, 0);
             default:
+                $this->trace("getVillageRecruitPool - Unknown village subtype: $subtype");
                 return [];
         }
     }
@@ -349,6 +356,8 @@ class Windwalkers extends Table
         $location = $this->getRecruitLocation($tile);
         $poolKey = "pool_init_{$location}";  // location already contains chapter info
         
+        $this->trace("getOrCreateRecruitPool - location: $location, fer=$ferCount, pack=$packCount, traine=$traineCount");
+        
         // Check if pool was already initialized this chapter (even if now empty)
         $poolInitialized = $this->getUniqueValueFromDB(
             "SELECT var_value FROM global_var WHERE var_name = '$poolKey'"
@@ -359,8 +368,18 @@ class Windwalkers extends Table
             "SELECT * FROM card WHERE card_location = '$location'"
         );
         
+        $this->trace("getOrCreateRecruitPool - poolInitialized: " . ($poolInitialized ? 'true' : 'false') . ", existingPoolCount: " . count($existingPool));
+        
+        // Log existing pool card types
+        if (!empty($existingPool)) {
+            foreach ($existingPool as $card) {
+                $this->trace("getOrCreateRecruitPool - existing card: id=" . $card['card_id'] . ", type=" . $card['card_type'] . ", type_arg=" . $card['card_type_arg']);
+            }
+        }
+        
         // If pool was already initialized, return current state (even if empty)
         if ($poolInitialized) {
+            $this->trace("getOrCreateRecruitPool - returning existing pool (already initialized)");
             return $existingPool;
         }
         
@@ -370,22 +389,27 @@ class Windwalkers extends Table
         
         // If there are already cards (from released hordiers), don't add more
         if (!empty($existingPool)) {
+            $this->trace("getOrCreateRecruitPool - returning existing pool (had cards from releases)");
             return $existingPool;
         }
         
         // Create new pool - draw cards and assign to this location
+        $this->trace("getOrCreateRecruitPool - drawing new cards");
         $newCards = $this->drawRecruitCards($ferCount, $packCount, $traineCount);
         
         // Move cards to pool location
         foreach ($newCards as $card) {
             $card_id = $card['card_id'];
             $this->DbQuery("UPDATE card SET card_location = '$location' WHERE card_id = $card_id");
+            $this->trace("getOrCreateRecruitPool - moved card $card_id (type=" . $card['card_type'] . ") to $location");
         }
         
         // Return the cards with updated location
-        return $this->getCollectionFromDb(
+        $finalPool = $this->getCollectionFromDb(
             "SELECT * FROM card WHERE card_location = '$location'"
         );
+        $this->trace("getOrCreateRecruitPool - final pool count: " . count($finalPool));
+        return $finalPool;
     }
 
     /**
@@ -400,10 +424,13 @@ class Windwalkers extends Table
     {
         $cards = [];
         
+        $this->trace("drawRecruitCards - Requested: fer=$ferCount, pack=$packCount, traine=$traineCount");
+        
         if ($ferCount > 0) {
             $fer = $this->getCollectionFromDb(
                 "SELECT * FROM card WHERE card_type = 'fer' AND card_is_leader = 0 AND card_location = 'deck' ORDER BY RAND() LIMIT $ferCount"
             );
+            $this->trace("drawRecruitCards - Found " . count($fer) . " fer cards");
             $cards = array_merge($cards, $fer);
         }
         
@@ -411,6 +438,7 @@ class Windwalkers extends Table
             $pack = $this->getCollectionFromDb(
                 "SELECT * FROM card WHERE card_type = 'pack' AND card_location = 'deck' ORDER BY RAND() LIMIT $packCount"
             );
+            $this->trace("drawRecruitCards - Found " . count($pack) . " pack cards");
             $cards = array_merge($cards, $pack);
         }
         
@@ -418,9 +446,11 @@ class Windwalkers extends Table
             $traine = $this->getCollectionFromDb(
                 "SELECT * FROM card WHERE card_type = 'traine' AND card_location = 'deck' ORDER BY RAND() LIMIT $traineCount"
             );
+            $this->trace("drawRecruitCards - Found " . count($traine) . " traine cards");
             $cards = array_merge($cards, $traine);
         }
         
+        $this->trace("drawRecruitCards - Total drawn: " . count($cards));
         return $cards;
     }
 
