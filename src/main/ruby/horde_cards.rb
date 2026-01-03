@@ -63,14 +63,14 @@ def drawCards(deck, dirname, now)
     embed.svg key: ':card:',         file: 'src/resources/helpers/card.svg',                 width: 40, height: 50, dy: -43
     embed.svg key: ':discard:',      file: 'src/resources/helpers/discard.svg',              width: 35, height: 50, dy: -43
     embed.svg key: ':missing:',      file: 'src/resources/helpers/missing.svg',              width: 40, height: 50, dy: -43
-    embed.png key: ':terrain:',      file: 'src/resources/helpers/d6-green.png',             width: 60, height: 60, dy: -45
-    embed.png key: ':fatalite:',     file: 'src/resources/helpers/d6-black.png',             width: 60, height: 60, dy: -45
-    embed.png key: ':tous-des:',     file: 'src/resources/helpers/d6-black-white-green.png', width: 60, height: 60, dy: -45
-    embed.png key: ':tous-mes-des:', file: 'src/resources/helpers/d6-blue-violet.png',       width: 60, height: 60, dy: -45
-    embed.png key: ':mes-des:',      file: 'src/resources/helpers/d6-blue.png',              width: 60, height: 60, dy: -45
-    embed.png key: ':epreuve:',      file: 'src/resources/helpers/d6-white-green.png',       width: 60, height: 60, dy: -45
-    embed.png key: ':vent:',         file: 'src/resources/helpers/d6-white.png',             width: 60, height: 60, dy: -45
-    embed.png key: ':violet:',       file: 'src/resources/helpers/d6-violet.png',            width: 60, height: 60, dy: -45
+    embed.png key: ':d6-green:',      file: 'src/resources/helpers/d6-green.png',             width: 60, height: 60, dy: -45
+    embed.png key: ':d6-black:',     file: 'src/resources/helpers/d6-black.png',             width: 60, height: 60, dy: -45
+    embed.png key: ':d6-black-white-green:',     file: 'src/resources/helpers/d6-black-white-green.png', width: 60, height: 60, dy: -45
+    embed.png key: ':d6-blue-violet:', file: 'src/resources/helpers/d6-blue-violet.png',       width: 60, height: 60, dy: -45
+    embed.png key: ':d6-blue:',      file: 'src/resources/helpers/d6-blue.png',              width: 60, height: 60, dy: -45
+    embed.png key: ':d6-white-green:',      file: 'src/resources/helpers/d6-white-green.png',       width: 60, height: 60, dy: -45
+    embed.png key: ':d6-white:',         file: 'src/resources/helpers/d6-white.png',             width: 60, height: 60, dy: -45
+    embed.png key: ':d6-violet:',       file: 'src/resources/helpers/d6-violet.png',            width: 60, height: 60, dy: -45
     embed.svg key: ':tuile:',        file: 'src/resources/helpers/hex-tile.svg',             width: 45, height: 50, dy: -38
     embed.png key: ':moral:',        file: 'src/resources/helpers/moral.png',                width: 35, height: 45, dy: -40
     embed.png key: ':force-1:',      file: 'src/resources/helpers/wind-force-1.png',         width: 50, height: 50, dy: -38

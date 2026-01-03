@@ -364,7 +364,7 @@ trait WW_Confrontation
                 $this->applyBaramasPower($player_id);
                 break;
             case 'uther_power':
-                // Uther: :tap:: :discard: pour ignorer 3 :tous-des: / :missing:
+                // Uther: :tap:: :discard: pour ignorer 3 :d6-black-white-green: / :missing:
                 $this->applyUtherPower($player_id, $card_id, $target_card_id, $params);
                 break;
             case 'xavio_power':
@@ -419,6 +419,26 @@ trait WW_Confrontation
                 // Galas Thunderflayer: Si force = 6 (FUREVENT), rest-all (except himself)
                 $this->applyGalasPower($player_id, $card_id);
                 break;
+            case 'oranne_power':
+                // Oranne la Voyageuse: Si tuile avec moral, ignorez jusqu'à 3 dés challenge
+                $this->applyOrannePower($player_id, $params);
+                break;
+            case 'ivana_power':
+                // Ivana: Discard to ignore all challenge dice < wind force
+                $this->applyIvanaPower($player_id, $card_id);
+                break;
+            case 'thutmus_power':
+                // Thutmus: Roll exactly wind_force number of horde dice
+                $this->applyThutmusPower($player_id);
+                break;
+            case 'amon_power':
+                // Amon Amon: Ignore all white dice (wind) per black dice (fatalite)
+                $this->applyAmonPower($player_id);
+                break;
+            case 'duke_power':
+                // Duke Arnaud N.: Discard to place 2 of your dice
+                $this->applyDukePower($player_id, $card_id, $params);
+                break;
                 
             // Add more powers here as they are implemented
             default:
@@ -463,8 +483,273 @@ trait WW_Confrontation
     }
     
     /**
+     * Oranne la Voyageuse's power: If tile has moral effect, ignore up to 3 challenge dice
+     * :tap:: Si :tuile: avec :moral: alors ignorez -3 :d6-black-white-green:
+     */
+    private function applyOrannePower(int $player_id, array $params): void
+    {
+        // Get the selected tile to check moral effect
+        $tile_id = $this->getGameStateValue('selected_tile');
+        if (!$tile_id) {
+            throw new BgaUserException($this->_("No tile selected"));
+        }
+        
+        $tile = $this->getObjectFromDB("SELECT * FROM tile WHERE tile_id = $tile_id");
+        if (!$tile) {
+            throw new BgaUserException($this->_("Tile not found"));
+        }
+        
+        $moral_effect = (int)($tile['tile_moral_effect'] ?? 0);
+        
+        // Check if tile has any moral effect (positive or negative)
+        if ($moral_effect == 0) {
+            throw new BgaUserException($this->_("This power only works on tiles with a moral effect"));
+        }
+        
+        $ignored_dice = $params['ignored_dice'] ?? [];
+        
+        if (empty($ignored_dice)) {
+            return; // Nothing to ignore
+        }
+        
+        // Max 3 dice can be ignored
+        if (count($ignored_dice) > 3) {
+            throw new BgaUserException($this->_("You can only ignore up to 3 dice"));
+        }
+        
+        // Get current ignored dice and merge
+        $current_ignored = json_decode($this->getGlobalVariable('uther_ignored_dice') ?? '[]', true);
+        $current_ignored = array_merge($current_ignored, $ignored_dice);
+        $this->setGlobalVariable('uther_ignored_dice', json_encode($current_ignored));
+        
+        // Notify all players
+        $this->notifyAllPlayers('diceIgnored', clienttranslate('${player_name} uses Oranne\'s power: ${count} challenge dice ignored!'), [
+            'player_id' => $player_id,
+            'player_name' => $this->getActivePlayerName(),
+            'ignored_dice' => $ignored_dice,
+            'count' => count($ignored_dice)
+        ]);
+    }
+    
+    /**
+     * Ivana's power: Discard to ignore all challenge dice with value < wind force
+     * :discard:: Ignorez :d6-black-white-green: < à :force-x:
+     */
+    private function applyIvanaPower(int $player_id, int $card_id): void
+    {
+        // Get wind force
+        $tile_id = $this->getGameStateValue('selected_tile');
+        if (!$tile_id) {
+            throw new BgaUserException($this->_("No tile selected"));
+        }
+        
+        $tile = $this->getObjectFromDB("SELECT * FROM tile WHERE tile_id = $tile_id");
+        if (!$tile) {
+            throw new BgaUserException($this->_("Tile not found"));
+        }
+        
+        $wind_force = (int)($tile['tile_wind_force'] ?? 0);
+        
+        if ($wind_force <= 1) {
+            throw new BgaUserException($this->_("Wind force must be greater than 1 to use this power"));
+        }
+        
+        // Get all challenge dice with value < wind_force
+        $challenge_dice = $this->getCollectionFromDb("SELECT * FROM dice_roll WHERE dice_owner = 'challenge' AND dice_value < $wind_force");
+        
+        if (empty($challenge_dice)) {
+            throw new BgaUserException($this->_("No challenge dice with value less than wind force"));
+        }
+        
+        // Discard Ivana
+        $this->cards->moveCard($card_id, 'discard');
+        
+        // Notify about discard
+        $this->notifyAllPlayers('hordierDiscarded', clienttranslate('${player_name} discards Ivana to use her power'), [
+            'player_id' => $player_id,
+            'player_name' => $this->getActivePlayerName(),
+            'card_id' => $card_id
+        ]);
+        
+        // Build list of dice IDs to ignore
+        $ignored_dice = array_keys($challenge_dice);
+        
+        // Add to ignored dice
+        $current_ignored = json_decode($this->getGlobalVariable('uther_ignored_dice') ?? '[]', true);
+        $current_ignored = array_merge($current_ignored, $ignored_dice);
+        $this->setGlobalVariable('uther_ignored_dice', json_encode($current_ignored));
+        
+        // Notify all players
+        $this->notifyAllPlayers('diceIgnored', clienttranslate('${player_name} uses Ivana\'s power: All dice with value < ${wind_force} are ignored! (${count} dice)'), [
+            'player_id' => $player_id,
+            'player_name' => $this->getActivePlayerName(),
+            'ignored_dice' => $ignored_dice,
+            'count' => count($ignored_dice),
+            'wind_force' => $wind_force
+        ]);
+    }
+    
+    /**
+     * Thutmus's power: Roll exactly wind_force number of BLUE horde dice
+     * :tap:: Lancez autant :d6-blue: / Force :force-x:, ni plus, ni moins.
+     * Only affects blue dice, violet dice are kept
+     */
+    private function applyThutmusPower(int $player_id): void
+    {
+        // Get wind force
+        $tile_id = $this->getGameStateValue('selected_tile');
+        if (!$tile_id) {
+            throw new BgaUserException($this->_("No tile selected"));
+        }
+        
+        $tile = $this->getObjectFromDB("SELECT * FROM tile WHERE tile_id = $tile_id");
+        if (!$tile) {
+            throw new BgaUserException($this->_("Tile not found"));
+        }
+        
+        $wind_force = (int)($tile['tile_wind_force'] ?? 0);
+        
+        if ($wind_force <= 0) {
+            throw new BgaUserException($this->_("No wind force on this tile"));
+        }
+        
+        // Clear ONLY blue horde dice (keep violet dice from Torantor powers)
+        $this->DbQuery("DELETE FROM dice_roll WHERE dice_owner = 'player' AND dice_type = 'blue'");
+        
+        // Roll exactly wind_force number of blue dice
+        $new_dice = [];
+        for ($i = 0; $i < $wind_force; $i++) {
+            $value = bga_rand(1, 6);
+            $this->DbQuery("INSERT INTO dice_roll (dice_type, dice_value, dice_owner) VALUES ('blue', $value, 'player')");
+            $dice_id = $this->DbGetLastId();
+            $new_dice[] = [
+                'id' => $dice_id,
+                'type' => 'blue',
+                'value' => $value
+            ];
+        }
+        
+        // Notify all players about the new dice (this will replace blue dice in UI)
+        $this->notifyAllPlayers('blueDiceRerolled', clienttranslate('${player_name} uses Thutmus\' power: Rolling exactly ${count} blue horde dice (equal to wind force)'), [
+            'player_id' => $player_id,
+            'player_name' => $this->getActivePlayerName(),
+            'dice' => $new_dice,
+            'count' => $wind_force
+        ]);
+    }
+    
+    /**
+     * Amon Amon's power: Ignore 1 white die per black die
+     * :tap:: Ignorez :d6-white: / :d6-black:
+     */
+    private function applyAmonPower(int $player_id): void
+    {
+        // Count black dice (fatalite)
+        $black_dice = $this->getCollectionFromDb("SELECT * FROM dice_roll WHERE dice_owner = 'challenge' AND dice_type = 'black'");
+        $black_count = count($black_dice);
+        
+        if ($black_count == 0) {
+            throw new BgaUserException($this->_("No black dice (fatalité) - cannot use this power"));
+        }
+        
+        // Get white dice (vent) to ignore
+        $white_dice = $this->getCollectionFromDb("SELECT * FROM dice_roll WHERE dice_owner = 'challenge' AND dice_type = 'white'");
+        
+        if (empty($white_dice)) {
+            throw new BgaUserException($this->_("No white dice to ignore"));
+        }
+        
+        // Ignore up to black_count white dice
+        $ignored_dice = [];
+        $count = 0;
+        foreach ($white_dice as $dice_id => $dice) {
+            if ($count >= $black_count) break;
+            $ignored_dice[] = $dice_id;
+            $count++;
+        }
+        
+        if (empty($ignored_dice)) {
+            return;
+        }
+        
+        // Add to ignored dice
+        $current_ignored = json_decode($this->getGlobalVariable('uther_ignored_dice') ?? '[]', true);
+        $current_ignored = array_merge($current_ignored, $ignored_dice);
+        $this->setGlobalVariable('uther_ignored_dice', json_encode($current_ignored));
+        
+        // Notify all players
+        $this->notifyAllPlayers('diceIgnored', clienttranslate('${player_name} uses Amon Amon\'s power: ${count} white dice ignored (1 per black die)'), [
+            'player_id' => $player_id,
+            'player_name' => $this->getActivePlayerName(),
+            'ignored_dice' => $ignored_dice,
+            'count' => count($ignored_dice)
+        ]);
+    }
+    
+    /**
+     * Duke Arnaud N.'s power: Discard to place (set values of) 2 of your dice
+     * :discard:: Placez 2 :d6-blue-violet:
+     */
+    private function applyDukePower(int $player_id, int $card_id, array $params): void
+    {
+        $dice_selections = $params['dice_selections'] ?? [];
+        
+        if (count($dice_selections) !== 2) {
+            throw new BgaUserException($this->_("You must select exactly 2 dice to set"));
+        }
+        
+        // Validate and update each die
+        $modified_dice = [];
+        foreach ($dice_selections as $selection) {
+            $dice_id = $selection['dice_id'] ?? null;
+            $dice_value = $selection['dice_value'] ?? null;
+            
+            if ($dice_id === null || $dice_value === null) {
+                throw new BgaUserException($this->_("Invalid dice selection"));
+            }
+            
+            if ($dice_value < 1 || $dice_value > 6) {
+                throw new BgaUserException($this->_("Dice value must be between 1 and 6"));
+            }
+            
+            // Check the die exists and belongs to player (blue or violet dice)
+            $dice = $this->getObjectFromDB("SELECT * FROM dice_roll WHERE dice_id = $dice_id AND dice_owner = 'player' AND dice_type IN ('blue', 'violet')");
+            if (!$dice) {
+                throw new BgaUserException($this->_("Invalid die selection - you can only modify your blue or violet dice"));
+            }
+            
+            // Update the die value
+            $this->DbQuery("UPDATE dice_roll SET dice_value = $dice_value WHERE dice_id = $dice_id");
+            $modified_dice[] = [
+                'dice_id' => $dice_id,
+                'new_value' => $dice_value
+            ];
+        }
+        
+        // Discard Duke (this is a discard power)
+        $this->cards->moveCard($card_id, 'discard');
+        
+        // Notify about discard
+        $this->notifyAllPlayers('hordierDiscarded', clienttranslate('${player_name} discards Duke Arnaud N. to use his power'), [
+            'player_id' => $player_id,
+            'player_name' => $this->getActivePlayerName(),
+            'card_id' => $card_id
+        ]);
+        
+        // Notify about dice modification (one notification per die to reuse existing handler)
+        foreach ($modified_dice as $dice) {
+            $this->notifyAllPlayers('diceModified', clienttranslate('${player_name} sets a die to ${new_value} (Duke)'), [
+                'player_id' => $player_id,
+                'player_name' => $this->getActivePlayerName(),
+                'dice_id' => $dice['dice_id'],
+                'new_value' => $dice['new_value']
+            ]);
+        }
+    }
+    
+    /**
      * Uther's power: Sacrifice another Hordier to ignore challenge dice
-     * :tap:: :discard: pour ignorer 3 :tous-des: / :missing:
+     * :tap:: :discard: pour ignorer 3 :d6-black-white-green: / :missing:
      * Can ignore up to 3 dice per missing hordier
      */
     private function applyUtherPower(int $player_id, int $uther_card_id, ?int $target_card_id, array $params): void
@@ -1085,7 +1370,7 @@ trait WW_Confrontation
     
     /**
      * Waldo Waldmann's power: Ignore 1 challenge die per missing hordier
-     * :tap:: Ignorez -1 :terrain: / :missing:
+     * :tap:: Ignorez -1 :d6-green: / :missing:
      */
     private function applyWaldoPower(int $player_id, array $params): void
     {
@@ -1128,7 +1413,7 @@ trait WW_Confrontation
     
     /**
      * Belkacem's power: Set a green terrain die to a chosen value
-     * :tap:: Placez 1 :terrain: (set value of a green die)
+     * :tap:: Placez 1 :d6-green: (set value of a green die)
      */
     private function applyBelkacemPower(int $player_id, array $params): void
     {
@@ -1163,7 +1448,7 @@ trait WW_Confrontation
     
     /**
      * Benelim's power: Roll +1 horde die per PACK card in horde
-     * :discard:: Lancez +1 :tous-mes-des: / :card: <b>PACK</b>.
+     * :discard:: Lancez +1 :d6-blue-violet: / :card: <b>PACK</b>.
      */
     private function applyBenelimPower(int $player_id): void
     {

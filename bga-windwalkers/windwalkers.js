@@ -278,12 +278,20 @@ function (dojo, declare) {
         },
         
         // Selection
-        setSelectedTile: function(tileId) {
-            this._data.selectedTile = tileId;
+        setSelectedTile: function(tile) {
+            // Can be just an ID or the full tile object
+            this._data.selectedTile = tile;
         },
         
         getSelectedTile: function() {
             return this._data.selectedTile;
+        },
+        
+        // Get tile moral effect (from stored tile object)
+        getSelectedTileMoralEffect: function() {
+            var tile = this._data.selectedTile;
+            if (!tile || typeof tile !== 'object') return 0;
+            return parseInt(tile.tile_moral_effect) || 0;
         },
         
         setSelectedDice: function(diceIds) {
@@ -2517,6 +2525,11 @@ function (dojo, declare) {
                 WW_DOM.setHtml('ww_wind_force', args.wind_force > 0 ? args.wind_force : '-');
             }
             
+            // Store tile info for powers like Oranne (needs moral_effect)
+            if (args && args.tile) {
+                WW_State.setSelectedTile(args.tile);
+            }
+            
             // Update horde exhausted state from server data
             if (args && args.horde) {
                 WW_Cards.updateHordeExhaustedState(args.horde);
@@ -2872,7 +2885,7 @@ function (dojo, declare) {
          * Check if a power requires special UI interaction
          */
         powerRequiresSpecialUI: function(powerCode) {
-            var specialPowers = ['gianni_power', 'wanda_power', 'xavio_power', 'yavo_power', 'kyo_power', 'thomassin_power', 'blanchette_power', 'waldo_power', 'belkacem_power', 'galas_power'];
+            var specialPowers = ['gianni_power', 'wanda_power', 'xavio_power', 'yavo_power', 'kyo_power', 'thomassin_power', 'blanchette_power', 'waldo_power', 'belkacem_power', 'galas_power', 'oranne_power', 'ivana_power', 'thutmus_power', 'amon_power', 'duke_power'];
             return specialPowers.indexOf(powerCode) !== -1;
         },
         
@@ -2911,6 +2924,21 @@ function (dojo, declare) {
                     // Galas: simple tap power - send directly to server
                     this.executeSimplePower(cardId);
                     break;
+                case 'oranne_power':
+                    this.enterOrannePowerMode(cardId);
+                    break;
+                case 'ivana_power':
+                    this.executeIvanaPower(cardId);
+                    break;
+                case 'thutmus_power':
+                    this.executeThutmusPower(cardId);
+                    break;
+                case 'amon_power':
+                    this.executeAmonPower(cardId);
+                    break;
+                case 'duke_power':
+                    this.enterDukePowerMode(cardId);
+                    break;
             }
         },
         
@@ -2944,6 +2972,337 @@ function (dojo, declare) {
                 this.performAction('actUsePower', {
                     card_id: parseInt(cardId),
                     params: JSON.stringify({})
+                });
+            }
+        },
+        
+        /**
+         * Execute Ivana's discard power: ignore all dice < wind force
+         * Shows confirmation dialog since it discards the card
+         */
+        executeIvanaPower: function(cardId) {
+            var self = this;
+            var windForce = WW_State.getWindForce() || 0;
+            
+            if (windForce <= 1) {
+                this.showMessage(_("Wind force must be greater than 1 to use this power"), "error");
+                return;
+            }
+            
+            // Count dice that would be ignored
+            var diceToIgnore = 0;
+            dojo.query('#ww_wind_dice .ww_dice').forEach(function(diceEl) {
+                var value = parseInt(WW_DOM.getAttr(diceEl, 'data-value')) || 0;
+                if (value < windForce) {
+                    diceToIgnore++;
+                }
+            });
+            
+            if (diceToIgnore === 0) {
+                this.showMessage(_("No challenge dice with value less than wind force"), "error");
+                return;
+            }
+            
+            // Confirm dialog since this discards the card
+            this.confirmationDialog(
+                dojo.string.substitute(_("Discard Ivana to ignore ${count} dice (all dice with value < ${force})?"), {
+                    count: diceToIgnore,
+                    force: windForce
+                }),
+                function() {
+                    // If there are pending actions, resolve them first
+                    if (WW_PendingActions.isEnabled && WW_PendingActions.isEnabled() && WW_PendingActions.hasPending()) {
+                        var actions = WW_PendingActions.getActions();
+                        
+                        self.bgaPerformAction('actBatchActions', {
+                            actions: JSON.stringify(actions),
+                            andConfirm: 0
+                        }).then(function() {
+                            WW_PendingActions.clear();
+                            self.performAction('actUsePower', {
+                                card_id: parseInt(cardId),
+                                params: JSON.stringify({})
+                            });
+                        }).catch(function() {
+                            WW_PendingActions.undoAll();
+                        });
+                    } else {
+                        self.performAction('actUsePower', {
+                            card_id: parseInt(cardId),
+                            params: JSON.stringify({})
+                        });
+                    }
+                }
+            );
+        },
+        
+        /**
+         * Execute Thutmus's power: Roll exactly wind_force BLUE dice
+         * Shows confirmation since it replaces all blue dice
+         */
+        executeThutmusPower: function(cardId) {
+            var self = this;
+            var windForce = WW_State.getWindForce() || 0;
+            
+            if (windForce <= 0) {
+                this.showMessage(_("No wind force on this tile"), "error");
+                return;
+            }
+            
+            // Count current blue horde dice only
+            var currentBlueDiceCount = dojo.query('#ww_horde_dice .ww_dice_blue').length;
+            
+            // Confirm dialog since this replaces all blue dice
+            this.confirmationDialog(
+                dojo.string.substitute(_("Use Thutmus to roll exactly ${force} blue dice? (Currently: ${current} blue dice)"), {
+                    force: windForce,
+                    current: currentBlueDiceCount
+                }),
+                function() {
+                    // If there are pending actions, resolve them first
+                    if (WW_PendingActions.isEnabled && WW_PendingActions.isEnabled() && WW_PendingActions.hasPending()) {
+                        var actions = WW_PendingActions.getActions();
+                        
+                        self.bgaPerformAction('actBatchActions', {
+                            actions: JSON.stringify(actions),
+                            andConfirm: 0
+                        }).then(function() {
+                            WW_PendingActions.clear();
+                            self.performAction('actUsePower', {
+                                card_id: parseInt(cardId),
+                                params: JSON.stringify({})
+                            });
+                        }).catch(function() {
+                            WW_PendingActions.undoAll();
+                        });
+                    } else {
+                        self.performAction('actUsePower', {
+                            card_id: parseInt(cardId),
+                            params: JSON.stringify({})
+                        });
+                    }
+                }
+            );
+        },
+        
+        /**
+         * Execute Amon Amon's power: Ignore 1 white die per black die
+         */
+        executeAmonPower: function(cardId) {
+            var self = this;
+            
+            // Count black dice
+            var blackDiceCount = dojo.query('#ww_horde_dice .ww_dice_black, #ww_wind_dice .ww_dice_black').length;
+            
+            if (blackDiceCount === 0) {
+                this.showMessage(_("No black dice (fatalité) - cannot use this power"), "error");
+                return;
+            }
+            
+            // Count white dice
+            var whiteDiceCount = dojo.query('#ww_wind_dice .ww_dice_white').length;
+            
+            if (whiteDiceCount === 0) {
+                this.showMessage(_("No white dice to ignore"), "error");
+                return;
+            }
+            
+            var toIgnore = Math.min(blackDiceCount, whiteDiceCount);
+            
+            // Simple power - execute directly (or resolve pending first)
+            if (WW_PendingActions.isEnabled && WW_PendingActions.isEnabled() && WW_PendingActions.hasPending()) {
+                var actions = WW_PendingActions.getActions();
+                
+                this.bgaPerformAction('actBatchActions', {
+                    actions: JSON.stringify(actions),
+                    andConfirm: 0
+                }).then(function() {
+                    WW_PendingActions.clear();
+                    self.performAction('actUsePower', {
+                        card_id: parseInt(cardId),
+                        params: JSON.stringify({})
+                    });
+                }).catch(function() {
+                    WW_PendingActions.undoAll();
+                });
+            } else {
+                this.performAction('actUsePower', {
+                    card_id: parseInt(cardId),
+                    params: JSON.stringify({})
+                });
+            }
+        },
+        
+        /**
+         * Duke Arnaud N.'s power: Discard to place (set values of) 2 blue dice
+         * Multi-step UI: select die 1 -> value 1 -> select die 2 -> value 2 -> confirm
+         */
+        enterDukePowerMode: function(cardId) {
+            var self = this;
+            
+            // Count available blue and violet dice
+            var playerDice = dojo.query('#ww_horde_dice .ww_dice_blue, #ww_horde_dice .ww_dice_violet');
+            
+            if (playerDice.length < 2) {
+                this.showMessage(_("Not enough dice (need at least 2 blue or violet dice)"), "error");
+                return;
+            }
+            
+            WW_State.setSpecialPowerMode({
+                card_id: cardId,
+                power_code: 'duke_power',
+                step: 'select_dice_1',
+                dice_selections: []  // Will hold {dice_id, dice_value} pairs
+            });
+            
+            this.saveOriginalPageTitle();
+            this.gamedatas.gamestate.descriptionmyturn = _("Duke: Select the first die to set");
+            this.updatePageTitle();
+            
+            // Make blue and violet dice selectable
+            playerDice.forEach(function(diceEl) {
+                WW_DOM.addClass(diceEl, 'ww_dice_selectable');
+                diceEl.onclick = function(evt) {
+                    WW_DOM.stopEvent(evt);
+                    self.onDukeDiceSelect(diceEl);
+                };
+            });
+            
+            this.removeActionButtons();
+            this.addActionButton('btn_cancel_power', _('Cancel'), function() {
+                self.cancelSpecialPowerMode();
+            }, null, false, 'gray');
+        },
+        
+        /**
+         * Handle dice selection in Duke power mode
+         */
+        onDukeDiceSelect: function(diceEl) {
+            var self = this;
+            var mode = WW_State.getSpecialPowerMode();
+            if (!mode || mode.power_code !== 'duke_power') return;
+            
+            var diceId = diceEl.id.replace('dice_', '');
+            
+            // Check if this die was already selected
+            for (var i = 0; i < mode.dice_selections.length; i++) {
+                if (mode.dice_selections[i].dice_id == diceId) {
+                    this.showMessage(_("This die is already selected"), "error");
+                    return;
+                }
+            }
+            
+            // Mark die as selected
+            WW_DOM.addClass(diceEl, 'ww_dice_selected');
+            
+            // Store current dice id and show value selection
+            mode.current_dice_id = diceId;
+            var isSecondDice = mode.step === 'select_dice_2';
+            mode.step = isSecondDice ? 'select_value_2' : 'select_value_1';
+            
+            this.gamedatas.gamestate.descriptionmyturn = isSecondDice 
+                ? _("Duke: Select the value for the second die")
+                : _("Duke: Select the value for the first die");
+            this.updatePageTitle();
+            
+            // Remove clickability from dice while selecting value
+            WW_DOM.removeClassFromAll('.ww_dice_selectable', 'ww_dice_selectable');
+            
+            this.removeActionButtons();
+            for (var v = 1; v <= 6; v++) {
+                (function(value) {
+                    self.addActionButton('btn_value_' + value, value.toString(), function() {
+                        self.onDukeValueSelect(value);
+                    });
+                })(v);
+            }
+            
+            this.addActionButton('btn_cancel_power', _('Cancel'), function() {
+                self.cancelSpecialPowerMode();
+            }, null, false, 'gray');
+        },
+        
+        /**
+         * Handle value selection in Duke power mode
+         */
+        onDukeValueSelect: function(value) {
+            var self = this;
+            var mode = WW_State.getSpecialPowerMode();
+            if (!mode || mode.power_code !== 'duke_power') return;
+            
+            // Store the selection
+            mode.dice_selections.push({
+                dice_id: parseInt(mode.current_dice_id),
+                dice_value: value
+            });
+            
+            if (mode.step === 'select_value_1') {
+                // Move to second dice selection
+                mode.step = 'select_dice_2';
+                mode.current_dice_id = null;
+                
+                this.gamedatas.gamestate.descriptionmyturn = _("Duke: Select the second die to set");
+                this.updatePageTitle();
+                
+                // Re-enable dice selection (except already selected)
+                var playerDice = dojo.query('#ww_horde_dice .ww_dice_blue, #ww_horde_dice .ww_dice_violet');
+                playerDice.forEach(function(diceEl) {
+                    if (!WW_DOM.hasClass(diceEl, 'ww_dice_selected')) {
+                        WW_DOM.addClass(diceEl, 'ww_dice_selectable');
+                        diceEl.onclick = function(evt) {
+                            WW_DOM.stopEvent(evt);
+                            self.onDukeDiceSelect(diceEl);
+                        };
+                    }
+                });
+                
+                this.removeActionButtons();
+                this.addActionButton('btn_cancel_power', _('Cancel'), function() {
+                    self.cancelSpecialPowerMode();
+                }, null, false, 'gray');
+            } else {
+                // Both dice selected - confirm and execute
+                this.confirmDukePower();
+            }
+        },
+        
+        /**
+         * Confirm and execute Duke power
+         */
+        confirmDukePower: function() {
+            var self = this;
+            var mode = WW_State.getSpecialPowerMode();
+            if (!mode || mode.power_code !== 'duke_power') return;
+            
+            var cardId = mode.card_id;
+            var diceSelections = mode.dice_selections;
+            
+            WW_State.setSpecialPowerMode(null);
+            this.cleanupPowerModeUI();
+            this.restorePowerModeUI();
+            
+            var params = { dice_selections: diceSelections };
+            
+            // Discard powers need to resolve pending actions first
+            if (WW_PendingActions.isEnabled && WW_PendingActions.isEnabled() && WW_PendingActions.hasPending()) {
+                var actions = WW_PendingActions.getActions();
+                
+                this.bgaPerformAction('actBatchActions', {
+                    actions: JSON.stringify(actions),
+                    andConfirm: 0
+                }).then(function() {
+                    WW_PendingActions.clear();
+                    self.performAction('actUsePower', {
+                        card_id: parseInt(cardId),
+                        params: JSON.stringify(params)
+                    });
+                }).catch(function() {
+                    WW_PendingActions.undoAll();
+                });
+            } else {
+                this.performAction('actUsePower', {
+                    card_id: parseInt(cardId),
+                    params: JSON.stringify(params)
                 });
             }
         },
@@ -3030,6 +3389,34 @@ function (dojo, declare) {
                 exactCount: false,
                 diceFilter: 'ww_dice_green', // Only green dice
                 message: dojo.string.substitute(_("Waldo: Select up to ${max} green terrain dice to ignore"), {max: Math.min(maxIgnore, greenDiceCount)})
+            });
+        },
+        
+        /**
+         * Oranne power: If tile has moral effect, ignore up to 3 challenge dice
+         */
+        enterOrannePowerMode: function(cardId) {
+            // Check if tile has moral effect
+            var moralEffect = WW_State.getSelectedTileMoralEffect();
+            if (moralEffect == 0) {
+                this.showMessage(_("This power only works on tiles with a moral effect"), "error");
+                return;
+            }
+            
+            // Check if there are any challenge dice to ignore
+            var challengeDiceCount = dojo.query('#ww_wind_dice .ww_dice').length;
+            if (challengeDiceCount === 0) {
+                this.showMessage(_("No challenge dice to ignore"), "error");
+                return;
+            }
+            
+            var maxIgnore = Math.min(3, challengeDiceCount);
+            
+            this.enterDiceIgnorePowerMode(cardId, 'oranne_power', {
+                maxIgnore: maxIgnore,
+                exactCount: false,
+                diceFilter: null, // All challenge dice
+                message: dojo.string.substitute(_("Oranne: Select up to ${max} challenge dice to ignore"), {max: maxIgnore})
             });
         },
         
@@ -4000,11 +4387,17 @@ function (dojo, declare) {
             dojo.subscribe('powerUsed', this, "notif_powerUsed");
             this.notifqueue.setSynchronous('powerUsed', 500);
             
+            dojo.subscribe('hordierDiscarded', this, "notif_hordierDiscarded");
+            this.notifqueue.setSynchronous('hordierDiscarded', 500);
+            
             dojo.subscribe('challengeDiceModified', this, "notif_challengeDiceModified");
             this.notifqueue.setSynchronous('challengeDiceModified', 500);
             
             dojo.subscribe('diceIgnored', this, "notif_diceIgnored");
             this.notifqueue.setSynchronous('diceIgnored', 500);
+            
+            dojo.subscribe('blueDiceRerolled', this, "notif_blueDiceRerolled");
+            this.notifqueue.setSynchronous('blueDiceRerolled', 1000);
             
             dojo.subscribe('challengeDiceAdded', this, "notif_challengeDiceAdded");
             this.notifqueue.setSynchronous('challengeDiceAdded', 500);
@@ -4411,6 +4804,43 @@ function (dojo, declare) {
             }
         },
         
+        notif_blueDiceRerolled: function(notif) {
+            // Remove only blue dice from UI (keep violet dice)
+            dojo.query('#ww_horde_dice .ww_dice_blue').forEach(function(diceEl) {
+                WW_DOM.destroy(diceEl);
+            });
+            
+            // Add new blue dice
+            var self = this;
+            var sortedDice = notif.args.dice.slice().sort(function(a, b) {
+                return (a.value || 0) - (b.value || 0);
+            });
+            
+            sortedDice.forEach(function(dice) {
+                WW_Dice.createDice({
+                    dice_id: dice.id,
+                    dice_type: dice.type,
+                    dice_value: dice.value
+                }, 'ww_horde_dice', function(diceId) {
+                    self.onDiceClick(diceId);
+                });
+            });
+            
+            // Sort all dice in container
+            WW_Dice.sortDiceInContainer('ww_horde_dice');
+            WW_Dice.updateConfrontationPreview();
+            
+            // Animate the new dice
+            var animationDelay = 0;
+            sortedDice.forEach(function(dice) {
+                setTimeout(function() {
+                    var diceEl = $('dice_' + dice.id);
+                    if (diceEl) WW_Dice.animateDiceRoll(diceEl, dice.value);
+                }, animationDelay);
+                animationDelay += 100;
+            });
+        },
+        
         notif_challengeDiceModified: function(notif) {
             // Clear and recreate wind dice with new values after Uther's sacrifice
             WW_Dice.clearDice('wind');
@@ -4462,6 +4892,11 @@ function (dojo, declare) {
                 card.power_used = 1;
                 card.powerUsed = true;
             }
+        },
+        
+        notif_hordierDiscarded: function(notif) {
+            // Remove the card from the horde visually with animation
+            WW_Cards.removeHordeCard(notif.args.card_id, true);
         }
    });
 });
