@@ -270,6 +270,7 @@ trait WW_Confrontation
     private function executeBatchUsePower(int $player_id, array $params): void
     {
         $card_id = (int)($params['card_id'] ?? 0);
+        $target_card_id = isset($params['target_card_id']) ? (int)$params['target_card_id'] : null;
         
         $card = $this->getObjectFromDB("SELECT * FROM card WHERE card_id = $card_id AND card_location = 'horde_$player_id'");
         if (!$card) {
@@ -280,11 +281,199 @@ trait WW_Confrontation
             throw new BgaUserException($this->_("Power already used"));
         }
         
-        // Mark power as used
+        // Get character info
+        $type_arg = (int)$card['card_type_arg'];
+        $char_info = $this->characters[$type_arg] ?? null;
+        $power_code = $char_info['power_code'] ?? '';
+        
+        // Mark power as used (tap)
         $this->DbQuery("UPDATE card SET card_power_used = 1 WHERE card_id = $card_id");
         
-        // TODO: Apply power effect based on character
-        // This will be implemented when character powers are fully defined
+        // Apply power effect based on power_code
+        $this->applyPowerEffect($player_id, $card_id, $power_code, $target_card_id, $params);
+        
+        // Notify power used
+        $this->notifyAllPlayers('powerUsed', clienttranslate('${player_name} uses ${character_name}\'s power'), [
+            'player_id' => $player_id,
+            'player_name' => $this->getActivePlayerName(),
+            'card_id' => $card_id,
+            'character_name' => $char_info['name'] ?? 'Unknown',
+            'power_code' => $power_code
+        ]);
+    }
+    
+    /**
+     * Apply power effect based on power_code
+     */
+    private function applyPowerEffect(int $player_id, int $card_id, string $power_code, ?int $target_card_id, array $params): void
+    {
+        switch ($power_code) {
+            case 'vera_power':
+                // Vera: :tap:: :rest: - Rest one exhausted Hordier
+                $this->applyVeraPower($player_id, $card_id, $target_card_id);
+                break;
+            case 'saskia_power':
+                // Saskia: Si tuile = 2 dés verts, gagnez +2 moral
+                $this->applySaskiaPower($player_id);
+                break;
+            case 'uther_power':
+                // Uther: :tap:: :discard: pour ignorer 3 :tous-des: / :missing:
+                $this->applyUtherPower($player_id, $card_id, $target_card_id, $params);
+                break;
+                
+            // Add more powers here as they are implemented
+            default:
+                // Unknown or unimplemented power - no effect
+                break;
+        }
+    }
+    
+    /**
+     * Uther's power: Sacrifice another Hordier to ignore challenge dice
+     * :tap:: :discard: pour ignorer 3 :tous-des: / :missing:
+     * Can ignore up to 3 dice per missing hordier
+     */
+    private function applyUtherPower(int $player_id, int $uther_card_id, ?int $target_card_id, array $params): void
+    {
+        if (!$target_card_id) {
+            throw new BgaUserException($this->_("You must select a Hordier to sacrifice"));
+        }
+        
+        // Validate target is in player's horde and not Uther himself
+        $target_card = $this->getObjectFromDB("SELECT * FROM card WHERE card_id = $target_card_id AND card_location = 'horde_$player_id'");
+        if (!$target_card) {
+            throw new BgaUserException($this->_("Invalid target card"));
+        }
+        
+        if ($target_card_id == $uther_card_id) {
+            throw new BgaUserException($this->_("Uther cannot sacrifice himself"));
+        }
+        
+        // Get target character name
+        $target_type_arg = (int)$target_card['card_type_arg'];
+        $target_char = $this->characters[$target_type_arg] ?? null;
+        $target_name = $target_char['name'] ?? 'Unknown';
+        
+        // Discard the target
+        $this->DbQuery("UPDATE card SET card_location = 'discard' WHERE card_id = $target_card_id");
+        
+        // Notify about the sacrifice
+        $this->notifyAllPlayers('hordierLost', clienttranslate('${player_name} sacrifices ${character_name}!'), [
+            'player_id' => $player_id,
+            'player_name' => $this->getActivePlayerName(),
+            'card_id' => $target_card_id,
+            'character_name' => $target_name
+        ]);
+        
+        // Get ignored dice from params
+        $ignored_dice = $params['ignored_dice'] ?? [];
+        
+        if (!empty($ignored_dice)) {
+            // Count missing hordiers (max horde is 8)
+            $horde_count = (int)$this->getUniqueValueFromDB("SELECT COUNT(*) FROM card WHERE card_location = 'horde_$player_id'");
+            $missing_count = 8 - $horde_count;
+            $max_ignore = 3 * $missing_count;
+            
+            // Validate not ignoring more than allowed
+            if (count($ignored_dice) > $max_ignore) {
+                throw new BgaUserException(sprintf($this->_("You can only ignore %d dice"), $max_ignore));
+            }
+            
+            // Mark dice as ignored (locked) - they won't count in confrontation
+            foreach ($ignored_dice as $dice_id) {
+                // dice_id from client is like "white_0", "green_1", etc.
+                // We need to find the actual database dice_id
+                // For now, we store ignored dice IDs in a game state variable
+            }
+            
+            // Store ignored dice IDs for confrontation calculation
+            $this->setGlobalVariable('uther_ignored_dice', json_encode($ignored_dice));
+            
+            $this->notifyAllPlayers('diceIgnored', clienttranslate('${count} challenge dice ignored!'), [
+                'player_id' => $player_id,
+                'ignored_dice' => $ignored_dice,
+                'count' => count($ignored_dice)
+            ]);
+        }
+    }
+    
+    /**
+     * Saskia's power: If tile has exactly 2 green dice, gain +2 moral
+     */
+    private function applySaskiaPower(int $player_id): void
+    {
+        // Get current tile
+        $tile_id = $this->getGameStateValue('selected_tile');
+        $tile = $this->getObjectFromDB("SELECT * FROM tile WHERE tile_id = $tile_id");
+        
+        if (!$tile) {
+            throw new BgaUserException($this->_("No tile selected"));
+        }
+        
+        // Count green dice only
+        $greenDice = (int)$tile['tile_green_dice'];
+        
+        if ($greenDice !== 2) {
+            throw new BgaUserException(sprintf(
+                $this->_("Saskia's power requires exactly 2 green dice (this tile has %d)"),
+                $greenDice
+            ));
+        }
+        
+        // Add +2 moral
+        $this->DbQuery("UPDATE player SET player_moral = player_moral + 2 WHERE player_id = $player_id");
+        
+        // Get new moral value
+        $newMoral = (int)$this->getUniqueValueFromDB("SELECT player_moral FROM player WHERE player_id = $player_id");
+        
+        // Notify
+        $this->notifyAllPlayers('moralChanged', clienttranslate('${player_name} gains +2 moral (Saskia\'s power)'), [
+            'player_id' => $player_id,
+            'player_name' => $this->getActivePlayerName(),
+            'moral' => $newMoral,
+            'change' => 2
+        ]);
+    }
+    
+    /**
+     * Vera's power: Rest one exhausted Hordier (not herself)
+     */
+    private function applyVeraPower(int $player_id, int $vera_card_id, ?int $target_card_id): void
+    {
+        if ($target_card_id === null) {
+            throw new BgaUserException($this->_("You must select a Hordier to rest"));
+        }
+        
+        // Can't rest herself
+        if ($target_card_id === $vera_card_id) {
+            throw new BgaUserException($this->_("Vera cannot rest herself"));
+        }
+        
+        // Check target is in player's horde and exhausted
+        $target = $this->getObjectFromDB(
+            "SELECT * FROM card WHERE card_id = $target_card_id AND card_location = 'horde_$player_id'"
+        );
+        
+        if (!$target) {
+            throw new BgaUserException($this->_("Invalid target"));
+        }
+        
+        if (!$target['card_power_used']) {
+            throw new BgaUserException($this->_("This Hordier is not exhausted"));
+        }
+        
+        // Rest the target
+        $this->DbQuery("UPDATE card SET card_power_used = 0 WHERE card_id = $target_card_id");
+        
+        // Notify
+        $target_type_arg = (int)$target['card_type_arg'];
+        $target_char = $this->characters[$target_type_arg] ?? ['name' => 'Hordier'];
+        
+        $this->notifyAllPlayers('hordierRested', clienttranslate('${character_name} is rested'), [
+            'player_id' => $player_id,
+            'card_id' => $target_card_id,
+            'character_name' => $target_char['name']
+        ]);
     }
 
     /**
@@ -455,6 +644,19 @@ trait WW_Confrontation
         $horde_dice = $this->getCollectionFromDb("SELECT * FROM dice_roll WHERE dice_owner = 'player'");
         $wind_dice = $this->getCollectionFromDb("SELECT * FROM dice_roll WHERE dice_owner = 'challenge'");
         
+        // Filter out ignored dice (from Uther's power)
+        $ignored_dice_json = $this->getGlobalVariable('uther_ignored_dice');
+        if ($ignored_dice_json) {
+            $ignored_dice = json_decode($ignored_dice_json, true) ?? [];
+            if (!empty($ignored_dice)) {
+                $wind_dice = array_filter($wind_dice, function($dice) use ($ignored_dice) {
+                    return !in_array($dice['dice_id'], $ignored_dice);
+                });
+                // Clear the variable for next confrontation
+                $this->setGlobalVariable('uther_ignored_dice', null);
+            }
+        }
+        
         $tile_id = $this->getGameStateValue('selected_tile');
         $tile = $this->getObjectFromDB("SELECT * FROM tile WHERE tile_id = $tile_id");
         $wind_force = $tile['tile_wind_force'] ?? 0;
@@ -473,6 +675,18 @@ trait WW_Confrontation
      */
     private function calculateConfrontationResult(array $horde_dice, array $wind_dice, int $wind_force): array
     {
+        // If no wind dice remain (all ignored), automatic success
+        if (empty($wind_dice)) {
+            return [
+                'success' => true,
+                'horde_sum' => array_sum(array_column($horde_dice, 'dice_value')),
+                'wind_sum' => 0,
+                'wind_force' => $wind_force,
+                'wind_counts' => [],
+                'player_counts' => $this->countFaceOccurrences($horde_dice, null, 'player')
+            ];
+        }
+        
         // 1. Separate dice by type
         $blue_dice = array_filter($horde_dice, fn($d) => $d['dice_type'] == 'blue');
         $green_dice = array_filter($wind_dice, fn($d) => $d['dice_type'] == 'green');
@@ -486,10 +700,22 @@ trait WW_Confrontation
         // 3. THEN: Match blue vs green/white
         $blue_counts = $this->countFaceOccurrences($blue_dice, null, 'player');
         
-        $green_match = $this->matchAndConsumeDice($wind_dice, $blue_counts, 'green');
-        $reduced_force = max(0, $wind_force - $green_match['matched']);
+        // Wind force cannot exceed the number of available challenge dice (green + white)
+        $effective_wind_force = min($wind_force, count($green_dice) + count($white_dice));
+        
+        // If no green dice, green matching is automatically OK
+        $green_match = empty($green_dice) 
+            ? ['ok' => true, 'matched' => 0]
+            : $this->matchAndConsumeDice($wind_dice, $blue_counts, 'green');
+        
+        // Reduced force cannot exceed the number of white dice available
+        $reduced_force = max(0, $effective_wind_force - $green_match['matched']);
+        $reduced_force = min($reduced_force, count($white_dice));
 
-        $white_match = $this->matchAndConsumeDice($wind_dice, $blue_counts, 'white');
+        // If no white dice, white matching is automatically OK
+        $white_match = empty($white_dice)
+            ? ['ok' => true, 'matched' => $reduced_force]  // Consider all required as matched
+            : $this->matchAndConsumeDice($wind_dice, $blue_counts, 'white');
 
         // 4. Sum check: blue vs non-black
         $horde_sum = array_sum(array_column($blue_dice, 'dice_value'));

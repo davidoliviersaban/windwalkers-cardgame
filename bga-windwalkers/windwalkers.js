@@ -187,7 +187,9 @@ function (dojo, declare) {
             selectedTile: null,
             selectedDice: [],
             hordeCards: {},
-            currentState: null
+            currentState: null,
+            powerTargetMode: null,  // { card_id, power_code, callback }
+            utherDiceMode: null     // { source_card_id, target_card_id, max_ignore, selected_dice }
         },
         
         init: function(gamedatas) {
@@ -201,6 +203,40 @@ function (dojo, declare) {
         
         getCharacters: function() {
             return this._data.characters;
+        },
+        
+        // Power target selection mode
+        setPowerTargetMode: function(mode) {
+            this._data.powerTargetMode = mode;
+        },
+        
+        getPowerTargetMode: function() {
+            return this._data.powerTargetMode;
+        },
+        
+        clearPowerTargetMode: function() {
+            this._data.powerTargetMode = null;
+        },
+        
+        isInPowerTargetMode: function() {
+            return this._data.powerTargetMode !== null;
+        },
+        
+        // Uther dice selection mode
+        setUtherDiceMode: function(mode) {
+            this._data.utherDiceMode = mode;
+        },
+        
+        getUtherDiceMode: function() {
+            return this._data.utherDiceMode;
+        },
+        
+        clearUtherDiceMode: function() {
+            this._data.utherDiceMode = null;
+        },
+        
+        isInUtherDiceMode: function() {
+            return this._data.utherDiceMode !== null;
         },
         
         // Player data
@@ -244,6 +280,14 @@ function (dojo, declare) {
         // Horde
         setHordeCards: function(cards) {
             this._data.hordeCards = cards || {};
+        },
+        
+        getHordeCards: function() {
+            return this._data.hordeCards || {};
+        },
+        
+        getHordeCard: function(cardId) {
+            return this._data.hordeCards[cardId] || null;
         },
         
         addHordeCard: function(cardId, cardData) {
@@ -601,7 +645,10 @@ function (dojo, declare) {
                     if (state.horde && state.horde[action.params.card_id]) {
                         state.horde[action.params.card_id].power_used = 1;
                     }
-                    // Power effects vary by card - handled in visual
+                    // Handle powers that affect other cards (like Vera resting a target)
+                    if (action.params.target_card_id && state.horde && state.horde[action.params.target_card_id]) {
+                        state.horde[action.params.target_card_id].power_used = 0;  // Target is rested
+                    }
                     break;
                     
                 case 'rerollAll':
@@ -652,6 +699,35 @@ function (dojo, declare) {
                             WW_DOM.addClass(cardEl, 'ww_pending_exhausted');
                         } else {
                             WW_DOM.removeClass(cardEl, 'ww_pending_exhausted');
+                        }
+                    }
+                    // Handle powers that affect other cards
+                    if (action.params.target_card_id) {
+                        var targetEl = $('ww_horde_item_' + action.params.target_card_id);
+                        if (targetEl) {
+                            // Get power type from source card
+                            var sourceCard = WW_State.getHordeCard(action.params.card_id);
+                            var sourceType = sourceCard ? sourceCard.type : null;
+                            var charInfo = sourceType ? WW_State.getCharacter(sourceType) : null;
+                            var powerCode = charInfo ? charInfo.power_code : null;
+                            
+                            if (powerCode === 'uther_power') {
+                                // Uther sacrifices target - mark as pending discard
+                                if (apply) {
+                                    WW_DOM.addClass(targetEl, 'ww_pending_discarded');
+                                } else {
+                                    WW_DOM.removeClass(targetEl, 'ww_pending_discarded');
+                                }
+                            } else {
+                                // Other powers (like Vera) rest the target
+                                if (apply) {
+                                    WW_DOM.removeClass(targetEl, 'ww_card_exhausted');
+                                    WW_DOM.addClass(targetEl, 'ww_pending_rested');
+                                } else {
+                                    WW_DOM.addClass(targetEl, 'ww_card_exhausted');
+                                    WW_DOM.removeClass(targetEl, 'ww_pending_rested');
+                                }
+                            }
                         }
                     }
                     break;
@@ -1074,6 +1150,9 @@ function (dojo, declare) {
         getWindDice: function() {
             var dice = [];
             WW_DOM.forEach('#ww_wind_dice .ww_dice', function(diceEl) {
+                // Skip ignored dice (from Uther's power)
+                if (WW_DOM.hasClass(diceEl, 'ww_dice_ignored')) return;
+                
                 var value = parseInt(WW_DOM.getAttr(diceEl, 'data-value')) || 0;
                 var type = 'white';
                 if (WW_DOM.hasClass(diceEl, 'ww_dice_green')) type = 'green';
@@ -1084,6 +1163,25 @@ function (dojo, declare) {
         },
         
         calculateConfrontationResult: function(hordeDice, windDice, windForce) {
+            // If no wind dice remain (all ignored), automatic success
+            if (windDice.length === 0) {
+                var hordeSum = hordeDice.reduce(function(sum, d) { return sum + d.value; }, 0);
+                return {
+                    success: true,
+                    hordeSum: hordeSum,
+                    windSum: 0,
+                    greenRequired: 0,
+                    greenMatched: 0,
+                    greenOk: true,
+                    whiteRequired: 0,
+                    whiteMatched: 0,
+                    whiteOk: true,
+                    blackRequired: 0,
+                    blackMatched: 0,
+                    blackOk: true
+                };
+            }
+            
             // 1. Separate dice by type
             var blueDice = hordeDice.filter(function(d) { return d.type === 'blue'; });
             var violetDice = hordeDice.filter(function(d) { return d.type === 'violet'; });
@@ -1107,14 +1205,34 @@ function (dojo, declare) {
             for (var i = 1; i <= 6; i++) blueCounts[i] = 0;
             blueDice.forEach(function(d) { blueCounts[d.value]++; });
             
-            var greenValues = greenDice.map(function(d) { return d.value; });
-            var greenResult = this._matchDice(greenValues, blueCounts);
-            var greenOk = greenResult.matched >= greenResult.required || greenResult.matched >= windForce;
-            var reducedForce = Math.max(0, windForce - greenResult.matched);
+            // Wind force cannot exceed the number of available challenge dice (green + white)
+            var effectiveWindForce = Math.min(windForce, greenDice.length + whiteDice.length);
             
-            var whiteValues = whiteDice.map(function(d) { return d.value; });
-            var whiteResult = this._matchDice(whiteValues, blueCounts);
-            var whiteOk = whiteResult.matched >= reducedForce;
+            // If no green dice, green matching is automatically OK
+            var greenResult, greenOk;
+            if (greenDice.length === 0) {
+                greenResult = { required: 0, matched: 0 };
+                greenOk = true;
+            } else {
+                var greenValues = greenDice.map(function(d) { return d.value; });
+                greenResult = this._matchDice(greenValues, blueCounts);
+                greenOk = greenResult.matched >= greenResult.required || greenResult.matched >= effectiveWindForce;
+            }
+            
+            // Reduced force cannot exceed the number of white dice available
+            var reducedForce = Math.max(0, effectiveWindForce - greenResult.matched);
+            reducedForce = Math.min(reducedForce, whiteDice.length);
+            
+            // If no white dice, white matching is automatically OK
+            var whiteResult, whiteOk;
+            if (whiteDice.length === 0) {
+                whiteResult = { required: 0, matched: reducedForce };
+                whiteOk = true;
+            } else {
+                var whiteValues = whiteDice.map(function(d) { return d.value; });
+                whiteResult = this._matchDice(whiteValues, blueCounts);
+                whiteOk = whiteResult.matched >= reducedForce;
+            }
             
             // 4. Sum check: blue vs non-black
             var hordeSum = blueDice.reduce(function(sum, d) { return sum + d.value; }, 0);
@@ -1421,6 +1539,10 @@ function (dojo, declare) {
         setCardRested: function(cardId, rested) {
             var cardEl = $('ww_horde_item_' + cardId);
             if (cardEl) {
+                // Always remove pending visual classes
+                WW_DOM.removeClass(cardEl, 'ww_pending_rested');
+                WW_DOM.removeClass(cardEl, 'ww_pending_exhausted');
+                
                 if (rested) {
                     WW_DOM.removeClass(cardEl, 'ww_card_exhausted');
                     WW_DOM.addClass(cardEl, 'ww_card_rested');
@@ -2506,6 +2628,17 @@ function (dojo, declare) {
         },
         
         onUsePower: function(cardId) {
+            var self = this;
+            
+            // If we're in power target mode, this click is selecting a target
+            if (WW_State.isInPowerTargetMode()) {
+                var mode = WW_State.getPowerTargetMode();
+                if (mode.callback) {
+                    mode.callback(cardId);
+                }
+                return;
+            }
+            
             // Check if card already has pending exhaustion
             var computedState = WW_PendingActions.getComputedState();
             if (computedState && computedState.horde && computedState.horde[cardId] && computedState.horde[cardId].power_used) {
@@ -2513,10 +2646,390 @@ function (dojo, declare) {
                 return;
             }
             
-            // Add to pending actions
+            // Get character info to check power type
+            var hordeCard = WW_State.getHordeCard(cardId);
+            var typeArg = hordeCard ? hordeCard.type : null;
+            var charInfo = typeArg ? WW_State.getCharacter(typeArg) : null;
+            var powerCode = charInfo ? charInfo.power_code : null;
+            
+            // Check if this power requires a target
+            if (this.powerRequiresTarget(powerCode)) {
+                this.enterPowerTargetMode(cardId, powerCode);
+                return;
+            }
+            
+            // No target needed, add to pending actions directly
             WW_PendingActions.push('usePower', {
                 card_id: parseInt(cardId)
             }, {});
+        },
+        
+        /**
+         * Check if a power requires selecting a target
+         */
+        powerRequiresTarget: function(powerCode) {
+            var targetPowers = ['vera_power', 'uther_power'];  // Powers that need a target
+            return targetPowers.indexOf(powerCode) !== -1;
+        },
+        
+        /**
+         * Enter power target selection mode
+         */
+        enterPowerTargetMode: function(sourceCardId, powerCode) {
+            var self = this;
+            
+            // Store the mode
+            WW_State.setPowerTargetMode({
+                card_id: sourceCardId,
+                power_code: powerCode,
+                callback: function(targetCardId) {
+                    self.completePowerWithTarget(sourceCardId, powerCode, targetCardId);
+                }
+            });
+            
+            // Highlight valid targets based on power type
+            this.highlightPowerTargets(sourceCardId, powerCode);
+            
+            // Show message
+            var message = this.getPowerTargetMessage(powerCode);
+            this.showMessage(message, "info");
+            
+            // Add cancel button
+            this.addActionButton('btn_cancel_power', _('Cancel'), function() {
+                self.cancelPowerTargetMode();
+            }, null, false, 'gray');
+        },
+        
+        /**
+         * Get message for power target selection
+         */
+        getPowerTargetMessage: function(powerCode) {
+            switch (powerCode) {
+                case 'vera_power':
+                    return _("Select an exhausted Hordier to rest");
+                case 'uther_power':
+                    return _("Select a Hordier to sacrifice (-3 per missing Hordier)");
+                default:
+                    return _("Select a target");
+            }
+        },
+        
+        /**
+         * Highlight valid targets for a power
+         */
+        highlightPowerTargets: function(sourceCardId, powerCode) {
+            var computedState = WW_PendingActions.getComputedState();
+            
+            // Remove all current highlights
+            WW_DOM.removeClassFromAll('.ww_horde_card_item', 'ww_power_target');
+            WW_DOM.removeClassFromAll('.ww_horde_card_item', 'ww_power_source');
+            
+            // Mark source
+            WW_DOM.addClass('ww_horde_item_' + sourceCardId, 'ww_power_source');
+            
+            switch (powerCode) {
+                case 'vera_power':
+                    // Vera can target exhausted Hordiers (not herself)
+                    for (var cardId in WW_State.getHordeCards()) {
+                        if (cardId == sourceCardId) continue;  // Can't target herself
+                        
+                        var card = WW_State.getHordeCard(cardId);
+                        var isExhausted = card && card.powerUsed;
+                        
+                        // Check pending state too
+                        if (computedState && computedState.horde && computedState.horde[cardId]) {
+                            isExhausted = computedState.horde[cardId].power_used;
+                        }
+                        
+                        if (isExhausted) {
+                            WW_DOM.addClass('ww_horde_item_' + cardId, 'ww_power_target');
+                        }
+                    }
+                    break;
+                    
+                case 'uther_power':
+                    // Uther can sacrifice any other Hordier
+                    for (var cardId in WW_State.getHordeCards()) {
+                        if (cardId == sourceCardId) continue;  // Can't sacrifice himself
+                        WW_DOM.addClass('ww_horde_item_' + cardId, 'ww_power_target');
+                    }
+                    break;
+            }
+        },
+        
+        /**
+         * Complete a power that required a target
+         */
+        completePowerWithTarget: function(sourceCardId, powerCode, targetCardId) {
+            // Validate target based on power type
+            if (!this.validatePowerTarget(sourceCardId, powerCode, targetCardId)) {
+                return;
+            }
+            
+            // Special handling for Uther: need to select dice to ignore
+            if (powerCode === 'uther_power') {
+                this.enterUtherDiceSelectionMode(sourceCardId, targetCardId);
+                return;
+            }
+            
+            // Add to pending actions with target
+            WW_PendingActions.push('usePower', {
+                card_id: parseInt(sourceCardId),
+                target_card_id: parseInt(targetCardId)
+            }, {
+                target_card_id: parseInt(targetCardId)
+            });
+            
+            // Exit target mode
+            this.cancelPowerTargetMode();
+        },
+        
+        /**
+         * Enter Uther's dice selection mode after sacrificing a hordier
+         */
+        enterUtherDiceSelectionMode: function(sourceCardId, targetCardId) {
+            var self = this;
+            
+            // Calculate how many dice can be ignored (3 per missing hordier after sacrifice)
+            var hordeCards = WW_State.getHordeCards();
+            var hordeCount = Object.keys(hordeCards).length - 1; // -1 for the sacrifice
+            var missingCount = 8 - hordeCount;
+            var maxIgnore = 3 * missingCount;
+            
+            // Store state for dice selection
+            WW_State.setUtherDiceMode({
+                source_card_id: sourceCardId,
+                target_card_id: targetCardId,
+                max_ignore: maxIgnore,
+                selected_dice: []
+            });
+            
+            // Cancel power target mode visuals
+            this.cancelPowerTargetMode();
+            
+            // Show pending sacrifice visual
+            var targetEl = $('ww_horde_item_' + targetCardId);
+            if (targetEl) {
+                WW_DOM.addClass(targetEl, 'ww_pending_discarded');
+            }
+            var sourceEl = $('ww_horde_item_' + sourceCardId);
+            if (sourceEl) {
+                WW_DOM.addClass(sourceEl, 'ww_pending_exhausted');
+            }
+            
+            // Make challenge dice clickable
+            this.makeChallengeDiceSelectable();
+            
+            // Show message
+            this.showMessage(dojo.string.substitute(_("Select up to ${max} challenge dice to ignore"), {max: maxIgnore}), "info");
+            
+            // Update action buttons
+            this.removeActionButtons();
+            this.addActionButton('btn_confirm_uther', _('Confirm Ignored Dice'), function() {
+                self.confirmUtherPower();
+            }, null, false, 'blue');
+            this.addActionButton('btn_cancel_uther', _('Cancel'), function() {
+                self.cancelUtherDiceMode();
+            }, null, false, 'gray');
+        },
+        
+        /**
+         * Make challenge dice selectable for Uther's power
+         */
+        makeChallengeDiceSelectable: function() {
+            var self = this;
+            dojo.query('#ww_wind_dice .ww_dice').forEach(function(diceEl) {
+                WW_DOM.addClass(diceEl, 'ww_dice_selectable');
+                WW_DOM.connect(diceEl, 'onclick', null, function(evt) {
+                    WW_DOM.stopEvent(evt);
+                    self.onChallengeDiceClick(diceEl.id.replace('dice_', ''));
+                });
+            });
+        },
+        
+        /**
+         * Handle click on challenge dice during Uther's power
+         */
+        onChallengeDiceClick: function(diceId) {
+            var mode = WW_State.getUtherDiceMode();
+            if (!mode) return;
+            
+            var diceEl = $('dice_' + diceId);
+            if (!diceEl) return;
+            
+            var index = mode.selected_dice.indexOf(diceId);
+            if (index >= 0) {
+                // Deselect
+                mode.selected_dice.splice(index, 1);
+                WW_DOM.removeClass(diceEl, 'ww_dice_ignored');
+            } else {
+                // Select if under limit
+                if (mode.selected_dice.length < mode.max_ignore) {
+                    mode.selected_dice.push(diceId);
+                    WW_DOM.addClass(diceEl, 'ww_dice_ignored');
+                } else {
+                    this.showMessage(dojo.string.substitute(_("You can only ignore ${max} dice"), {max: mode.max_ignore}), "error");
+                }
+            }
+            
+            // Update button text
+            var btn = $('btn_confirm_uther');
+            if (btn) {
+                btn.innerHTML = dojo.string.substitute(_("Confirm (${count}/${max} dice)"), {
+                    count: mode.selected_dice.length,
+                    max: mode.max_ignore
+                });
+            }
+        },
+        
+        /**
+         * Confirm Uther's power with selected dice
+         */
+        confirmUtherPower: function() {
+            var mode = WW_State.getUtherDiceMode();
+            if (!mode) return;
+            
+            // Add to pending actions
+            WW_PendingActions.push('usePower', {
+                card_id: parseInt(mode.source_card_id),
+                target_card_id: parseInt(mode.target_card_id),
+                ignored_dice: mode.selected_dice
+            }, {
+                target_card_id: parseInt(mode.target_card_id),
+                ignored_dice: mode.selected_dice
+            });
+            
+            // Clean up
+            this.cleanUpUtherDiceMode();
+            
+            // Restore normal action buttons
+            this.restoreConfrontationButtons();
+        },
+        
+        /**
+         * Cancel Uther's dice selection mode
+         */
+        cancelUtherDiceMode: function() {
+            var mode = WW_State.getUtherDiceMode();
+            if (!mode) return;
+            
+            // Remove pending visuals
+            var targetEl = $('ww_horde_item_' + mode.target_card_id);
+            if (targetEl) {
+                WW_DOM.removeClass(targetEl, 'ww_pending_discarded');
+            }
+            var sourceEl = $('ww_horde_item_' + mode.source_card_id);
+            if (sourceEl) {
+                WW_DOM.removeClass(sourceEl, 'ww_pending_exhausted');
+            }
+            
+            // Clean up
+            this.cleanUpUtherDiceMode();
+            
+            // Restore normal action buttons
+            this.restoreConfrontationButtons();
+        },
+        
+        /**
+         * Clean up Uther dice selection mode
+         */
+        cleanUpUtherDiceMode: function() {
+            // Remove dice selection styling
+            dojo.query('#ww_wind_dice .ww_dice').forEach(function(diceEl) {
+                WW_DOM.removeClass(diceEl, 'ww_dice_selectable');
+                WW_DOM.disconnect(diceEl, 'onclick');
+            });
+            
+            // Clear state
+            WW_State.clearUtherDiceMode();
+        },
+        
+        /**
+         * Restore confrontation action buttons
+         */
+        restoreConfrontationButtons: function() {
+            var self = this;
+            this.removeActionButtons();
+            
+            // Re-add standard confrontation buttons
+            if (WW_PendingActions.hasPending()) {
+                this.addActionButton('btn_undo_action', _('Undo'), function() {
+                    WW_PendingActions.pop();
+                }, null, false, 'gray');
+            }
+            
+            // Determine button color based on confrontation result
+            var hordeDice = WW_Dice.getHordeDice();
+            var windDice = WW_Dice.getWindDice();
+            var windForce = parseInt(WW_DOM.getHtml('ww_wind_force')) || 0;
+            var buttonColor = 'blue';
+            if (hordeDice.length > 0 && windDice.length > 0) {
+                var result = WW_Dice.calculateConfrontationResult(hordeDice, windDice, windForce);
+                buttonColor = (result && result.success) ? 'blue' : 'red';
+            }
+            
+            this.addActionButton('btn_confirm_roll', _('Confirm'), 'onConfirmRoll', null, false, buttonColor);
+            
+            // Update undo button state
+            WW_PendingActions.updateUI();
+        },
+        
+        /**
+         * Validate power target selection
+         */
+        validatePowerTarget: function(sourceCardId, powerCode, targetCardId) {
+            var computedState = WW_PendingActions.getComputedState();
+            
+            switch (powerCode) {
+                case 'vera_power':
+                    if (targetCardId == sourceCardId) {
+                        this.showMessage(_("Vera cannot rest herself"), "error");
+                        return false;
+                    }
+                    
+                    var card = WW_State.getHordeCard(targetCardId);
+                    var isExhausted = card && card.powerUsed;
+                    
+                    // Check pending state
+                    if (computedState && computedState.horde && computedState.horde[targetCardId]) {
+                        isExhausted = computedState.horde[targetCardId].power_used;
+                    }
+                    
+                    if (!isExhausted) {
+                        this.showMessage(_("This Hordier is not exhausted"), "error");
+                        return false;
+                    }
+                    return true;
+                    
+                case 'uther_power':
+                    if (targetCardId == sourceCardId) {
+                        this.showMessage(_("Uther cannot sacrifice himself"), "error");
+                        return false;
+                    }
+                    return true;
+                    
+                default:
+                    return true;
+            }
+        },
+        
+        /**
+         * Cancel power target selection mode
+         */
+        cancelPowerTargetMode: function() {
+            WW_State.clearPowerTargetMode();
+            
+            // Remove highlights
+            WW_DOM.removeClassFromAll('.ww_horde_card_item', 'ww_power_target');
+            WW_DOM.removeClassFromAll('.ww_horde_card_item', 'ww_power_source');
+            
+            // Remove cancel button
+            var cancelBtn = $('btn_cancel_power');
+            if (cancelBtn) {
+                WW_DOM.destroy(cancelBtn);
+            }
+            
+            this.showMessage("", "info");  // Clear message
         },
         
         onConfirmDraft: function(evt) {
@@ -2622,6 +3135,12 @@ function (dojo, declare) {
             
             dojo.subscribe('powerUsed', this, "notif_powerUsed");
             this.notifqueue.setSynchronous('powerUsed', 500);
+            
+            dojo.subscribe('challengeDiceModified', this, "notif_challengeDiceModified");
+            this.notifqueue.setSynchronous('challengeDiceModified', 500);
+            
+            dojo.subscribe('diceIgnored', this, "notif_diceIgnored");
+            this.notifqueue.setSynchronous('diceIgnored', 500);
             
             dojo.subscribe('chapterDraftRecruit', this, "notif_chapterDraftRecruit");
             this.notifqueue.setSynchronous('chapterDraftRecruit', 500);
@@ -2928,6 +3447,36 @@ function (dojo, declare) {
         
         notif_allHordiersRested: function(notif) {
             WW_Cards.setAllCardsRested(notif.args.player_id);
+        },
+        
+        notif_challengeDiceModified: function(notif) {
+            // Clear and recreate wind dice with new values after Uther's sacrifice
+            WW_Dice.clearDice('wind');
+            
+            var updatedDice = notif.args.updated_dice || [];
+            WW_Dice.createDiceSorted(updatedDice, 'ww_wind_dice');
+            
+            // Flash animation on all wind dice to show the change
+            dojo.query('#ww_wind_dice .ww_dice').forEach(function(diceEl) {
+                WW_DOM.addClass(diceEl, 'ww_dice_modified');
+                setTimeout(function() {
+                    WW_DOM.removeClass(diceEl, 'ww_dice_modified');
+                }, 500);
+            });
+            
+            WW_Dice.updateConfrontationPreview();
+        },
+        
+        notif_diceIgnored: function(notif) {
+            // Mark ignored dice visually
+            var ignoredDice = notif.args.ignored_dice || [];
+            for (var i = 0; i < ignoredDice.length; i++) {
+                var diceEl = $('dice_' + ignoredDice[i]);
+                if (diceEl) {
+                    WW_DOM.addClass(diceEl, 'ww_dice_ignored');
+                }
+            }
+            WW_Dice.updateConfrontationPreview();
         },
         
         notif_powerUsed: function(notif) {

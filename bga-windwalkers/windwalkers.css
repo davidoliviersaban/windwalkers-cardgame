@@ -555,6 +555,28 @@
     transform: translateY(-5px) scale(1.05) !important;
 }
 
+/* Power target selection mode */
+.ww_horde_card_item.ww_power_source {
+    box-shadow: 0 0 15px 5px rgba(255, 165, 0, 0.8) !important;  /* Orange - source */
+    transform: scale(1.05);
+}
+
+.ww_horde_card_item.ww_power_target {
+    box-shadow: 0 0 12px 4px rgba(0, 255, 0, 0.7) !important;  /* Green - valid target */
+    cursor: pointer !important;
+    animation: power-target-pulse 1s ease-in-out infinite;
+}
+
+.ww_horde_card_item.ww_power_target:hover {
+    transform: translateY(-5px) scale(1.1) !important;
+    box-shadow: 0 0 20px 8px rgba(0, 255, 0, 0.9) !important;
+}
+
+@keyframes power-target-pulse {
+    0%, 100% { box-shadow: 0 0 12px 4px rgba(0, 255, 0, 0.7); }
+    50% { box-shadow: 0 0 18px 6px rgba(0, 255, 0, 0.9); }
+}
+
 /* Card disabled (cannot recruit - type limit reached) */
 .ww_card_disabled {
     opacity: 0.5;
@@ -839,6 +861,36 @@
 
 .ww_dice.ww_selected {
     outline: 3px solid var(--color-moral);
+}
+
+/* Selectable dice (Uther's power) */
+.ww_dice.ww_dice_selectable {
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.ww_dice.ww_dice_selectable:hover {
+    transform: scale(1.15);
+    box-shadow: 0 0 10px rgba(255, 100, 100, 0.8);
+}
+
+/* Ignored dice (Uther's power) */
+.ww_dice.ww_dice_ignored {
+    opacity: 0.3;
+    text-decoration: line-through;
+    box-shadow: 0 0 8px rgba(255, 0, 0, 0.8) !important;
+    position: relative;
+}
+
+.ww_dice.ww_dice_ignored::after {
+    content: '✕';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 30px;
+    color: rgba(255, 0, 0, 0.8);
+    font-weight: bold;
 }
 
 /* ==========================================
@@ -1309,6 +1361,37 @@
     transform: translate(-50%, -50%);
     font-size: 32px;
     text-shadow: 0 0 10px rgba(0,0,0,0.8);
+}
+
+/* Card being rested by a pending power (Vera) */
+.ww_pending_rested {
+    position: relative;
+    box-shadow: 0 0 10px 3px rgba(0, 255, 100, 0.7) !important;
+}
+
+.ww_pending_rested::after {
+    content: '💚';
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-size: 20px;
+    text-shadow: 0 0 5px rgba(0,0,0,0.5);
+}
+
+/* Card being sacrificed by a pending power (Uther) */
+.ww_pending_discarded {
+    position: relative;
+    box-shadow: 0 0 10px 3px rgba(255, 0, 0, 0.7) !important;
+    opacity: 0.6;
+}
+
+.ww_pending_discarded::after {
+    content: '💀';
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-size: 20px;
+    text-shadow: 0 0 5px rgba(0,0,0,0.5);
 }
 
 /* Moral value changed but not confirmed */

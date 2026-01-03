@@ -85,18 +85,18 @@ REMOTE_DIR_REL="${REMOTE_DIR_REL#/}"
 LOCAL_SNAPSHOT="$ROOT_DIR/bga-windwalkers-remote"
 mkdir -p "$LOCAL_SNAPSHOT"
 
-echo "Pulling remote folder '$BGA_SFTP_REMOTE_DIR' into '$LOCAL_SNAPSHOT' before deployment"
-lftp -u "$BGA_SFTP_USER","$BGA_SFTP_PASSWORD" "sftp://$BGA_SFTP_HOST:$BGA_SFTP_PORT" <<EOF
-set net:max-retries 2
-set net:timeout 30
-set sftp:auto-confirm yes
-set cmd:fail-exit yes
-lcd "$LOCAL_SNAPSHOT"
-cd ~
-cd "$REMOTE_DIR_REL"
-mirror --parallel=4 --delete ${excludeFlags[@]}
-bye
-EOF
+# echo "Pulling remote folder '$BGA_SFTP_REMOTE_DIR' into '$LOCAL_SNAPSHOT' before deployment"
+# lftp -u "$BGA_SFTP_USER","$BGA_SFTP_PASSWORD" "sftp://$BGA_SFTP_HOST:$BGA_SFTP_PORT" <<EOF
+# set net:max-retries 2
+# set net:timeout 30
+# set sftp:auto-confirm yes
+# set cmd:fail-exit yes
+# lcd "$LOCAL_SNAPSHOT"
+# cd ~
+# cd "$REMOTE_DIR_REL"
+# mirror --parallel=4 --delete ${excludeFlags[@]}
+# bye
+# EOF
 
 # Execute lftp mirror reverse (upload)
 lftp -u "$BGA_SFTP_USER","$BGA_SFTP_PASSWORD" "sftp://$BGA_SFTP_HOST:$BGA_SFTP_PORT" <<EOF

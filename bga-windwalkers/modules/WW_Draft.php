@@ -369,12 +369,16 @@ trait WW_Draft
         $this->trace("argChapterDraft - Chapter: $chapter, Player: $player_id");
         
         // Chapter draft uses the pool (like village recruitment)
+        // Pool should already be set up by stSetupNextChapter, but check as fallback
         $chapterDraftPool = $this->cards->getCardsInLocation('chapter_draft_pool');
         
         if (count($chapterDraftPool) == 0) {
-            // Generate chapter draft pool: 2 fer, 2 pack, 2 traine from unused characters
+            // Fallback: Generate chapter draft pool if not already done
+            $this->trace("argChapterDraft - WARNING: Pool was empty, setting up now (should have been done in stSetupNextChapter)");
             $this->setupChapterDraftPool();
             $chapterDraftPool = $this->cards->getCardsInLocation('chapter_draft_pool');
+        } else {
+            $this->trace("argChapterDraft - Pool already has " . count($chapterDraftPool) . " cards");
         }
         
         $available = $this->getEnrichedCards($chapterDraftPool);
