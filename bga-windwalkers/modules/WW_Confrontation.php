@@ -585,14 +585,14 @@ trait WW_Confrontation
                 // Player is still active - mark as eliminated without calling eliminatePlayer()
                 // This avoids BGA server communication issues in studio
                 
-                // Set eliminated player's score to 0
-                $this->DbQuery("UPDATE player SET player_score = 0, player_eliminated = 1 WHERE player_id = $player_id");
+                // Set eliminated player's score to -1 (indicates defeat/abandon)
+                $this->DbQuery("UPDATE player SET player_score = -1, player_eliminated = 1 WHERE player_id = $player_id");
                 
-                // Calculate final scores for remaining players
-                $this->calculateFinalScores();
-            } else {
-                // Player already eliminated - just calculate scores
-                $this->calculateFinalScores();
+                // Notify defeat
+                $this->notifyAllPlayers('gameDefeat', clienttranslate('The expedition has failed. Final score: ${score}'), [
+                    'player_id' => $player_id,
+                    'score' => -1
+                ]);
             }
             
             // Clear the value
