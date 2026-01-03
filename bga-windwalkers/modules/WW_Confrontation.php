@@ -582,19 +582,16 @@ trait WW_Confrontation
             $player = $this->getObjectFromDB("SELECT player_eliminated FROM player WHERE player_id = $player_id");
             
             if ($player && $player['player_eliminated'] == 0) {
-                // Player is still active - we need to eliminate them
+                // Player is still active - mark as eliminated without calling eliminatePlayer()
+                // This avoids BGA server communication issues in studio
                 
-                // Calculate final scores for remaining players BEFORE eliminating
-                // This avoids conflicts with eliminatePlayer
+                // Set eliminated player's score to 0
+                $this->DbQuery("UPDATE player SET player_score = 0, player_eliminated = 1 WHERE player_id = $player_id");
+                
+                // Calculate final scores for remaining players
                 $this->calculateFinalScores();
-                
-                // Set eliminated player's score to 0 (after calculateFinalScores to override)
-                $this->DbQuery("UPDATE player SET player_score = 0 WHERE player_id = $player_id");
-                
-                // Eliminate the player
-                $this->eliminatePlayer($player_id);
             } else {
-                // Player already eliminated (e.g., by abandonment) - just calculate scores
+                // Player already eliminated - just calculate scores
                 $this->calculateFinalScores();
             }
             
