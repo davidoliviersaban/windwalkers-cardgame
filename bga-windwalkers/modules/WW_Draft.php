@@ -40,6 +40,7 @@ trait WW_Draft
             $card['char_type'] = $charInfo['type'] ?? $card['card_type'];
             $card['is_leader'] = !empty($charInfo['is_leader']);
             $card['power'] = $charInfo['power'] ?? '';
+            $card['power_code'] = $charInfo['power_code'] ?? '';
             // Normalize for JS (expects both formats)
             $card['id'] = $card_id;
             $card['type_arg'] = $type_arg;
@@ -195,6 +196,14 @@ trait WW_Draft
 
         $this->validateHordeComplete($counts, $requirements);
 
+        // Track selected characters
+        foreach ($horde as $card) {
+            $type_arg = (int) ($card['card_type_arg'] ?? $card['type_arg'] ?? 0);
+            if ($type_arg) {
+                $this->incCharacterStat($type_arg, 'selected');
+            }
+        }
+
         $this->notifyAllPlayers('draftComplete', clienttranslate('${player_name} has completed their horde'), [
             'player_id' => $player_id,
             'player_name' => $this->getActivePlayerName(),
@@ -344,6 +353,9 @@ trait WW_Draft
 
         // $this->trace("setupChapterDraftPool - Pool char IDs to add: " . implode(',', $poolCharIds));
 
+        // Track proposed characters for chapter draft
+        $this->trackCharactersProposed($poolCharIds);
+
         // Create cards in pool (or move from existing location if they exist)
         foreach ($poolCharIds as $char_id) {
             // Find if card exists anywhere
@@ -441,6 +453,11 @@ trait WW_Draft
         $this->cards->moveCard($card_id, 'horde_' . $player_id);
 
         $type_arg = $card['type_arg'] ?? $card['card_type_arg'] ?? '';
+
+        // Track character selected
+        if ($type_arg) {
+            $this->incCharacterStat((int) $type_arg, 'selected');
+        }
         $card_type = $card['type'] ?? $card['card_type'] ?? '';
         $char_info = $this->characters[$type_arg] ?? ['name' => 'Unknown'];
 
@@ -489,6 +506,9 @@ trait WW_Draft
 
         // Move card back to chapter draft pool
         $this->cards->moveCard($card_id, 'chapter_draft_pool');
+
+        // Mark as exhausted - released cards can't use power if recruited again
+        $this->DbQuery("UPDATE card SET card_power_used = 1 WHERE card_id = $card_id");
 
         $type_arg = $card['type_arg'] ?? $card['card_type_arg'] ?? '';
         $char_info = $this->characters[$type_arg] ?? ['name' => 'Unknown'];
@@ -809,6 +829,9 @@ trait WW_Draft
         // Add card to recruit pool or discard
         $this->addCardToRecruitPool($card_id, $tile);
 
+        // Mark as exhausted - released cards can't use power if recruited again
+        $this->DbQuery("UPDATE card SET card_power_used = 1 WHERE card_id = $card_id");
+
         $type_arg = $card['card_type_arg'] ?? $card['type_arg'] ?? null;
         $char_info = $this->characters[$type_arg] ?? ['name' => 'Hordier'];
 
@@ -899,6 +922,11 @@ trait WW_Draft
         // Mark power as used (exhaust the card)
         $this->DbQuery("UPDATE card SET card_power_used = 1 WHERE card_id = $card_id");
 
+        // Track character power usage
+        if ($type_arg) {
+            $this->incCharacterStat((int) $type_arg, 'power_used');
+        }
+
         $this->notifyAllPlayers('powerUsed', clienttranslate('${player_name} uses ${character_name}\'s power'), [
             'player_id' => $player_id,
             'player_name' => $this->getActivePlayerName(),
@@ -917,6 +945,7 @@ trait WW_Draft
      * Rest one exhausted Hordier (reactivate power)
      * If card_id is provided, rest that specific card. Otherwise, rest the first exhausted one.
      * Returns the rested card or null if none available
+     * Note: Regitha can NEVER rest once used (her power_code is 'regitha_power')
      */
     function restOneHordier(int $player_id, ?int $card_id = null): ?array
     {
@@ -928,18 +957,42 @@ trait WW_Draft
             $protected_sql = " AND card_id NOT IN ($protected_ids)";
         }
 
-        // Find exhausted Hordier (specific or first available), excluding protected cards
+        // Get Regitha cards that have been used - they can NEVER rest
+        $regitha_type_arg = null;
+        foreach ($this->characters as $type_arg => $char) {
+            if (($char['power_code'] ?? '') === 'regitha_power') {
+                $regitha_type_arg = $type_arg;
+                break;
+            }
+        }
+        $regitha_sql = '';
+        if ($regitha_type_arg !== null) {
+            $regitha_sql = " AND NOT (card_type_arg = $regitha_type_arg AND card_power_used = 1)";
+        }
+
+        // Find exhausted Hordier (specific or first available), excluding protected cards and Regitha
         if ($card_id !== null) {
             // Check if this specific card is protected
             if (in_array($card_id, $protected_cards)) {
                 return null; // Cannot rest a protected card
+            }
+            // Check if this card is Regitha and exhausted
+            $card_check = $this->getObjectFromDB(
+                "SELECT * FROM card WHERE card_id = $card_id"
+            );
+            if (
+                $card_check && $regitha_type_arg !== null &&
+                (int) $card_check['card_type_arg'] === $regitha_type_arg &&
+                (int) $card_check['card_power_used'] === 1
+            ) {
+                return null; // Cannot rest Regitha
             }
             $exhausted_card = $this->getObjectFromDB(
                 "SELECT * FROM card WHERE card_id = $card_id AND card_location = 'horde_$player_id' AND card_power_used = 1 LIMIT 1"
             );
         } else {
             $exhausted_card = $this->getObjectFromDB(
-                "SELECT * FROM card WHERE card_location = 'horde_$player_id' AND card_power_used = 1$protected_sql LIMIT 1"
+                "SELECT * FROM card WHERE card_location = 'horde_$player_id' AND card_power_used = 1$protected_sql$regitha_sql LIMIT 1"
             );
         }
 
@@ -956,6 +1009,7 @@ trait WW_Draft
     /**
      * Rest all Hordiers (reactivate all powers) - used in cities
      * Returns the number of Hordiers rested
+     * Note: Regitha can NEVER rest once used (her power_code is 'regitha_power')
      */
     function restAllHordiers(int $player_id): int
     {
@@ -967,14 +1021,27 @@ trait WW_Draft
             $protected_sql = " AND card_id NOT IN ($protected_ids)";
         }
 
-        // Count exhausted Hordiers (excluding protected cards)
+        // Get Regitha cards that have been used - they can NEVER rest
+        $regitha_type_arg = null;
+        foreach ($this->characters as $type_arg => $char) {
+            if (($char['power_code'] ?? '') === 'regitha_power') {
+                $regitha_type_arg = $type_arg;
+                break;
+            }
+        }
+        $regitha_sql = '';
+        if ($regitha_type_arg !== null) {
+            $regitha_sql = " AND NOT (card_type_arg = $regitha_type_arg AND card_power_used = 1)";
+        }
+
+        // Count exhausted Hordiers (excluding protected cards and Regitha)
         $count = (int) $this->getUniqueValueFromDB(
-            "SELECT COUNT(*) FROM card WHERE card_location = 'horde_$player_id' AND card_power_used = 1$protected_sql"
+            "SELECT COUNT(*) FROM card WHERE card_location = 'horde_$player_id' AND card_power_used = 1$protected_sql$regitha_sql"
         );
 
         if ($count > 0) {
-            // Reactivate all powers (excluding protected cards)
-            $this->DbQuery("UPDATE card SET card_power_used = 0 WHERE card_location = 'horde_$player_id'$protected_sql");
+            // Reactivate all powers (excluding protected cards and Regitha)
+            $this->DbQuery("UPDATE card SET card_power_used = 0 WHERE card_location = 'horde_$player_id' AND card_power_used = 1$protected_sql$regitha_sql");
         }
 
         return $count;

@@ -69,11 +69,11 @@ class Windwalkers extends Table
         $default_colors = $gameinfos['player_colors'];
 
         // Create players
-        $sql = "INSERT INTO player (player_id, player_color, player_canal, player_name, player_avatar, player_moral) VALUES ";
+        $sql = "INSERT INTO player (player_id, player_color, player_canal, player_name, player_avatar, player_moral, player_score) VALUES ";
         $values = [];
         foreach ($players as $player_id => $player) {
             $color = array_shift($default_colors);
-            $values[] = "('" . $player_id . "','" . $color . "','" . $player['player_canal'] . "','" . addslashes($player['player_name']) . "','" . addslashes($player['player_avatar']) . "', 9)";
+            $values[] = "('" . $player_id . "','" . $color . "','" . $player['player_canal'] . "','" . addslashes($player['player_name']) . "','" . addslashes($player['player_avatar']) . "', 9, 0)";
         }
         $sql .= implode(',', $values);
         $this->DbQuery($sql);
@@ -190,6 +190,66 @@ class Windwalkers extends Table
     }
 
     //////////////////////////////////////////////////////////////////////////////
+    //////////// Character Statistics Tracking
+    //////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Get character stats (proposed, selected, power_used counts)
+     */
+    protected function getCharacterStats(): array
+    {
+        $json = $this->getGlobalVariable('character_stats');
+        return $json ? json_decode($json, true) : [];
+    }
+
+    /**
+     * Save character stats
+     */
+    protected function saveCharacterStats(array $stats): void
+    {
+        $this->setGlobalVariable('character_stats', json_encode($stats));
+    }
+
+    /**
+     * Increment a character stat
+     * @param int $typeArg The character type_arg (ID)
+     * @param string $statType One of: 'proposed', 'selected', 'power_used'
+     */
+    protected function incCharacterStat(int $typeArg, string $statType): void
+    {
+        $stats = $this->getCharacterStats();
+
+        if (!isset($stats[$typeArg])) {
+            $stats[$typeArg] = ['proposed' => 0, 'selected' => 0, 'power_used' => 0];
+        }
+
+        if (isset($stats[$typeArg][$statType])) {
+            $stats[$typeArg][$statType]++;
+        }
+
+        $this->saveCharacterStats($stats);
+    }
+
+    /**
+     * Track multiple characters as proposed (batch)
+     * @param array $typeArgs Array of character type_args
+     */
+    protected function trackCharactersProposed(array $typeArgs): void
+    {
+        $stats = $this->getCharacterStats();
+
+        foreach ($typeArgs as $typeArg) {
+            $typeArg = (int) $typeArg;
+            if (!isset($stats[$typeArg])) {
+                $stats[$typeArg] = ['proposed' => 0, 'selected' => 0, 'power_used' => 0];
+            }
+            $stats[$typeArg]['proposed']++;
+        }
+
+        $this->saveCharacterStats($stats);
+    }
+
+    //////////////////////////////////////////////////////////////////////////////
     //////////// getAllDatas
     //////////////////////////////////////////////////////////////////////////////
 
@@ -277,6 +337,9 @@ class Windwalkers extends Table
         foreach ($result['players'] as $player_id => $player) {
             $result['scores'][$player_id] = (int) ($player['player_score'] ?? 0);
         }
+
+        // Add character statistics (proposed, selected, power_used counts)
+        $result['character_stats'] = $this->getCharacterStats();
 
         return $result;
     }
@@ -953,31 +1016,26 @@ class Windwalkers extends Table
     }
 
     /**
-     * Update score at end of chapter - ADD moral and hordiers bonuses to current score
+     * Notify chapter end bonus (for display only - final score is calculated from stats)
      */
     function updateChapterEndScore(int $player_id): void
     {
-        // Get current score
-        $currentScore = $this->getUniqueValueFromDb("SELECT player_score FROM player WHERE player_id = $player_id");
-
-        // Calculate chapter-end bonuses
+        // Get current chapter and moral
+        $chapter = $this->getGameStateValue('current_chapter');
         $moral = $this->getPlayerMoral($player_id);
         $hordiers = count($this->cards->getCardsInLocation('horde_' . $player_id));
-        $chapterBonus = $moral + ($hordiers * 2);
 
-        // Add bonus to score
-        $newScore = $currentScore + $chapterBonus;
-        $this->DbQuery("UPDATE player SET player_score = $newScore WHERE player_id = $player_id");
+        // Track moral bonus for this chapter (only moral counts at chapter end, not hordiers)
+        $stat_name = 'chapter_' . $chapter . '_moral_bonus';
+        $this->setStat($moral, $stat_name, $player_id);
 
-        // Notify all players of chapter end bonus
-        $this->notifyAllPlayers('chapterEndScore', clienttranslate('${player_name} earns ${bonus} bonus points (${moral} moral + ${hordiers_points} for ${hordiers} hordiers)'), [
+        // Notify all players of chapter end score (informational)
+        $this->notifyAllPlayers('chapterEndScore', clienttranslate('${player_name} earns ${moral} bonus points from moral at end of chapter ${chapter}'), [
             'player_id' => $player_id,
             'player_name' => $this->getPlayerNameById($player_id),
-            'score' => $newScore,
-            'bonus' => $chapterBonus,
+            'chapter' => $chapter,
             'moral' => $moral,
-            'hordiers' => $hordiers,
-            'hordiers_points' => $hordiers * 2
+            'hordiers' => $hordiers
         ]);
     }
 
@@ -991,7 +1049,25 @@ class Windwalkers extends Table
                 continue;
             }
 
-            $score = $this->calculatePlayerScore($player_id);
+            // Calculate final score from stats (authoritative source)
+            $tiles = $this->getStat('tiles_traversed', $player_id) ?? 0;
+            $surpass = $this->getStat('surpass_points', $player_id) ?? 0;
+            $furevents = $this->getStat('furevents_defeated', $player_id) ?? 0;
+            $lihn_bonus = $this->getStat('lihn_bonus_points', $player_id) ?? 0;
+            $portedhurle_bonus = $this->getStat('portedhurle_bonus', $player_id) ?? 0;
+
+            // Sum moral bonuses from all chapters
+            $chapter_moral_bonus = 0;
+            for ($i = 1; $i <= 4; $i++) {
+                $chapter_moral_bonus += $this->getStat('chapter_' . $i . '_moral_bonus', $player_id) ?? 0;
+            }
+
+            // Hordiers count only at end of campaign (reaching Camp Boban)
+            $hordiers = count($this->cards->getCardsInLocation('horde_' . $player_id));
+
+            // Final score = tiles + surpass + furevents×3 + lihn_bonus + portedhurle + chapter_moral_bonuses + hordiers×2
+            $score = $tiles + $surpass + ($furevents * 3) + $lihn_bonus + $portedhurle_bonus + $chapter_moral_bonus + ($hordiers * 2);
+
             $this->DbQuery("UPDATE player SET player_score = $score WHERE player_id = $player_id");
             $this->setStat($score, 'total_score', $player_id);
 
@@ -1000,33 +1076,32 @@ class Windwalkers extends Table
                 'player_id' => $player_id,
                 'player_name' => $player['player_name'],
                 'score' => $score,
-                'breakdown' => $this->getScoreBreakdown($player_id)
+                'breakdown' => [
+                    'tiles' => $tiles,
+                    'surpass' => $surpass,
+                    'furevents' => $furevents,
+                    'furevents_points' => $furevents * 3,
+                    'lihn_bonus' => $lihn_bonus,
+                    'portedhurle_bonus' => $portedhurle_bonus,
+                    'chapter_moral_bonus' => $chapter_moral_bonus,
+                    'hordiers' => $hordiers,
+                    'hordiers_points' => $hordiers * 2
+                ]
             ]);
         }
     }
 
     /**
      * Calculate player FINAL score according to rules:
-     * - 1 point per tile traversed
-     * - Surpass points (cumulative: 0+1+2+3+4+5...)
-     * - 1 point per moral remaining
-     * - 2 points per Hordier in horde
-     * - 3 points per Furevent defeated
-     * - Chapter bonus (e.g., Porte d'Hurle: 5 points)
+     * Uses the accumulated player_score (tiles, surpass, furevents, Lihn bonuses)
+     * and adds end-game bonuses (moral, hordiers)
      */
     private function calculatePlayerScore(int $player_id): int
     {
-        $score = 0;
+        // Get the accumulated score from gameplay (includes tiles, surpass, furevents, Lihn doubles)
+        $score = (int) $this->getUniqueValueFromDB("SELECT COALESCE(player_score, 0) FROM player WHERE player_id = $player_id");
 
-        // Tiles traversed (1 point each)
-        $tiles = $this->getStat('tiles_traversed', $player_id);
-        $score += $tiles;
-
-        // Surpass points are already added during game (cumulative)
-        // They are stored in player_score incrementally, so we don't add them here
-        // Actually we recalculate from scratch, so we need surpass_total stat
-        $surpass_total = $this->getStat('surpass_points', $player_id) ?? 0;
-        $score += $surpass_total;
+        // Add end-game bonuses only:
 
         // Moral remaining (1 point each)
         $moral = $this->getPlayerMoral($player_id);
@@ -1035,10 +1110,6 @@ class Windwalkers extends Table
         // Hordiers remaining (2 points each)
         $hordiers = count($this->cards->getCardsInLocation('horde_' . $player_id));
         $score += $hordiers * 2;
-
-        // Furevents defeated (3 points each)
-        $furevents = $this->getStat('furevents_defeated', $player_id);
-        $score += $furevents * 3;
 
         return $score;
     }
@@ -1054,7 +1125,11 @@ class Windwalkers extends Table
         $hordiers = count($this->cards->getCardsInLocation('horde_' . $player_id));
         $furevents = $this->getStat('furevents_defeated', $player_id);
 
+        // Get accumulated gameplay score (before end-game bonuses)
+        $gameplay_score = (int) $this->getUniqueValueFromDB("SELECT COALESCE(player_score, 0) FROM player WHERE player_id = $player_id");
+
         return [
+            'gameplay_score' => $gameplay_score,  // Base score from all chapters
             'tiles' => $tiles,
             'surpass' => $surpass,
             'moral' => $moral,

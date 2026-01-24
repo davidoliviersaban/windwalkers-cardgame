@@ -91,6 +91,36 @@
       "id": 21,
       "name": "Rest actions",
       "type": "int"
+    },
+    "lihn_bonus_points": {
+      "id": 23,
+      "name": "Lihn bonus points",
+      "type": "int"
+    },
+    "chapter_1_moral_bonus": {
+      "id": 24,
+      "name": "Chapter 1 moral bonus",
+      "type": "int"
+    },
+    "chapter_2_moral_bonus": {
+      "id": 25,
+      "name": "Chapter 2 moral bonus",
+      "type": "int"
+    },
+    "chapter_3_moral_bonus": {
+      "id": 26,
+      "name": "Chapter 3 moral bonus",
+      "type": "int"
+    },
+    "chapter_4_moral_bonus": {
+      "id": 27,
+      "name": "Chapter 4 moral bonus",
+      "type": "int"
+    },
+    "portedhurle_bonus": {
+      "id": 28,
+      "name": "Porte d'Hurle bonus",
+      "type": "int"
     }
   }
 }

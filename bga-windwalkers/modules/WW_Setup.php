@@ -30,6 +30,10 @@ trait WW_Setup
         $this->cards->createCards($cards, 'deck');
         $this->cards->shuffle('deck');
 
+        // Track all available characters as proposed for initial draft
+        $proposedCharIds = array_column($cards, 'type_arg');
+        $this->trackCharactersProposed($proposedCharIds);
+
         // Set is_leader flag for traceurs
         foreach ($this->characters as $char_id => $char) {
             if (empty($char['is_available'])) {
@@ -323,8 +327,9 @@ trait WW_Setup
         // Update player_chapter for all players
         $this->DbQuery("UPDATE player SET player_chapter = $chapter");
 
-        // Reset all hordiers power_used status for new chapter
-        $this->DbQuery("UPDATE card SET card_power_used = 0");
+        // Reset power_used status only for cards in player hordes (not recruit pools or discard)
+        // Released/abandoned cards stay exhausted even if recruited again
+        $this->DbQuery("UPDATE card SET card_power_used = 0 WHERE card_location LIKE 'horde_%'");
 
         // Move all players to the start city of the new chapter
         $start_city = $this->chapters[$chapter]['start_city'];

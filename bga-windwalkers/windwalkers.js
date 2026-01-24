@@ -1163,6 +1163,23 @@ function (dojo, declare) {
             WW_DOM.addClass(tile, 'ww_discovered');
         },
         
+        /**
+         * Update the wind token on a tile (when a power changes the wind force)
+         */
+        updateWindToken: function(tileId, newForce) {
+            var tile = $('tile_' + tileId);
+            if (!tile) return;
+            
+            // Remove existing wind token
+            var existingToken = tile.querySelector('.ww_wind_token');
+            if (existingToken) {
+                existingToken.parentNode.removeChild(existingToken);
+            }
+            
+            // Add new wind token with updated force
+            WW_DOM.place(this.createWindTokenHtml(newForce, 'ww_wind_modified'), tile);
+        },
+        
         showConfrontationResult: function(tileId, success) {
             var className = success ? 'ww_confrontation_success' : 'ww_confrontation_failure';
             WW_DOM.animateClass('tile_' + tileId, className, 1000);
@@ -1534,6 +1551,25 @@ function (dojo, declare) {
     // WW_Cards - Card and Horde management
     // ============================================================
     var WW_Cards = {
+        // Utility: sort cards by type (traceur > fer > pack > traine)
+        TYPE_ORDER: { 'traceur': 1, 'fer': 2, 'pack': 3, 'traine': 4 },
+        
+        sortCardsByType: function(cards) {
+            var self = this;
+            var arr = Array.isArray(cards) ? cards : Object.values(cards);
+            return arr.sort(function(a, b) {
+                var typeA = a.char_type || a.card_type || a.type || 'traine';
+                var typeB = b.char_type || b.card_type || b.type || 'traine';
+                var orderA = self.TYPE_ORDER[typeA] || 5;
+                var orderB = self.TYPE_ORDER[typeB] || 5;
+                if (orderA !== orderB) return orderA - orderB;
+                // Same type - sort alphabetically
+                var nameA = (a.name || '').toLowerCase();
+                var nameB = (b.name || '').toLowerCase();
+                return nameA.localeCompare(nameB);
+            });
+        },
+        
         createCard: function(options) {
             var card = options.card;
             var typeArg = card.card_type_arg || card.type_arg;
@@ -1577,30 +1613,7 @@ function (dojo, declare) {
             WW_DOM.clear('ww_horde');
             WW_State.setHordeCards({});
             
-            // Sort cards by type priority: traceur > fer > pack > traine
-            // Within same type, sort alphabetically by name
-            var typeOrder = { 'traceur': 0, 'fer': 1, 'pack': 2, 'traine': 3 };
-            var sortedCards = [];
-            
-            for (var cardId in hordeData) {
-                sortedCards.push(hordeData[cardId]);
-            }
-            
-            sortedCards.sort(function(a, b) {
-                var typeA = a.card_type || a.char_type || 'traine';
-                var typeB = b.card_type || b.char_type || 'traine';
-                var orderA = typeOrder[typeA] !== undefined ? typeOrder[typeA] : 99;
-                var orderB = typeOrder[typeB] !== undefined ? typeOrder[typeB] : 99;
-                
-                if (orderA !== orderB) {
-                    return orderA - orderB;
-                }
-                
-                // Same type - sort alphabetically by name
-                var nameA = (a.name || '').toLowerCase();
-                var nameB = (b.name || '').toLowerCase();
-                return nameA.localeCompare(nameB);
-            });
+            var sortedCards = this.sortCardsByType(hordeData);
             
             for (var i = 0; i < sortedCards.length; i++) {
                 this.addHordeCard(sortedCards[i], onCardClick);
@@ -1645,7 +1658,7 @@ function (dojo, declare) {
             var hordeContainer = $('ww_horde');
             if (!hordeContainer) return;
             
-            var typeOrder = { 'traceur': 0, 'fer': 1, 'pack': 2, 'traine': 3 };
+            var self = this;
             var cards = [];
             
             // Collect all card elements
@@ -1660,10 +1673,10 @@ function (dojo, declare) {
                 });
             });
             
-            // Sort
+            // Sort using centralized TYPE_ORDER
             cards.sort(function(a, b) {
-                var orderA = typeOrder[a.type] !== undefined ? typeOrder[a.type] : 99;
-                var orderB = typeOrder[b.type] !== undefined ? typeOrder[b.type] : 99;
+                var orderA = self.TYPE_ORDER[a.type] || 5;
+                var orderB = self.TYPE_ORDER[b.type] || 5;
                 
                 if (orderA !== orderB) {
                     return orderA - orderB;
@@ -1833,26 +1846,30 @@ function (dojo, declare) {
             
             var self = this;
             if (args.available) {
-                for (var cardId in args.available) {
-                    this.createCard({
+                var sortedCards = this.sortCardsByType(args.available);
+                
+                sortedCards.forEach(function(card) {
+                    self.createCard({
                         prefix: 'draft_card',
-                        card: args.available[cardId],
+                        card: card,
                         containerId: 'ww_available_characters',
                         onClick: function(cid) { onCardClick(cid); }
                     });
-                }
+                });
             }
             
             if (args.selected) {
-                for (var cardId in args.selected) {
-                    this.createCard({
+                var sortedSelected = this.sortCardsByType(args.selected);
+                
+                sortedSelected.forEach(function(card) {
+                    self.createCard({
                         prefix: 'draft_card',
-                        card: args.selected[cardId],
+                        card: card,
                         containerId: 'ww_draft_selected',
                         extraClass: 'ww_selected',
                         onClick: function(cid) { onCardClick(cid); }
                     });
-                }
+                });
             }
             
             this.updateDraftCounts(args.counts, args.requirements);
@@ -1914,15 +1931,9 @@ function (dojo, declare) {
             
             // Show recruit pool (available cards)
             if (args.recruitPool) {
-                var typeOrder = { 'fer': 1, 'pack': 2, 'traine': 3 };
-                var sortedCards = Object.values(args.recruitPool).sort(function(a, b) {
-                    var typeA = a.char_type || a.type || 'traine';
-                    var typeB = b.char_type || b.type || 'traine';
-                    return (typeOrder[typeA] || 4) - (typeOrder[typeB] || 4);
-                });
+                var sortedCards = this.sortCardsByType(args.recruitPool);
                 
                 sortedCards.forEach(function(card) {
-                    var cardId = card.id || card.card_id;
                     self.createCard({
                         prefix: 'chapter_draft_card',
                         card: card,
@@ -1933,21 +1944,25 @@ function (dojo, declare) {
                 });
             }
             
-            // Show current horde (can click to release)
+            // Show current horde (can click to release) - sorted by type
             if (args.horde) {
-                for (var cardId in args.horde) {
-                    var card = args.horde[cardId];
+                var sortedHorde = this.sortCardsByType(args.horde);
+                
+                sortedHorde.forEach(function(card) {
                     var cardType = card.char_type || card.type || '';
                     var isTraceur = cardType === 'traceur';
+                    // Regitha cannot be released when exhausted (she can't be rested or replaced)
+                    var isRegithaExhausted = (card.power_code === 'regitha_power') && parseInt(card.power_used || card.card_power_used || 0, 10);
+                    var isLocked = isTraceur || isRegithaExhausted;
                     
-                    this.createCard({
+                    self.createCard({
                         prefix: 'chapter_draft_horde',
                         card: card,
                         containerId: 'ww_draft_selected',
-                        extraClass: isTraceur ? 'ww_card_disabled' : '',
-                        onClick: isTraceur ? null : function(cid) { onReleaseClick(cid); }
+                        extraClass: isLocked ? 'ww_card_disabled' : '',
+                        onClick: isLocked ? null : function(cid) { onReleaseClick(cid); }
                     });
-                }
+                });
             }
             
             // Update counts display
@@ -2080,6 +2095,7 @@ function (dojo, declare) {
                     '<div class="ww_moral_container">' +
                         '<span class="ww_moral_icon"></span>' +
                         '<span id="moral_counter_' + playerId + '" class="ww_moral_value">' + player.moral + '</span>' +
+                        '<span class="ww_moral_max">/9</span>' +
                     '</div>' +
                     '<div class="ww_dice_container">' +
                         '<span class="ww_dice_icon_small"></span>' +
@@ -2555,6 +2571,7 @@ function (dojo, declare) {
         enterDraftState: function(args) {
             WW_DOM.hide('ww_map_container');
             WW_DOM.hide('ww_dice_panel');
+            WW_DOM.hide('ww_horde_panel');
             
             var self = this;
             WW_Cards.showDraftInterface(args, function(cardId) {
@@ -2579,6 +2596,7 @@ function (dojo, declare) {
         enterPlayerTurnState: function(args) {
             WW_DOM.show('ww_map_container');
             WW_DOM.show('ww_dice_panel');
+            WW_DOM.show('ww_horde_panel');
             WW_DOM.hide('ww_draft_panel');
             
             WW_Dice.clearDice();
@@ -3088,7 +3106,7 @@ function (dojo, declare) {
          * Check if a power requires special UI interaction
          */
         powerRequiresSpecialUI: function(powerCode) {
-            var specialPowers = ['gianni_power', 'wanda_power', 'xavio_power', 'yavo_power', 'kyo_power', 'thomassin_power', 'blanchette_power', 'ukkiba_power', 'waldo_power', 'belkacem_power', 'galas_power', 'oranne_power', 'ivana_power', 'thutmus_power', 'amon_power', 'duke_power', 'lethune_power', 'kunigunde_power', 'regitha_power', 'lyara_power', 'topilzin_power', 'osuros_power', 'tula_power', 'charlize_power', 'jonas_power', 'lihn_power'];
+            var specialPowers = ['gianni_power', 'wanda_power', 'xavio_power', 'yavo_power', 'kyo_power', 'thomassin_power', 'blanchette_power', 'ukkiba_power', 'waldo_power', 'belkacem_power', 'galas_power', 'oranne_power', 'ivana_power', 'thutmus_power', 'amon_power', 'duke_power', 'lethune_power', 'kunigunde_power', 'regitha_power', 'lyara_power', 'topilzin_power', 'osuros_power', 'tula_power', 'charlize_power', 'jonas_power', 'lihn_power', 'benelim_power'];
             return specialPowers.indexOf(powerCode) !== -1;
         },
         
@@ -3143,6 +3161,10 @@ function (dojo, declare) {
                     break;
                 case 'amon_power':
                     this.executeAmonPower(cardId);
+                    break;
+                case 'benelim_power':
+                    // Benelim: discard to roll +1 die per PACK card
+                    this.executeSimplePower(cardId);
                     break;
                 case 'duke_power':
                     this.enterDukePowerMode(cardId);
@@ -5129,9 +5151,13 @@ function (dojo, declare) {
                     var dice = notif.args.updated_dice[i];
                     var diceEl = $('dice_' + dice.dice_id);
                     if (diceEl) {
+                        // Update both display AND data-value attribute
+                        WW_DOM.setData(diceEl, 'value', dice.dice_value);
                         WW_DOM.setHtml(diceEl, dice.dice_value);
                     }
                 }
+                // Refresh the confrontation preview with updated values
+                WW_Dice.updateConfrontationPreview();
             }
             
             // Re-apply ignored dice visual (from Uther/Waldo/Wanda powers)
@@ -5511,13 +5537,18 @@ function (dojo, declare) {
             var new_force = notif.args.new_force;
             var card_id = notif.args.card_id;
             
-            // Update wind force in state
-            WW_State.windForce = new_force;
+            // Update wind force in state (use setter so getWindForce() returns correct value)
+            WW_State.setWindForce(new_force);
             
-            // Update UI - wind force display if exists
+            // Update UI - wind force display in dice panel
             var windForceEl = $('ww_wind_force');
             if (windForceEl) {
                 windForceEl.innerHTML = new_force;
+            }
+            
+            // Update wind token on the tile (on the map) - only for Jonas (permanent change)
+            if (tile_id && notif.args.update_tile) {
+                WW_Hex.updateWindToken(tile_id, new_force);
             }
             
             // Remove the sacrificed card from horde (animated)
