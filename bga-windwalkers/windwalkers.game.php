@@ -158,6 +158,19 @@ class Windwalkers extends Table
             $this->initStat('player', 'confrontations_won', 0, $player_id);
             $this->initStat('player', 'confrontations_lost', 0, $player_id);
             $this->initStat('player', 'total_score', 0, $player_id);
+            // Chapter days and PAR
+            $this->initStat('player', 'chapter_1_days', 0, $player_id);
+            $this->initStat('player', 'chapter_2_days', 0, $player_id);
+            $this->initStat('player', 'chapter_3_days', 0, $player_id);
+            $this->initStat('player', 'chapter_4_days', 0, $player_id);
+            $this->initStat('player', 'total_par_difference', 0, $player_id);
+            // PAR bonuses (golf scoring: Albatross +30, Eagle +15, Birdie +5)
+            $this->initStat('player', 'chapter_1_par_bonus', 0, $player_id);
+            $this->initStat('player', 'chapter_2_par_bonus', 0, $player_id);
+            $this->initStat('player', 'chapter_3_par_bonus', 0, $player_id);
+            $this->initStat('player', 'chapter_4_par_bonus', 0, $player_id);
+            $this->initStat('player', 'total_par_bonus', 0, $player_id);
+            $this->initStat('player', 'total_days', 0, $player_id);
         }
     }
 
@@ -187,6 +200,25 @@ class Windwalkers extends Table
     {
         $name = $this->escapeStringForDB($name);
         return $this->getUniqueValueFromDB("SELECT var_value FROM global_var WHERE var_name = '$name'");
+    }
+
+    /**
+     * Calculate PAR bonus points (golf-style scoring)
+     * @param int $parDiff Days minus PAR (negative = under par)
+     * @return array ['bonus' => points, 'name' => golf term]
+     */
+    private function calculateParBonus(int $parDiff): array
+    {
+        if ($parDiff <= -3) {
+            return ['bonus' => 30, 'name' => 'Albatross'];
+        } elseif ($parDiff == -2) {
+            return ['bonus' => 15, 'name' => 'Eagle'];
+        } elseif ($parDiff == -1) {
+            return ['bonus' => 5, 'name' => 'Birdie'];
+        } else {
+            // PAR (0) or Bogey (+1 or more) = no bonus, no malus
+            return ['bonus' => 0, 'name' => $parDiff == 0 ? 'PAR' : 'Bogey'];
+        }
     }
 
     //////////////////////////////////////////////////////////////////////////////
@@ -788,12 +820,30 @@ class Windwalkers extends Table
         $chapter = $this->getGameStateValue('current_chapter');
         $this->incStat(1, 'chapters_completed');
 
+        // Get chapter days and PAR
+        $chapterDays = $this->getGameStateValue('chapter_round');
+        $chapterPar = $this->chapters[$chapter]['par'] ?? 10;
+        $parDiff = $chapterDays - $chapterPar;
+
         // Clear all recruit pools (villages and cities) for this chapter - cards go back to deck
         $this->clearRecruitPoolsForChapter($chapter);
+
+        // Calculate PAR bonus (golf scoring)
+        $parResult = $this->calculateParBonus($parDiff);
+        $parBonus = $parResult['bonus'];
+        $parName = $parResult['name'];
 
         // Calculate and display final scores for this chapter
         $players = $this->loadPlayersBasicInfos();
         foreach ($players as $player_id => $player) {
+            // Track chapter days and par difference
+            $this->setStat($chapterDays, 'chapter_' . $chapter . '_days', $player_id);
+            $this->incStat($parDiff, 'total_par_difference', $player_id);
+            
+            // Track PAR bonus for this chapter
+            $this->setStat($parBonus, 'chapter_' . $chapter . '_par_bonus', $player_id);
+            $this->incStat($parBonus, 'total_par_bonus', $player_id);
+
             // Award moral for completing chapter
             $this->modifyPlayerMoral($player_id, 1);
 
@@ -801,9 +851,18 @@ class Windwalkers extends Table
             $this->updateChapterEndScore($player_id);
         }
 
-        // Notify chapter completion
-        $this->notifyAllPlayers('chapterComplete', clienttranslate('Chapter ${chapter_num} complete!'), [
-            'chapter_num' => $chapter
+        // Notify chapter completion with PAR info and golf term
+        $parText = $parDiff == 0 ? 'PAR' : ($parDiff < 0 ? $parDiff : '+' . $parDiff);
+        $bonusText = $parBonus > 0 ? " - ${parName}! +${parBonus} pts" : '';
+        $this->notifyAllPlayers('chapterComplete', clienttranslate('Chapter ${chapter_num} complete! ${days} days (PAR ${par}, ${par_text})${bonus_text}'), [
+            'chapter_num' => $chapter,
+            'days' => $chapterDays,
+            'par' => $chapterPar,
+            'par_text' => $parText,
+            'par_diff' => $parDiff,
+            'par_bonus' => $parBonus,
+            'par_name' => $parName,
+            'bonus_text' => $bonusText
         ]);
 
         if ($chapter >= 4) {
@@ -884,6 +943,9 @@ class Windwalkers extends Table
         // $this->trace("stSetupNextChapter - Starting, current state: $stateId");
 
         $this->transitionToNextChapter();
+
+        // Reset chapter day counter for new chapter
+        $this->setGameStateValue('chapter_round', 1);
 
         // Setup the chapter draft pool with 6 new characters (2 fer, 2 pack, 2 traine)
         // This must be called here to ensure a fresh pool, not in argChapterDraft
@@ -1065,17 +1127,38 @@ class Windwalkers extends Table
             // Hordiers count only at end of campaign (reaching Camp Boban)
             $hordiers = count($this->cards->getCardsInLocation('horde_' . $player_id));
 
-            // Final score = tiles + surpass + furevents×3 + lihn_bonus + portedhurle + chapter_moral_bonuses + hordiers×2
-            $score = $tiles + $surpass + ($furevents * 3) + $lihn_bonus + $portedhurle_bonus + $chapter_moral_bonus + ($hordiers * 2);
+            // Get PAR bonus (golf scoring: Albatross +30, Eagle +15, Birdie +5)
+            $total_par_bonus = $this->getStat('total_par_bonus', $player_id) ?? 0;
+
+            // Get PAR stats for display
+            $total_par_diff = $this->getStat('total_par_difference', $player_id) ?? 0;
+            $total_days = 0;
+            $total_par = 0;
+            for ($i = 1; $i <= 4; $i++) {
+                $total_days += $this->getStat('chapter_' . $i . '_days', $player_id) ?? 0;
+                $total_par += $this->chapters[$i]['par'] ?? 10;
+            }
+
+            // Final score = tiles + surpass + furevents×3 + lihn_bonus + portedhurle + chapter_moral_bonuses + hordiers×2 + PAR_bonus
+            $score = $tiles + $surpass + ($furevents * 3) + $lihn_bonus + $portedhurle_bonus + $chapter_moral_bonus + ($hordiers * 2) + $total_par_bonus;
 
             $this->DbQuery("UPDATE player SET player_score = $score WHERE player_id = $player_id");
             $this->setStat($score, 'total_score', $player_id);
+            $this->setStat($total_days, 'total_days', $player_id);
+
+            // Format PAR text
+            $parText = $total_par_diff == 0 ? 'PAR' : ($total_par_diff < 0 ? $total_par_diff : '+' . $total_par_diff);
 
             // Notify final score with breakdown
-            $this->notifyAllPlayers('finalScore', clienttranslate('${player_name} scores ${score} points'), [
+            $this->notifyAllPlayers('finalScore', clienttranslate('${player_name} scores ${score} points (${total_days} days, ${par_text})'), [
                 'player_id' => $player_id,
                 'player_name' => $player['player_name'],
                 'score' => $score,
+                'total_days' => $total_days,
+                'total_par' => $total_par,
+                'par_text' => $parText,
+                'par_diff' => $total_par_diff,
+                'par_bonus' => $total_par_bonus,
                 'breakdown' => [
                     'tiles' => $tiles,
                     'surpass' => $surpass,
@@ -1085,7 +1168,8 @@ class Windwalkers extends Table
                     'portedhurle_bonus' => $portedhurle_bonus,
                     'chapter_moral_bonus' => $chapter_moral_bonus,
                     'hordiers' => $hordiers,
-                    'hordiers_points' => $hordiers * 2
+                    'hordiers_points' => $hordiers * 2,
+                    'par_bonus' => $total_par_bonus
                 ]
             ]);
         }

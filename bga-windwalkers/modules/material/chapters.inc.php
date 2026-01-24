@@ -12,6 +12,7 @@ $this->chapters = [
         'title' => 'Windwalker - Chapter 1',
         'start_city' => 'aberlaas',
         'end_city' => 'portchoon',
+        'par' => 2,
         'grid' => [
             ['q' => 3, 'r' => 17, 'name' => 'aberlaas'],
             ['q' => 3, 'r' => 16, 'name' => 'mountain'],
@@ -44,6 +45,7 @@ $this->chapters = [
         'title' => 'Windwalker - Chapter 2',
         'start_city' => 'portchoon',
         'end_city' => 'chawondasee',
+        'par' => 4,
         'grid' => [
             ['q' => 3, 'r' => 4, 'name' => 'portchoon'],
             ['q' => 3, 'r' => 2, 'name' => 'tourfontaine'],
@@ -72,6 +74,7 @@ $this->chapters = [
         'title' => 'Windwalker - Chapter 3',
         'start_city' => 'chawondasee',
         'end_city' => 'alticcio',
+        'par' => 3,
         'grid' => [
             ['q' => 6, 'r' => 7, 'name' => 'chawondasee'],
             ['q' => 5, 'r' => 7, 'name' => 'desert'],
@@ -104,6 +107,7 @@ $this->chapters = [
         'title' => 'Windwalker - Chapter 4',
         'start_city' => 'alticcio',
         'end_city' => 'campboban',
+        'par' => 4,
         'grid' => [
             ['q' => 10, 'r' => 38, 'name' => 'alticcio'],
             ['q' => 9, 'r' => 38, 'name' => 'portedhurle'],

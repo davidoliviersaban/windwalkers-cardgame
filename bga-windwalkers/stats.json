@@ -121,6 +121,61 @@
       "id": 28,
       "name": "Porte d'Hurle bonus",
       "type": "int"
+    },
+    "chapter_1_days": {
+      "id": 29,
+      "name": "Chapter 1 days",
+      "type": "int"
+    },
+    "chapter_2_days": {
+      "id": 30,
+      "name": "Chapter 2 days",
+      "type": "int"
+    },
+    "chapter_3_days": {
+      "id": 31,
+      "name": "Chapter 3 days",
+      "type": "int"
+    },
+    "chapter_4_days": {
+      "id": 32,
+      "name": "Chapter 4 days",
+      "type": "int"
+    },
+    "total_days": {
+      "id": 34,
+      "name": "Total days",
+      "type": "int"
+    },
+    "total_par_difference": {
+      "id": 33,
+      "name": "PAR difference (negative = under par)",
+      "type": "int"
+    },
+    "chapter_1_par_bonus": {
+      "id": 35,
+      "name": "Chapter 1 PAR bonus",
+      "type": "int"
+    },
+    "chapter_2_par_bonus": {
+      "id": 36,
+      "name": "Chapter 2 PAR bonus",
+      "type": "int"
+    },
+    "chapter_3_par_bonus": {
+      "id": 37,
+      "name": "Chapter 3 PAR bonus",
+      "type": "int"
+    },
+    "chapter_4_par_bonus": {
+      "id": 38,
+      "name": "Chapter 4 PAR bonus",
+      "type": "int"
+    },
+    "total_par_bonus": {
+      "id": 39,
+      "name": "Total PAR bonus (golf scoring)",
+      "type": "int"
     }
   }
 }
