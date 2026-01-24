@@ -8,14 +8,19 @@ trait WW_Setup
     //////////////////////////////////////////////////////////////////////////////
     // Character Cards Setup
     //////////////////////////////////////////////////////////////////////////////
-    
+
     /**
      * Create all character cards in deck
+     * Only creates cards for characters with is_available = true
      */
     function setupCharacterCards(): void
     {
         $cards = [];
         foreach ($this->characters as $char_id => $char) {
+            // Skip unavailable characters (powers not implemented yet)
+            if (empty($char['is_available'])) {
+                continue;
+            }
             $cards[] = [
                 'type' => $char['type'],  // 'fer', 'pack', 'traine'
                 'type_arg' => $char_id,
@@ -24,9 +29,12 @@ trait WW_Setup
         }
         $this->cards->createCards($cards, 'deck');
         $this->cards->shuffle('deck');
-        
+
         // Set is_leader flag for traceurs
         foreach ($this->characters as $char_id => $char) {
+            if (empty($char['is_available'])) {
+                continue;
+            }
             if (isset($char['is_leader']) && $char['is_leader']) {
                 $this->DbQuery("UPDATE card SET card_is_leader = 1 WHERE card_type_arg = $char_id");
             }
@@ -36,7 +44,7 @@ trait WW_Setup
     //////////////////////////////////////////////////////////////////////////////
     // Wind Tokens Setup
     //////////////////////////////////////////////////////////////////////////////
-    
+
     /**
      * Create wind tokens according to distribution
      */
@@ -55,7 +63,7 @@ trait WW_Setup
     //////////////////////////////////////////////////////////////////////////////
     // Chapter Tiles Setup
     //////////////////////////////////////////////////////////////////////////////
-    
+
     /**
      * Setup tiles for a specific chapter
      */
@@ -64,14 +72,14 @@ trait WW_Setup
         if ($chapter < 1 || $chapter > 4) {
             throw new BgaVisibleSystemException("setupChapterTiles called with invalid chapter: $chapter");
         }
-        
+
         $this->debug("=== setupChapterTiles for chapter $chapter ===");
-        
+
         $tiles = $this->getChapterTilesData($chapter);
-        
+
         $this->debug("Creating " . count($tiles) . " tiles");
         $this->createTilesFromData($tiles, $chapter);
-        
+
         $count = $this->getUniqueValueFromDB("SELECT COUNT(*) FROM tile WHERE tile_chapter = $chapter");
         $this->debug("Total tiles in DB for chapter $chapter: $count");
     }
@@ -86,9 +94,9 @@ trait WW_Setup
                 "Chapter $chapter tile data not found in material."
             );
         }
-        
+
         $grid = $this->chapters[$chapter]['grid'];
-        
+
         // Convert material format to internal format
         $tiles = [];
         foreach ($grid as $index => $tile) {
@@ -98,12 +106,12 @@ trait WW_Setup
                 );
             }
             $tiles[] = [
-                'q' => (int)$tile['q'],
-                'r' => (int)$tile['r'],
+                'q' => (int) $tile['q'],
+                'r' => (int) $tile['r'],
                 'subtype' => $tile['name']
             ];
         }
-        
+
         $this->debug("Loaded " . count($tiles) . " tiles from embedded material for chapter $chapter");
         return $tiles;
     }
@@ -117,10 +125,10 @@ trait WW_Setup
         foreach ($tiles as $tile) {
             $subtype = $tile['subtype'];
             $type = $this->determineTileType($subtype);
-            
+
             // Get tile data from the appropriate source based on type
             $tileData = $this->getTileDataBySubtype($subtype, $type);
-            
+
             $values[] = sprintf(
                 "(%d, %d, '%s', '%s', %d, %d, %d, %d, %d)",
                 $tile['q'],
@@ -134,7 +142,7 @@ trait WW_Setup
                 $tileData['moral_effect']
             );
         }
-        
+
         if (!empty($values)) {
             $sql = "INSERT IGNORE INTO tile (tile_q, tile_r, tile_type, tile_subtype, tile_chapter, 
                 tile_white_dice, tile_green_dice, tile_black_dice, tile_moral_effect) 
@@ -142,7 +150,7 @@ trait WW_Setup
             $this->DbQuery($sql);
         }
     }
-    
+
     /**
      * Get tile data (dice values, moral effect) from the appropriate source array
      */
@@ -155,7 +163,7 @@ trait WW_Setup
             'black_dice' => 0,
             'moral_effect' => 0
         ];
-        
+
         switch ($type) {
             case 'village':
                 // Villages are defined in village_types
@@ -168,11 +176,11 @@ trait WW_Setup
                     ];
                 }
                 break;
-                
+
             case 'city':
                 // Cities have no dice (players rest there)
                 return $defaults;
-                
+
             case 'special':
                 // Special locations (tourfontaine, portedhurle) might be in terrain_types
                 if (isset($this->terrain_types[$subtype])) {
@@ -184,7 +192,7 @@ trait WW_Setup
                     ];
                 }
                 break;
-                
+
             case 'terrain':
             default:
                 // Regular terrains are in terrain_types
@@ -207,7 +215,7 @@ trait WW_Setup
                 }
                 break;
         }
-        
+
         return $defaults;
     }
 
@@ -231,7 +239,7 @@ trait WW_Setup
     //////////////////////////////////////////////////////////////////////////////
     // Starting Position
     //////////////////////////////////////////////////////////////////////////////
-    
+
     /**
      * Find starting city position for the given chapter
      */
@@ -245,7 +253,7 @@ trait WW_Setup
                 break;
             }
         }
-        
+
         if ($startSubtype === null) {
             return null;
         }
@@ -253,12 +261,12 @@ trait WW_Setup
         $tile = $this->getObjectFromDB(
             "SELECT tile_q q, tile_r r FROM tile WHERE tile_subtype = '" . addslashes($startSubtype) . "' AND tile_chapter = $chapter LIMIT 1"
         );
-        
+
         if (!$tile) {
             return null;
         }
-        
-        return ['q' => (int)$tile['q'], 'r' => (int)$tile['r']];
+
+        return ['q' => (int) $tile['q'], 'r' => (int) $tile['r']];
     }
 
     /**
@@ -270,7 +278,7 @@ trait WW_Setup
         if (!$startPos) {
             return;
         }
-        
+
         foreach ($player_ids as $player_id) {
             $this->DbQuery(
                 "UPDATE player SET player_position_q = {$startPos['q']}, player_position_r = {$startPos['r']}, player_chapter = $chapter WHERE player_id = $player_id"
@@ -281,13 +289,13 @@ trait WW_Setup
     //////////////////////////////////////////////////////////////////////////////
     // Chapter Management
     //////////////////////////////////////////////////////////////////////////////
-    
+
     /**
      * Ensure tiles exist for the given chapter
      */
     function ensureChapterSetup(int $chapter): void
     {
-        $tile_count = (int)$this->getUniqueValueFromDB("SELECT COUNT(*) FROM tile WHERE tile_chapter = $chapter");
+        $tile_count = (int) $this->getUniqueValueFromDB("SELECT COUNT(*) FROM tile WHERE tile_chapter = $chapter");
         if ($tile_count == 0) {
             $this->setupChapterTiles($chapter);
         }
@@ -300,30 +308,30 @@ trait WW_Setup
     {
         $chapter = $this->getGameStateValue('current_chapter') + 1;
         $this->setGameStateValue('current_chapter', $chapter);
-        
+
         // Reset chapter day counter to 1 (total days remains unchanged for scoring)
         $this->setGameStateValue('chapter_round', 1);
-                
+
         $this->setupChapterTiles($chapter);
-        
+
         // Reset wind tokens
         $this->DbQuery("UPDATE wind_token SET token_location = 'bag', token_tile_id = NULL");
-        
+
         // Reset player movement counters for new chapter
         $this->DbQuery("UPDATE player SET player_has_moved = 0, player_surpass_count = 0");
-        
+
         // Update player_chapter for all players
         $this->DbQuery("UPDATE player SET player_chapter = $chapter");
-        
+
         // Reset all hordiers power_used status for new chapter
         $this->DbQuery("UPDATE card SET card_power_used = 0");
-        
+
         // Move all players to the start city of the new chapter
         $start_city = $this->chapters[$chapter]['start_city'];
         $start_tile = $this->getObjectFromDB(
             "SELECT tile_q, tile_r FROM tile WHERE tile_subtype = '$start_city' AND tile_chapter = $chapter"
         );
-        
+
         if ($start_tile) {
             $this->DbQuery(
                 "UPDATE player SET player_position_q = {$start_tile['tile_q']}, player_position_r = {$start_tile['tile_r']}"

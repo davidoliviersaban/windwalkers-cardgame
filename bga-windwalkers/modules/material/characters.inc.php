@@ -14,6 +14,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: :discard: pour ignorer -3 :d6-black-white-green: / :missing:'),
         'power_type' => 'discard',
         'power_code' => 'uther_power',
+        'is_available' => true,
+        'is_multiplayer_only' => false,
     ],
     2 => [
         'name' => clienttranslate('Rokka le Cerf-Volant'),
@@ -24,6 +26,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Placez 1 :force-x: Ignorez :d6-black-white-green: dont la valeur est > à ce :force-x:'),
         'power_type' => 'tap',
         'power_code' => 'rokka_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     3 => [
         'name' => clienttranslate('Alpha l\'Econome'),
@@ -34,6 +38,8 @@ $this->characters = [
         'power' => clienttranslate('∞: Placez 0+ :d6-blue-violet: sur <b>Alpha</b>. Ils sont ignorés. \n:tap:: Utilisez :d6-blue-violet: tels quels.'),
         'power_type' => 'tap',
         'power_code' => 'alpha_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     4 => [
         'name' => clienttranslate('Ryage le Joueur'),
@@ -44,6 +50,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Perdez -1 :moral: et lancez 1 :d6-blue:.\nSi :d6-blue: ≥ à :force-x:, ignorez tous :d6-black-white-green:'),
         'power_type' => 'tap',
         'power_code' => 'ryage_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     5 => [
         'name' => clienttranslate('Viciar le Perfectionniste'),
@@ -54,6 +62,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Ignorez -1 :d6-black-white-green: / :d6-green:'),
         'power_type' => 'tap',
         'power_code' => 'viciar_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     6 => [
         'name' => clienttranslate('Thomassin de Gaude'),
@@ -63,6 +73,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Faites ±1 sur la valeur de chacun de :d6-blue:'),
         'power_type' => 'tap',
         'power_code' => 'thomassin_power',
+        'is_available' => true,
+        'is_multiplayer_only' => false,
     ],
     7 => [
         'name' => clienttranslate('Ukkiba Tomoshi'),
@@ -72,6 +84,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Perdez -1 :moral:. Faites ±1 / :moral: restant sur :d6-blue:'),
         'power_type' => 'tap',
         'power_code' => 'ukkiba_power',
+        'is_available' => true,
+        'is_multiplayer_only' => false,
     ],
     8 => [
         'name' => clienttranslate('Filibert Franz'),
@@ -81,6 +95,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Ignorez les pénalités de :moral: liées au terrain.'),
         'power_type' => 'tap',
         'power_code' => 'filibert_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     9 => [
         'name' => clienttranslate('Herbert Benegh'),
@@ -90,6 +106,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Retirez une :tuile: grise du plateau. Si <b>FRANCK</b> n\'est pas dans votre équipe, perdez -1 :moral:'),
         'power_type' => 'tap',
         'power_code' => 'herbert_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     10 => [
         'name' => clienttranslate('Franck Benegh'),
@@ -99,6 +117,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Échangez 2 :tuile: grises et adjacentes à la vôtre. Si <b>HERBERT</b> n\'est pas dans votre équipe, perdez -1 :moral:'),
         'power_type' => 'tap',
         'power_code' => 'franck_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     11 => [
         'name' => clienttranslate('Athonios Catan'),
@@ -108,6 +128,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Annulez toutes vos actions, reculez et rejouez immédiatement.'),
         'power_type' => 'tap',
         'power_code' => 'athonios_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     12 => [
         'name' => clienttranslate('Blanchette de Gaude'),
@@ -117,6 +139,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Faites ±1 sur :d6-blue: / :force-x:'),
         'power_type' => 'tap',
         'power_code' => 'blanchette_power',
+        'is_available' => true,
+        'is_multiplayer_only' => false,
     ],
     13 => [
         'name' => clienttranslate('Ed Abro Ragerage'),
@@ -126,6 +150,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Posez tous :d6-green: sur <b>Ed</b>. Ils sont ignorés et seront ajoutés au prochain contre.\n:rest:: <b>Ed</b>, retirez ces :d6-green:'),
         'power_type' => 'tap',
         'power_code' => 'ed_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     14 => [
         'name' => clienttranslate('Kunigunde Nosske'),
@@ -135,6 +161,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Si la somme :d6-blue: est > :d6-white-green:, ignorez tous :d6-white:'),
         'power_type' => 'tap',
         'power_code' => 'kunigunde_power',
+        'is_available' => true,
+        'is_multiplayer_only' => false,
     ],
     15 => [
         'name' => clienttranslate('Anika'),
@@ -144,6 +172,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Lancez +1 :d6-blue: / :force-x: = :force-x:'),
         'power_type' => 'tap',
         'power_code' => 'anika_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     16 => [
         'name' => clienttranslate('Kon'),
@@ -153,6 +183,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Relancez tout ou partie de :d6-blue:'),
         'power_type' => 'tap',
         'power_code' => 'kon_power',
+        'is_available' => true,
+        'is_multiplayer_only' => false,
     ],
     17 => [
         'name' => clienttranslate('Waldo Waldmann'),
@@ -162,6 +194,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Ignorez -1 :d6-green: / :missing:'),
         'power_type' => 'tap',
         'power_code' => 'waldo_power',
+        'is_available' => true,
+        'is_multiplayer_only' => false,
     ],
     18 => [
         'name' => clienttranslate('Dorothy Irony'),
@@ -171,6 +205,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Faites ±1 / <b>OISELEUR</b> sur 1 :d6-blue:'),
         'power_type' => 'tap',
         'power_code' => 'dorothy_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     19 => [
         'name' => clienttranslate('Oshora'),
@@ -180,6 +216,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Gagnez +1 :moral: / :missing:.\nSi vous :discard: <b>Zhalinka</b>, :discard: <b>Oshora</b> aussi puis activez son pouvoir'),
         'power_type' => 'discard',
         'power_code' => 'oshora_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     20 => [
         'name' => clienttranslate('Adolar Rossel'),
@@ -189,6 +227,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: :discard: 1 :card: <b>FER/PACK/TRAÎNE</b>.\nRecrutez votre <b>Faucon</b>.'),
         'power_type' => 'discard',
         'power_code' => 'adolar_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     21 => [
         'name' => clienttranslate('Alicone Minh-row'),
@@ -198,6 +238,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Retirez -1 à :force-x: \nOU \najoutez +1 à :force-x: et gagnez +2 :moral:'),
         'power_type' => 'tap',
         'power_code' => 'alicone_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     22 => [
         'name' => clienttranslate('Ashley'),
@@ -207,6 +249,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: :rest-all:. Perdez -1 :moral: / :rest:'),
         'power_type' => 'tap',
         'power_code' => 'ashley_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     23 => [
         'name' => clienttranslate('Baramas'),
@@ -216,6 +260,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Si :force-x: = <b>CHOON</b> :force-3:, gagnez +3 :moral:'),
         'power_type' => 'tap',
         'power_code' => 'baramas_power',
+        'is_available' => true,
+        'is_multiplayer_only' => false,
     ],
     24 => [
         'name' => clienttranslate('Xavio Torantor'),
@@ -225,6 +271,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Lancez +1 :d6-blue:.\nSi vous avez un autre <b>TORANTOR</b>, \nFaites ±1 sur 1 :d6-blue:'),
         'power_type' => 'tap',
         'power_code' => 'xavio_power',
+        'is_available' => true,
+        'is_multiplayer_only' => false,
     ],
     25 => [
         'name' => clienttranslate('Yavo Torantor'),
@@ -234,6 +282,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Lancez +1 :d6-blue:. \nSi vous avez 1 autre <b>TORANTOR</b>, \nGagnez +1 :moral:'),
         'power_type' => 'tap',
         'power_code' => 'yavo_power',
+        'is_available' => true,
+        'is_multiplayer_only' => false,
     ],
     26 => [
         'name' => clienttranslate('Ernest Waltman'),
@@ -243,6 +293,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Placez 1 :force-x: sur 3 :tuile: adjacentes.'),
         'power_type' => 'tap',
         'power_code' => 'ernest_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     27 => [
         'name' => clienttranslate('Galas Thunderflayer'),
@@ -252,6 +304,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Si :force-x: = <b>FUREVENT</b> :force-6:, :rest-all:'),
         'power_type' => 'tap',
         'power_code' => 'galas_power',
+        'is_available' => true,
+        'is_multiplayer_only' => false,
     ],
     28 => [
         'name' => clienttranslate('Gianni Raymondi'),
@@ -261,6 +315,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Placez 1 :d6-blue:'),
         'power_type' => 'tap',
         'power_code' => 'gianni_power',
+        'is_available' => true,
+        'is_multiplayer_only' => false,
     ],
     29 => [
         'name' => clienttranslate('Ivan Baumann'),
@@ -270,6 +326,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Lancez +1 :d6-blue-violet: / :card: <b>FER</b>.'),
         'power_type' => 'tap',
         'power_code' => 'ivan_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     30 => [
         'name' => clienttranslate('Lethune de Prals'),
@@ -279,6 +337,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Lancez +1 :d6-blue: / :moral: sur :tuile:'),
         'power_type' => 'tap',
         'power_code' => 'lethune_power',
+        'is_available' => true,
+        'is_multiplayer_only' => false,
     ],
     31 => [
         'name' => clienttranslate('Osvaldo Hawksson'),
@@ -288,6 +348,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Si :tuile: = 3 :d6-green:, gagnez +3 :moral:'),
         'power_type' => 'tap',
         'power_code' => 'osvaldo_power',
+        'is_available' => true,
+        'is_multiplayer_only' => false,
     ],
     32 => [
         'name' => clienttranslate('Rochelle Niephaus'),
@@ -297,6 +359,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: :force-x: ⮕ :force-1: Perdez -1 :moral:'),
         'power_type' => 'tap',
         'power_code' => 'rochelle_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     33 => [
         'name' => clienttranslate('Saskia Bisch'),
@@ -306,6 +370,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Si :tuile: = 2 :d6-green:, gagnez +2 :moral:'),
         'power_type' => 'tap',
         'power_code' => 'saskia_power',
+        'is_available' => true,
+        'is_multiplayer_only' => false,
     ],
     34 => [
         'name' => clienttranslate('Vera'),
@@ -315,6 +381,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: :rest:'),
         'power_type' => 'tap',
         'power_code' => 'vera_power',
+        'is_available' => true,
+        'is_multiplayer_only' => false,
     ],
     35 => [
         'name' => clienttranslate('Wanda Pfeffer'),
@@ -324,6 +392,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Ignorez -1 :d6-white-green:'),
         'power_type' => 'tap',
         'power_code' => 'wanda_power',
+        'is_available' => true,
+        'is_multiplayer_only' => false,
     ],
     36 => [
         'name' => clienttranslate('Emelyn Kraw'),
@@ -333,6 +403,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Faites ±1 sur 1 :d6-blue: / :card: <b>PACK</b>.'),
         'power_type' => 'tap',
         'power_code' => 'emelyn_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     37 => [
         'name' => clienttranslate('Faucon'),
@@ -342,6 +414,8 @@ $this->characters = [
         'power' => clienttranslate(':discard:: Si vous avez 1 :card: <b>OISELEUR</b>.\nRecrutez +1 :discard:'),
         'power_type' => 'discard',
         'power_code' => 'faucon_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     38 => [
         'name' => clienttranslate('Croque'),
@@ -351,6 +425,8 @@ $this->characters = [
         'power' => clienttranslate(':discard:: Recrutez 1 :discard:'),
         'power_type' => 'discard',
         'power_code' => 'croque_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     39 => [
         'name' => clienttranslate('Abriyen'),
@@ -360,6 +436,8 @@ $this->characters = [
         'power' => clienttranslate(':discard:: :rest: :rest:'),
         'power_type' => 'discard',
         'power_code' => 'abriyen_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     40 => [
         'name' => clienttranslate('Yeng'),
@@ -369,6 +447,8 @@ $this->characters = [
         'power' => clienttranslate(':discard:: Échangez 2 :tuile: grises et adjacentes.'),
         'power_type' => 'discard',
         'power_code' => 'yeng_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     41 => [
         'name' => clienttranslate('Belkacem'),
@@ -378,6 +458,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Placez 1 :d6-green:'),
         'power_type' => 'tap',
         'power_code' => 'belkacem_power',
+        'is_available' => true,
+        'is_multiplayer_only' => false,
     ],
     42 => [
         'name' => clienttranslate('Benelim'),
@@ -387,6 +469,8 @@ $this->characters = [
         'power' => clienttranslate(':discard:: Lancez +1 :d6-blue-violet: / :card: <b>PACK</b>.'),
         'power_type' => 'discard',
         'power_code' => 'benelim_power',
+        'is_available' => true,
+        'is_multiplayer_only' => false,
     ],
     43 => [
         'name' => clienttranslate('Duke Arnaud N.'),
@@ -396,6 +480,8 @@ $this->characters = [
         'power' => clienttranslate(':discard:: Placez 2 :d6-blue-violet:'),
         'power_type' => 'discard',
         'power_code' => 'duke_power',
+        'is_available' => true,
+        'is_multiplayer_only' => false,
     ],
     44 => [
         'name' => clienttranslate('Tula'),
@@ -405,6 +491,8 @@ $this->characters = [
         'power' => clienttranslate(':discard:: :force-x: ⮕ :force-2:'),
         'power_type' => 'discard',
         'power_code' => 'tula_power',
+        'is_available' => true,
+        'is_multiplayer_only' => false,
     ],
     45 => [
         'name' => clienttranslate('Comtesse Elewys'),
@@ -414,6 +502,8 @@ $this->characters = [
         'power' => clienttranslate(':discard:: Ignorez -2 :d6-black-white-green:'),
         'power_type' => 'discard',
         'power_code' => 'comtesse_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     46 => [
         'name' => clienttranslate('Amiral Jean'),
@@ -423,6 +513,8 @@ $this->characters = [
         'power' => clienttranslate(':discard:: Chaque :moral: dépensé compte double.'),
         'power_type' => 'discard',
         'power_code' => 'amiral_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     47 => [
         'name' => clienttranslate('Topilzin'),
@@ -432,6 +524,8 @@ $this->characters = [
         'power' => clienttranslate(':discard:: :force-x: ⮕ :force-3:'),
         'power_type' => 'discard',
         'power_code' => 'topilzin_power',
+        'is_available' => true,
+        'is_multiplayer_only' => false,
     ],
     48 => [
         'name' => clienttranslate('Zhalinka'),
@@ -441,6 +535,8 @@ $this->characters = [
         'power' => clienttranslate(':discard:: Lancez +1 :d6-blue-violet: / :missing:'),
         'power_type' => 'discard',
         'power_code' => 'zhalinka_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     49 => [
         'name' => clienttranslate('Bellune'),
@@ -450,6 +546,8 @@ $this->characters = [
         'power' => clienttranslate(':discard:: Placez 1 :d6-blue-violet: / :missing:'),
         'power_type' => 'discard',
         'power_code' => 'bellune_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     50 => [
         'name' => clienttranslate('Osuros'),
@@ -459,6 +557,8 @@ $this->characters = [
         'power' => clienttranslate(':discard:: :force-x: ⮕ :force-6:'),
         'power_type' => 'discard',
         'power_code' => 'osuros_power',
+        'is_available' => true,
+        'is_multiplayer_only' => false,
     ],
     51 => [
         'name' => clienttranslate('Mère'),
@@ -468,6 +568,8 @@ $this->characters = [
         'power' => clienttranslate(':discard:: Gagnez +3 :moral:\nSi :discard: <b>Père</b> le même tour, regagnez tout :moral:'),
         'power_type' => 'discard',
         'power_code' => 'mère_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     52 => [
         'name' => clienttranslate('Père'),
@@ -477,6 +579,8 @@ $this->characters = [
         'power' => clienttranslate(':discard:: Gagnez +3 :moral:\nSi :discard: <b>Mère</b> le même tour, regagnez tout :moral:'),
         'power_type' => 'discard',
         'power_code' => 'père_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     53 => [
         'name' => clienttranslate('Fuego'),
@@ -486,6 +590,8 @@ $this->characters = [
         'power' => clienttranslate(':discard:: Placez 1 :force-x: sur chaque :tuile: adjacente'),
         'power_type' => 'discard',
         'power_code' => 'fuego_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     54 => [
         'name' => clienttranslate('Ama Ama'),
@@ -495,6 +601,8 @@ $this->characters = [
         'power' => clienttranslate(':discard:: Faites ±1 sur :d6-blue-violet: / :moral:'),
         'power_type' => 'discard',
         'power_code' => 'ama_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     55 => [
         'name' => clienttranslate('Giltarr le Tricheur'),
@@ -506,6 +614,8 @@ $this->characters = [
         'power_type' => 'tap',
         'power_code' => 'giltarr_power',
         'extension' => '2-players',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     56 => [
         'name' => clienttranslate('Usmos l\'Eunuque'),
@@ -516,6 +626,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Utilisez un pouvoir :card: <b>TRAÎNE</b> sans :discard:.\n:tap: ce :card:<b>TRAÎNE</b>'),
         'power_type' => 'discard',
         'power_code' => 'usmos_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     57 => [
         'name' => clienttranslate('Estrella l\'Innebranlable'),
@@ -526,6 +638,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Distribuez équitablement vos :d6-black: sur les :tuile: adjacentes, ces :d6-black: modifient définitivement la :tuile: puis :d6-violet: = :d6-blue:'),
         'power_type' => 'tap',
         'power_code' => 'estrella_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     58 => [
         'name' => clienttranslate('I.E.L'),
@@ -536,6 +650,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Si :tuile: manquante autour de votre :tuile:, ignorez -3 :d6-black-white-green:'),
         'power_type' => 'tap',
         'power_code' => 'iel_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     59 => [
         'name' => clienttranslate('Ambroise le Coquin'),
@@ -547,6 +663,8 @@ $this->characters = [
         'power_type' => 'tap',
         'power_code' => 'ambroise_power',
         'extension' => '2-players',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     60 => [
         'name' => clienttranslate('Oranne la Voyageuse'),
@@ -557,6 +675,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Si :tuile: avec :moral: alors ignorez -3 :d6-black-white-green:'),
         'power_type' => 'tap',
         'power_code' => 'oranne_power',
+        'is_available' => true,
+        'is_multiplayer_only' => false,
     ],
     61 => [
         'name' => clienttranslate('Lyara l\'Inspirante'),
@@ -567,6 +687,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: :tuile: villages = :tuile: villes: Ignorez tous :d6-black-white-green: et vous recrutez tout type de :card: Si :rest-all: gagnez  +1 :moral:'),
         'power_type' => 'tap',
         'power_code' => 'lyara_power',
+        'is_available' => true,
+        'is_multiplayer_only' => false,
     ],
     62 => [
         'name' => clienttranslate('Maarveen Guillor'),
@@ -576,6 +698,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Définissez une valeur et mettez tous :d6-blue: sur cette valeur.'),
         'power_type' => 'tap',
         'power_code' => 'maarveen_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     63 => [
         'name' => clienttranslate('Arabine'),
@@ -585,6 +709,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Ignorez les :d6-white: < à votre :d6-blue: le plus faible.'),
         'power_type' => 'tap',
         'power_code' => 'arabine_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     64 => [
         'name' => clienttranslate('Thutmus'),
@@ -594,6 +720,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Lancez autant :d6-blue: / Force :force-x:, ni plus, ni moins.'),
         'power_type' => 'tap',
         'power_code' => 'thutmus_power',
+        'is_available' => true,
+        'is_multiplayer_only' => false,
     ],
     65 => [
         'name' => clienttranslate('Dunseth Calsan'),
@@ -603,6 +731,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: :discard: 1 :card: <b>FER</b>\nRecrutez 1 :card: <b>Calsan</b> et :rest-all: <b>Calsans</b>.'),
         'power_type' => 'discard',
         'power_code' => 'dunseth_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     66 => [
         'name' => clienttranslate('Irilad Calsan'),
@@ -612,6 +742,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: :discard: 1 :card: <b>TRAÎNE</b>. \nPlacez :d6-blue: / :missing: <b>TRAÎNE</b>.'),
         'power_type' => 'discard',
         'power_code' => 'irilad_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     67 => [
         'name' => clienttranslate('Oravan Calsan'),
@@ -621,6 +753,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: :discard: 1 :card: <b>PACK</b>. \nLancez +1 :d6-blue: / :missing: <b>PACK</b>.'),
         'power_type' => 'discard',
         'power_code' => 'oravan_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     68 => [
         'name' => clienttranslate('Justin Rubino'),
@@ -630,6 +764,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Ignorez :d6-green: / :card: <b>FEULEUR</b>'),
         'power_type' => 'tap',
         'power_code' => 'justin_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     69 => [
         'name' => clienttranslate('Amon Amon'),
@@ -639,6 +775,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Ignorez :d6-white: / :d6-black:'),
         'power_type' => 'tap',
         'power_code' => 'amon_power',
+        'is_available' => true,
+        'is_multiplayer_only' => false,
     ],
     70 => [
         'name' => clienttranslate('Jared Smeth'),
@@ -648,6 +786,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Lancez +1 :d6-blue: / :card: <b>OISELEUR</b>.'),
         'power_type' => 'tap',
         'power_code' => 'jared_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     71 => [
         'name' => clienttranslate('Cassandre'),
@@ -658,6 +798,8 @@ $this->characters = [
         'power_type' => 'discard',
         'power_code' => 'cassandre_power',
         'extension' => '2-players',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     72 => [
         'name' => clienttranslate('Ragnard Telsen'),
@@ -668,6 +810,8 @@ $this->characters = [
         'power_type' => 'tap',
         'power_code' => 'ragnard_power',
         'extension' => '2-players',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     73 => [
         'name' => clienttranslate('Lorwin Grenwald'),
@@ -678,6 +822,8 @@ $this->characters = [
         'power_type' => 'tap',
         'power_code' => 'lorwin_power',
         'extension' => '2-players',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     74 => [
         'name' => clienttranslate('Josmina'),
@@ -687,6 +833,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: :rest: / :d6-black:'),
         'power_type' => 'tap',
         'power_code' => 'josmina_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     75 => [
         'name' => clienttranslate('Nadia Ingot'),
@@ -696,6 +844,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Remettez un vent du plateau dans la pioche. Piochez un autre vent si c\'est le vôtre.'),
         'power_type' => 'tap',
         'power_code' => 'nadia_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     76 => [
         'name' => clienttranslate('Eyline Bisch'),
@@ -705,6 +855,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Gagnez +1 :moral: / :d6-black:'),
         'power_type' => 'tap',
         'power_code' => 'eyline_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     77 => [
         'name' => clienttranslate('Donmaer'),
@@ -714,15 +866,19 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Ajoutez et placez jusqu\'à 2 :d6-green:'),
         'power_type' => 'tap',
         'power_code' => 'donmaer_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     78 => [
         'name' => clienttranslate('Kyo Torantor'),
         'type' => CHAR_PACK,
         'position' => 'pack',
         'tier' => 3,
-        'power' => clienttranslate(':tap:: Lancez +1 :d6-blue: Si vous avez 1 autre :card: <b>Torantor</b>, :rest: cette :card:.'),
+        'power' => clienttranslate(':tap:: Lancez +1 :d6-blue: Si vous avez 1 autre :card: <b>Torantor</b>, :rest: 1 autre :card: <b>Torantor</b>.'),
         'power_type' => 'tap',
         'power_code' => 'kyo_power',
+        'is_available' => true,
+        'is_multiplayer_only' => false,
     ],
     79 => [
         'name' => clienttranslate('Bert Haring'),
@@ -733,6 +889,8 @@ $this->characters = [
         'power_type' => 'tap',
         'power_code' => 'bert_power',
         'extension' => '2-players',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     80 => [
         'name' => clienttranslate('Sarbella'),
@@ -742,6 +900,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Ne perdez pas de :moral: en utilisant vos alliés OU gagnez +1 :moral:'),
         'power_type' => 'tap',
         'power_code' => 'sarbella_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     81 => [
         'name' => clienttranslate('Le Daron'),
@@ -751,6 +911,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Lancez 1 :d6-blue: : \n1-2 : Perdez -1 :moral: \n3-5 : Gagnez +2 :moral: \n6 : Toutes les <b>Hordes</b> gagnent +2 :moral:'),
         'power_type' => 'tap',
         'power_code' => 'le_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     82 => [
         'name' => clienttranslate('Le Dragon'),
@@ -759,7 +921,9 @@ $this->characters = [
         'tier' => 3,
         'power' => clienttranslate(':tap:: :tap: 1 autre :card: et gagnez +4 :moral:'),
         'power_type' => 'tap',
-        'power_code' => 'le_power',
+        'power_code' => 'dragon_power',
+        'is_available' => true,
+        'is_multiplayer_only' => false,
     ],
     83 => [
         'name' => clienttranslate('Sylvana Delcourt'),
@@ -770,6 +934,8 @@ $this->characters = [
         'power_type' => 'tap',
         'power_code' => 'sylvana_power',
         'extension' => '2-players',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     84 => [
         'name' => clienttranslate('Saphira Montclair'),
@@ -780,6 +946,8 @@ $this->characters = [
         'power_type' => 'tap',
         'power_code' => 'saphira_power',
         'extension' => '2-players',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     85 => [
         'name' => clienttranslate('Darius Voren'),
@@ -790,6 +958,8 @@ $this->characters = [
         'power_type' => 'tap',
         'power_code' => 'darius_power',
         'extension' => '2-players',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     86 => [
         'name' => clienttranslate('Céleste Daramond'),
@@ -800,6 +970,8 @@ $this->characters = [
         'power_type' => 'tap',
         'power_code' => 'céleste_power',
         'extension' => '2-players',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     87 => [
         'name' => clienttranslate('Alric Vorn'),
@@ -810,6 +982,8 @@ $this->characters = [
         'power_type' => 'tap',
         'power_code' => 'alric_power',
         'extension' => '2-players',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     88 => [
         'name' => clienttranslate('Cassia Montclair'),
@@ -820,6 +994,8 @@ $this->characters = [
         'power_type' => 'tap',
         'power_code' => 'cassia_power',
         'extension' => '2-players',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     89 => [
         'name' => clienttranslate('Sensemune'),
@@ -829,6 +1005,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Placez 1 de vos :card: <b>FER</b> sur ce :card: Il compte comme <b>FER</b> et <b>TRAÎNE</b>.'),
         'power_type' => 'tap',
         'power_code' => 'sensemune_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     90 => [
         'name' => clienttranslate('Sensesune'),
@@ -838,6 +1016,8 @@ $this->characters = [
         'power' => clienttranslate(':tap:: Placez 1 de vos :card:  <b>PACK</b> sur ce :card: Il compte comme <b>PACK</b> et <b>TRAÎNE</b>.'),
         'power_type' => 'tap',
         'power_code' => 'sensesune_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     91 => [
         'name' => clienttranslate('Régitha'),
@@ -846,7 +1026,9 @@ $this->characters = [
         'tier' => 2,
         'power' => clienttranslate(':tap:: Ignorez TOUS :d6-black-white-green: Une fois utilisée, <b>Régitha</b> ne peut être :discard:, remplacée ou :rest:'),
         'power_type' => 'discard',
-        'power_code' => 'régitha_power',
+        'power_code' => 'regitha_power',
+        'is_available' => true,
+        'is_multiplayer_only' => false,
     ],
     92 => [
         'name' => clienttranslate('Barakiel'),
@@ -856,6 +1038,8 @@ $this->characters = [
         'power' => clienttranslate(':discard:: Tous les :d6-black: sont :d6-green: et les :d6-violet: sont :d6-blue:\n:force-x: ⮕ :force-1:'),
         'power_type' => 'discard',
         'power_code' => 'barakiel_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     93 => [
         'name' => clienttranslate('Charlize Soulages'),
@@ -865,6 +1049,8 @@ $this->characters = [
         'power' => clienttranslate(':discard:: Gagnez +2 :moral: / :d6-black:'),
         'power_type' => 'discard',
         'power_code' => 'charlize_power',
+        'is_available' => true,
+        'is_multiplayer_only' => false,
     ],
     94 => [
         'name' => clienttranslate('Minerva'),
@@ -874,6 +1060,8 @@ $this->characters = [
         'power' => clienttranslate(':discard:: Recrutez 1 :card: dans n\'importe quel village.'),
         'power_type' => 'discard',
         'power_code' => 'minerva_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     95 => [
         'name' => clienttranslate('Dr. Ana Pride'),
@@ -883,6 +1071,8 @@ $this->characters = [
         'power' => clienttranslate(':discard:: Dévoilez +1 :card: / :tuile: village.'),
         'power_type' => 'discard',
         'power_code' => 'dr_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     96 => [
         'name' => clienttranslate('Ivana'),
@@ -892,6 +1082,8 @@ $this->characters = [
         'power' => clienttranslate(':discard:: Ignorez :d6-black-white-green: < à :force-x:'),
         'power_type' => 'discard',
         'power_code' => 'ivana_power',
+        'is_available' => true,
+        'is_multiplayer_only' => false,
     ],
     97 => [
         'name' => clienttranslate('Hulan'),
@@ -901,6 +1093,8 @@ $this->characters = [
         'power' => clienttranslate('Placez 1 :d6-blue-violet: / :card: <b>OISELEUR</b> puis :discard: <b>Hulan</b>.'),
         'power_type' => 'discard',
         'power_code' => 'hulan_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     98 => [
         'name' => clienttranslate('Zaffa Torantor'),
@@ -910,6 +1104,8 @@ $this->characters = [
         'power' => clienttranslate(':discard:: Lancez +1 :d6-violet:, :rest: 1 autre :card: <b>Torantor</b>.'),
         'power_type' => 'discard',
         'power_code' => 'zaffa_power',
+        'is_available' => true,
+        'is_multiplayer_only' => false,
     ],
     99 => [
         'name' => clienttranslate('Eolia Luthan'),
@@ -920,6 +1116,8 @@ $this->characters = [
         'power_type' => 'discard',
         'power_code' => 'eolia_power',
         'extension' => '2-players',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     100 => [
         'name' => clienttranslate('Torren Varnay'),
@@ -929,6 +1127,8 @@ $this->characters = [
         'power' => clienttranslate(':discard:: Augmentez la force d\'un vent adjacent.'),
         'power_type' => 'discard',
         'power_code' => 'torren_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     101 => [
         'name' => clienttranslate('Unicorn'),
@@ -939,6 +1139,8 @@ $this->characters = [
         'power_type' => 'discard',
         'power_code' => 'unicorn_power',
         'extension' => '2-players',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     102 => [
         'name' => clienttranslate('Lihn'),
@@ -948,6 +1150,8 @@ $this->characters = [
         'power' => clienttranslate(':discard:: Doublez les points gagnés de ce tour.'),
         'power_type' => 'discard',
         'power_code' => 'lihn_power',
+        'is_available' => true,
+        'is_multiplayer_only' => false,
     ],
     103 => [
         'name' => clienttranslate('Tala Warai'),
@@ -957,6 +1161,8 @@ $this->characters = [
         'power' => clienttranslate(':discard:: Remplacez une :tuile: grise par une autre :tuile: grise de la réserve. Le vent reste à sa place.'),
         'power_type' => 'discard',
         'power_code' => 'tala_power',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     104 => [
         'name' => clienttranslate('Jonas'),
@@ -967,6 +1173,8 @@ $this->characters = [
         'power_type' => 'discard',
         'power_code' => 'jonas_power',
         'extension' => '2-players',
+        'is_available' => true,
+        'is_multiplayer_only' => false,
     ],
     105 => [
         'name' => clienttranslate('Selena Vane'),
@@ -977,6 +1185,8 @@ $this->characters = [
         'power_type' => 'discard',
         'power_code' => 'selena_power',
         'extension' => '2-players',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     106 => [
         'name' => clienttranslate('Eryk Thorne'),
@@ -987,6 +1197,8 @@ $this->characters = [
         'power_type' => 'discard',
         'power_code' => 'eryk_power',
         'extension' => '2-players',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     107 => [
         'name' => clienttranslate('Lorien Daramond'),
@@ -997,6 +1209,8 @@ $this->characters = [
         'power_type' => 'discard',
         'power_code' => 'lorien_power',
         'extension' => '2-players',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     108 => [
         'name' => clienttranslate('Erynn Luthan'),
@@ -1007,6 +1221,8 @@ $this->characters = [
         'power_type' => 'discard',
         'power_code' => 'erynn_power',
         'extension' => '2-players',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
     109 => [
         'name' => clienttranslate('Trump\'ette'),
@@ -1017,5 +1233,7 @@ $this->characters = [
         'power_type' => 'discard',
         'power_code' => 'trumpette_power',
         'extension' => '2-players',
+        'is_available' => false,
+        'is_multiplayer_only' => false,
     ],
 ];

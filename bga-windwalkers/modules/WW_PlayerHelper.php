@@ -55,9 +55,18 @@ trait WW_PlayerHelper
     
     /**
      * Modify player moral (clamped to 0-9)
+     * If Lihn's power is active and delta is positive, double the gain
      */
     function modifyPlayerMoral(int $player_id, int $delta): int
     {
+        // Check if Lihn's double points is active (only for positive gains)
+        if ($delta > 0) {
+            $lihn_active = (int)($this->getGlobalVariable('lihn_double_points') ?? 0);
+            if ($lihn_active) {
+                $delta *= 2;
+            }
+        }
+        
         $this->DbQuery(
             "UPDATE player SET player_moral = GREATEST(0, LEAST(9, player_moral + $delta)) WHERE player_id = $player_id"
         );
@@ -136,5 +145,58 @@ trait WW_PlayerHelper
             }
         }
         return $enriched;
+    }
+    
+    /**
+     * Check if player has a specific character (by power_code) active in their horde
+     * @param int $player_id Player ID
+     * @param string $power_code The power code to check (e.g. 'lyara_power')
+     * @param bool $mustBeAvailable If true, the power must not be exhausted
+     * @return bool
+     */
+    function hasCharacterWithPower(int $player_id, string $power_code, bool $mustBeAvailable = false): bool
+    {
+        // Find the character ID with this power_code
+        $char_id = null;
+        foreach ($this->characters as $id => $char) {
+            if (isset($char['power_code']) && $char['power_code'] === $power_code) {
+                $char_id = $id;
+                break;
+            }
+        }
+        
+        if ($char_id === null) {
+            return false;
+        }
+        
+        // Check if player has this character in their horde
+        $exhausted_condition = $mustBeAvailable ? " AND card_power_used = 0" : "";
+        $count = (int)$this->getUniqueValueFromDB(
+            "SELECT COUNT(*) FROM card WHERE card_location = 'horde_$player_id' AND card_type_arg = $char_id" . $exhausted_condition
+        );
+        
+        return $count > 0;
+    }
+    
+    /**
+     * Check if player has Lyara l'Inspirante in their horde (villages = cities)
+     */
+    function hasLyaraActive(int $player_id): bool
+    {
+        return $this->hasCharacterWithPower($player_id, 'lyara_power', false);
+    }
+    
+    /**
+     * Check if a tile should be treated as a city (actual city OR village with Lyara)
+     */
+    function isTreatedAsCity(array $tile, int $player_id): bool
+    {
+        if ($tile['tile_type'] === 'city') {
+            return true;
+        }
+        if ($tile['tile_type'] === 'village' && $this->hasLyaraActive($player_id)) {
+            return true;
+        }
+        return false;
     }
 }

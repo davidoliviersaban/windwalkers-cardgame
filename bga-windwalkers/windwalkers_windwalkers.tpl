@@ -39,7 +39,7 @@
                 
                 <!-- Horde Dice Column -->
                 <div class="ww_dice_section">
-                    <h4>{HORDE_DICE}</h4>
+                    <h4>{HORDE_DICE} <span id="ww_sort_dice_btn" class="ww_action_btn" title="{SORT_DICE}">⇅</span></h4>
                     <div id="ww_horde_dice">
                         <!-- Blue dice will appear here -->
                     </div>

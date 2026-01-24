@@ -20,6 +20,11 @@ def wrap_with_letter_spacing(text, letter_spacing_value = '-5120')
   end
 end
 
+# Helper function to sanitize filename (remove spaces, punctuation, and special characters except accented letters)
+def sanitize_filename(name)
+  name.to_s.gsub(/[^a-zA-Z0-9À-ÿ]/, '')
+end
+
 def drawCards(deck, dirname, now)
   rect layout: :bleed
 
@@ -118,21 +123,21 @@ def drawCards(deck, dirname, now)
   text str: now, layout: :date
   text str: deck["Id"], layout: :id_card
   text str: deck["Retravailler"], layout: :date, x: 500
-  save_png prefix: deck["Id"].zip(deck["Position"],deck["Nom"],deck["Tier"]).map{|name| "%03d.%s.%s.T%s."%name}, dir: dirname#dir: '_cards'
+  save_png prefix: deck["Id"].zip(deck["Position"],deck["Nom"],deck["Tier"]).map{|id, pos, nom, tier| "%03d.%s.%s.T%s." % [id, pos, sanitize_filename(nom), tier]}, dir: dirname#dir: '_cards'
 
 end
 
 def drawCutlines(deck,dirname)
     rect layout: :bleed
     rect layout: :cut
-    save_png prefix: deck["Id"].zip(deck["Position"],deck["Nom"],deck["Tier"]).map{|name| "%03d.%s.%s.T%s."%name}, dir: dirname#dir: '_cards'
+    save_png prefix: deck["Id"].zip(deck["Position"],deck["Nom"],deck["Tier"]).map{|id, pos, nom, tier| "%03d.%s.%s.T%s." % [id, pos, sanitize_filename(nom), tier]}, dir: dirname#dir: '_cards'
 end
 
 def drawBack(deck, dirname)
     rect layout: :bleed
     rect layout: :cut, stroke_color: :black
     png file: deck["Position"].map{ |img| "src/resources/images/cover_"+img.downcase+".png"}, layout: :inside
-    save_png prefix: deck["Id"].zip(deck["Position"],deck["Nom"],deck["Tier"]).map{|name| "%03d.%s.%s.T%s."%name}, dir: dirname#dir: '_cards'
+    save_png prefix: deck["Id"].zip(deck["Position"],deck["Nom"],deck["Tier"]).map{|id, pos, nom, tier| "%03d.%s.%s.T%s." % [id, pos, sanitize_filename(nom), tier]}, dir: dirname#dir: '_cards'
 end
 
 Squib::Deck.new(cards: deck1["Nom"].size,

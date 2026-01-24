@@ -681,6 +681,20 @@
     letter-spacing: 0.5px;
 }
 
+#ww_sort_dice_btn {
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.2);
+    margin-left: 6px;
+    transition: background 0.2s;
+}
+
+#ww_sort_dice_btn:hover {
+    background: rgba(255,255,255,0.4);
+}
+
 .ww_dice_sum {
     font-size: 13px;
     font-weight: bold;
@@ -928,6 +942,12 @@
     border-radius: 4px;
 }
 
+/* Dice with +2 or more modifier */
+.ww_dice.ww_dice_mod_plus2 {
+    box-shadow: 0 0 16px rgba(0, 255, 0, 1) !important;
+    border: 4px solid #00ff00;
+}
+
 /* Dice with -1 modifier */
 .ww_dice.ww_dice_mod_minus {
     box-shadow: 0 0 12px rgba(255, 100, 0, 1) !important;
@@ -945,6 +965,39 @@
     font-weight: bold;
     padding: 2px 4px;
     border-radius: 4px;
+}
+
+/* Dice with -2 or less modifier */
+.ww_dice.ww_dice_mod_minus2 {
+    box-shadow: 0 0 16px rgba(255, 50, 0, 1) !important;
+    border: 4px solid #ff3200;
+}
+
+/* Badge for modifier display (used when modifier > 1 or < -1) */
+.ww_dice_mod_badge {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background: #333;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 6px;
+    z-index: 10;
+    border: 2px solid white;
+    min-width: 20px;
+    text-align: center;
+}
+
+.ww_dice.ww_dice_mod_plus2 .ww_dice_mod_badge {
+    background: #00cc00;
+    color: black;
+}
+
+.ww_dice.ww_dice_mod_minus2 .ww_dice_mod_badge {
+    background: #ff3200;
+    color: white;
 }
 
 /* Ignored dice (Uther's power) */
@@ -1265,7 +1318,6 @@
 
 .ww_draft_card.ww_selected {
     border-color: #4caf50;
-    background: #e8f5e9;
     box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
 }
 

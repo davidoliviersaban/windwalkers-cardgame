@@ -40,6 +40,7 @@ class view_windwalkers_windwalkers extends game_view
         $this->tpl['FER'] = $this->_("Fer");
         $this->tpl['PACK'] = $this->_("Pack");
         $this->tpl['TRAINE'] = $this->_("Traîne");
+        $this->tpl['SORT_DICE'] = $this->_("Sort dice");
 
         /*********** Do not change anything below this line  ************/
     }

@@ -376,8 +376,8 @@ trait WW_Confrontation
                 $this->applyYavoPower($player_id, $card_id);
                 break;
             case 'kyo_power':
-                // Kyo Torantor: +1 dé, si autre Torantor repose cette carte
-                $this->applyKyoPower($player_id, $card_id);
+                // Kyo Torantor: +1 dé, si autre Torantor repose un autre Torantor
+                $this->applyKyoPower($player_id, $card_id, $target_card_id);
                 break;
             case 'zaffa_power':
                 // Zaffa Torantor: +1 dé violet, repose 1 autre Torantor
@@ -402,6 +402,10 @@ trait WW_Confrontation
             case 'blanchette_power':
                 // Blanchette de Gaude: ±1 sur dés de horde, nombre = force du vent
                 $this->applyBlanchettePower($player_id, $params);
+                break;
+            case 'ukkiba_power':
+                // Ukkiba Tomoshi: -1 moral, puis ±1 sur dés = moral restant
+                $this->applyUkkibaPower($player_id, $params);
                 break;
             case 'waldo_power':
                 // Waldo Waldmann: Ignorer 1 dé terrain par hordier manquant
@@ -439,6 +443,46 @@ trait WW_Confrontation
                 // Duke Arnaud N.: Discard to place 2 of your dice
                 $this->applyDukePower($player_id, $card_id, $params);
                 break;
+            case 'lethune_power':
+                // Lethune de Prals: Roll +1 die per moral on tile
+                $this->applyLethunePower($player_id);
+                break;
+            case 'regitha_power':
+                // Régitha: Ignore ALL challenge dice, but can't be discarded/replaced/rested after
+                $this->applyRegithaPower($player_id, $card_id);
+                break;
+            case 'lyara_power':
+                // Lyara l'Inspirante: On villages, treat as city (ignore all dice, recruit any type)
+                $this->applyLyaraPower($player_id, $card_id);
+                break;
+            case 'topilzin_power':
+                // Topilzin: Discard to set wind force to 3
+                $this->applyTopilzinPower($player_id, $card_id);
+                break;
+            case 'osuros_power':
+                // Osuros: Discard to set wind force to 6 (FUREVENT)
+                $this->applyOsurosPower($player_id, $card_id);
+                break;
+            case 'tula_power':
+                // Tula: Discard to set wind force to 2
+                $this->applyTulaPower($player_id, $card_id);
+                break;
+            case 'charlize_power':
+                // Charlize Soulages: Discard to gain +2 moral per black die
+                $this->applyCharlizePower($player_id, $card_id);
+                break;
+            case 'jonas_power':
+                // Jonas: Choose wind token from bag (place on current tile)
+                $this->applyJonasPower($player_id, $card_id, $params);
+                break;
+            case 'lihn_power':
+                // Lihn: Double points gained this turn
+                $this->applyLihnPower($player_id, $card_id);
+                break;
+            case 'dragon_power':
+                // Dragon: Tap another hordier to gain +4 moral
+                $this->applyDragonPower($player_id, $card_id, $target_card_id);
+                break;
                 
             // Add more powers here as they are implemented
             default:
@@ -471,14 +515,30 @@ trait WW_Confrontation
             throw new BgaUserException($this->_("This power only works on FUREVENT tiles (wind force 6)"));
         }
         
-        // Rest all hordiers EXCEPT Galas himself (set card_power_used = 0)
-        $this->DbQuery("UPDATE card SET card_power_used = 0 WHERE card_location = 'horde_$player_id' AND card_id != $galas_card_id");
+        // Get protected cards (like Régitha after using her power)
+        $protected_cards = json_decode($this->getGlobalVariable('protected_cards') ?? '[]', true);
+        
+        // Build list of cards to exclude from resting
+        $exclude_ids = [$galas_card_id];
+        if (!empty($protected_cards)) {
+            $exclude_ids = array_merge($exclude_ids, array_map('intval', $protected_cards));
+        }
+        $exclude_sql = implode(',', $exclude_ids);
+        
+        // Rest all hordiers EXCEPT Galas himself and protected cards (set card_power_used = 0)
+        $sql = "UPDATE card SET card_power_used = 0 WHERE card_location = 'horde_$player_id' AND card_id NOT IN ($exclude_sql)";
+        $this->DbQuery($sql);
+        
+        // Get list of cards that were rested for the notification
+        $rested_cards = $this->getObjectListFromDB("SELECT card_id FROM card WHERE card_location = 'horde_$player_id' AND card_id NOT IN ($exclude_sql)");
+        $rested_ids = array_map(function($c) { return (int)$c['card_id']; }, $rested_cards);
         
         // Notify all players
-        $this->notifyAllPlayers('allHordiersRested', clienttranslate('${player_name} uses Galas\' power: All other hordiers are rested!'), [
+        $this->notifyAllPlayers('allHordiersRested', clienttranslate('\${player_name} uses Galas\' power: All other hordiers are rested!'), [
             'player_id' => $player_id,
             'player_name' => $this->getActivePlayerName(),
-            'except_card_id' => $galas_card_id
+            'except_card_id' => $galas_card_id,
+            'rested_cards' => $rested_ids
         ]);
     }
     
@@ -745,6 +805,44 @@ trait WW_Confrontation
                 'new_value' => $dice['new_value']
             ]);
         }
+    }
+    
+    /**
+     * Lethune de Prals's power: Roll +1 blue die per moral on tile
+     * :tap:: Lancez +1 :d6-blue: / :moral: sur :tuile:
+     */
+    private function applyLethunePower(int $player_id): void
+    {
+        // Get the selected tile
+        $tile_id = $this->getGameStateValue('selected_tile');
+        if (!$tile_id) {
+            throw new BgaUserException($this->_("No tile selected"));
+        }
+        
+        $tile = $this->getObjectFromDB("SELECT * FROM tile WHERE tile_id = $tile_id");
+        if (!$tile) {
+            throw new BgaUserException($this->_("Tile not found"));
+        }
+        
+        // Get tile's moral effect directly from the tile table
+        $moral_effect = (int)($tile['tile_moral_effect'] ?? 0);
+        
+        if ($moral_effect <= 0) {
+            throw new BgaUserException($this->_("This tile has no moral bonus - cannot use Lethune's power"));
+        }
+        
+        // Roll +1 blue die per moral on tile
+        for ($i = 0; $i < $moral_effect; $i++) {
+            $this->rollExtraDie($player_id, 'blue', 'Lethune de Prals');
+        }
+        
+        // Notify
+        $this->notifyAllPlayers('message', clienttranslate('${player_name} uses Lethune de Prals: +${count} dice (${moral} moral on tile)'), [
+            'player_id' => $player_id,
+            'player_name' => $this->getActivePlayerName(),
+            'count' => $moral_effect,
+            'moral' => $moral_effect
+        ]);
     }
     
     /**
@@ -1099,26 +1197,45 @@ trait WW_Confrontation
     }
     
     /**
-     * Kyo Torantor's power: Roll +1 die, if another Torantor rest this card
+     * Kyo Torantor's power: Roll +1 die, if another Torantor exists, rest another Torantor
      */
-    private function applyKyoPower(int $player_id, int $card_id): void
+    private function applyKyoPower(int $player_id, int $card_id, ?int $target_card_id): void
     {
         // Roll +1 blue die
         $this->rollExtraDie($player_id, 'blue', 'Kyo Torantor');
         
-        // Check for another Torantor
-        if ($this->hasAnotherTorantor($player_id, $card_id)) {
-            // Rest Kyo (un-exhaust him)
-            $this->DbQuery("UPDATE card SET card_power_used = 0 WHERE card_id = $card_id");
+        // Check for another Torantor and if target was provided
+        if ($this->hasAnotherTorantor($player_id, $card_id) && $target_card_id) {
+            // Validate target is another Torantor (not Kyo himself)
+            if ($target_card_id == $card_id) {
+                throw new BgaUserException($this->_("Kyo cannot rest himself"));
+            }
             
-            // Get character name for notification
-            $card = $this->getObjectFromDB("SELECT card_type_arg FROM card WHERE card_id = $card_id");
-            $char_id = (int)$card['card_type_arg'];
-            $char = $this->characters[$char_id] ?? ['name' => 'Kyo Torantor'];
+            $target = $this->getObjectFromDB("SELECT * FROM card WHERE card_id = $target_card_id AND card_location = 'horde_$player_id'");
+            if (!$target) {
+                throw new BgaUserException($this->_("Invalid target card"));
+            }
             
-            $this->notifyAllPlayers('hordierRested', clienttranslate('${character_name} is rested (Torantor bonus)'), [
+            $char_id = (int)$target['card_type_arg'];
+            $char = $this->characters[$char_id] ?? null;
+            
+            // Check target is a Torantor
+            if (!$char || stripos($char['name'], 'Torantor') === false) {
+                throw new BgaUserException($this->_("Target must be a Torantor"));
+            }
+            
+            // Check if target is protected (like Régitha)
+            $protected_cards = json_decode($this->getGlobalVariable('protected_cards') ?? '[]', true);
+            if (in_array($target_card_id, $protected_cards)) {
+                throw new BgaUserException($this->_("This card cannot be rested"));
+            }
+            
+            // Rest the target Torantor
+            $this->DbQuery("UPDATE card SET card_power_used = 0 WHERE card_id = $target_card_id");
+            
+            $this->notifyAllPlayers('hordierRested', clienttranslate('${character_name} is rested (Kyo Torantor)'), [
                 'player_id' => $player_id,
-                'card_id' => $card_id,
+                'card_id' => $target_card_id,
                 'character_name' => $char['name']
             ]);
         }
@@ -1142,6 +1259,12 @@ trait WW_Confrontation
                 
                 // Check target is a Torantor
                 if ($char && stripos($char['name'], 'Torantor') !== false) {
+                    // Check if target is protected (like Régitha)
+                    $protected_cards = json_decode($this->getGlobalVariable('protected_cards') ?? '[]', true);
+                    if (in_array($target_card_id, $protected_cards)) {
+                        throw new BgaUserException($this->_("This card cannot be rested"));
+                    }
+                    
                     // Rest the target
                     $this->DbQuery("UPDATE card SET card_power_used = 0 WHERE card_id = $target_card_id");
                     
@@ -1216,10 +1339,14 @@ trait WW_Confrontation
     }
     
     /**
-     * Kunigunde Nosske's power: If sum of horde dice > challenge, ignore all white dice
+     * Kunigunde Nosske's power: If sum of horde dice >= white+green dice, ignore all white dice
      */
     private function applyKunigundePower(int $player_id): void
     {
+        // Get already ignored dice
+        $current_ignored = json_decode($this->getGlobalVariable('uther_ignored_dice') ?? '[]', true);
+        $ignored_ids_str = empty($current_ignored) ? '0' : implode(',', $current_ignored);
+        
         // Get all player dice (blue)
         $player_dice = $this->getObjectListFromDB("SELECT * FROM dice_roll WHERE dice_owner = 'player' AND dice_type = 'blue'");
         $player_sum = 0;
@@ -1227,8 +1354,8 @@ trait WW_Confrontation
             $player_sum += (int)$dice['dice_value'];
         }
         
-        // Get all challenge dice (white + green + black)
-        $challenge_dice = $this->getObjectListFromDB("SELECT * FROM dice_roll WHERE dice_owner = 'challenge'");
+        // Get only white + green challenge dice that are NOT already ignored
+        $challenge_dice = $this->getObjectListFromDB("SELECT * FROM dice_roll WHERE dice_owner = 'challenge' AND dice_type IN ('white', 'green') AND dice_id NOT IN ($ignored_ids_str)");
         $challenge_sum = 0;
         foreach ($challenge_dice as $dice) {
             $challenge_sum += (int)$dice['dice_value'];
@@ -1236,27 +1363,26 @@ trait WW_Confrontation
         
         if ($player_sum <= $challenge_sum) {
             throw new BgaUserException(sprintf(
-                $this->_("Kunigunde's power requires horde dice sum (%d) > challenge sum (%d)"),
+                $this->_("Kunigunde's power requires horde dice sum (%d) > white+green sum (%d)"),
                 $player_sum,
                 $challenge_sum
             ));
         }
         
-        // Find all white dice and ignore them
-        $white_dice = $this->getObjectListFromDB("SELECT * FROM dice_roll WHERE dice_owner = 'challenge' AND dice_type = 'white'");
+        // Find all white dice that are NOT already ignored
+        $white_dice = $this->getObjectListFromDB("SELECT * FROM dice_roll WHERE dice_owner = 'challenge' AND dice_type = 'white' AND dice_id NOT IN ($ignored_ids_str)");
         
         if (empty($white_dice)) {
             throw new BgaUserException($this->_("No white dice to ignore"));
         }
         
-        // Build list of white dice IDs to ignore
+        // Build list of white dice IDs to ignore (use actual dice_id from database)
         $ignored_dice = [];
-        foreach ($white_dice as $index => $dice) {
-            $ignored_dice[] = 'white_' . $index;
+        foreach ($white_dice as $dice) {
+            $ignored_dice[] = (int)$dice['dice_id'];
         }
         
         // Add to ignored dice
-        $current_ignored = json_decode($this->getGlobalVariable('uther_ignored_dice') ?? '[]', true);
         $current_ignored = array_merge($current_ignored, $ignored_dice);
         $this->setGlobalVariable('uther_ignored_dice', json_encode($current_ignored));
         
@@ -1265,6 +1391,374 @@ trait WW_Confrontation
             'player_name' => $this->getActivePlayerName(),
             'ignored_dice' => $ignored_dice,
             'count' => count($ignored_dice)
+        ]);
+    }
+    
+    /**
+     * Régitha's power: Ignore ALL challenge dice
+     * Once used, Régitha cannot be discarded, replaced, or rested
+     */
+    private function applyRegithaPower(int $player_id, int $card_id): void
+    {
+        // Get ALL challenge dice
+        $challenge_dice = $this->getObjectListFromDB("SELECT * FROM dice_roll WHERE dice_owner = 'challenge'");
+        
+        if (empty($challenge_dice)) {
+            throw new BgaUserException($this->_("No challenge dice to ignore"));
+        }
+        
+        // Build list of all challenge dice IDs to ignore
+        $ignored_dice = [];
+        foreach ($challenge_dice as $dice) {
+            $ignored_dice[] = (int)$dice['dice_id'];
+        }
+        
+        // Add to ignored dice
+        $current_ignored = json_decode($this->getGlobalVariable('uther_ignored_dice') ?? '[]', true);
+        $current_ignored = array_merge($current_ignored, $ignored_dice);
+        $this->setGlobalVariable('uther_ignored_dice', json_encode($current_ignored));
+        
+        // Mark Régitha as "protected" using global variable
+        // She cannot be discarded, replaced, or rested after using her power
+        $protected_cards = json_decode($this->getGlobalVariable('protected_cards') ?? '[]', true);
+        $protected_cards[] = $card_id;
+        $this->setGlobalVariable('protected_cards', json_encode($protected_cards));
+        
+        $this->notifyAllPlayers('diceIgnored', clienttranslate('${player_name} uses Régitha to ignore ALL challenge dice! Régitha cannot be discarded or rested anymore.'), [
+            'player_id' => $player_id,
+            'player_name' => $this->getActivePlayerName(),
+            'ignored_dice' => $ignored_dice,
+            'count' => count($ignored_dice)
+        ]);
+        
+        // Notify about Régitha being protected
+        $this->notifyAllPlayers('cardProtected', '', [
+            'card_id' => $card_id
+        ]);
+    }
+    
+    /**
+     * Lyara l'Inspirante's power: Villages are treated as cities
+     * :tap:: :tuile: villages = :tuile: villes: Ignorez tous :d6-black-white-green: et vous recrutez tout type de :card:
+     * Si :rest-all: gagnez +1 :moral:
+     * 
+     * When activated on a village:
+     * - Ignore ALL challenge dice (like cities have no challenge)
+     * - Allow recruiting any card type (flag for recruitment phase)
+     * - +1 moral if player does rest-all later (checked in stRest)
+     */
+    private function applyLyaraPower(int $player_id, int $card_id): void
+    {
+        // Get the selected tile to check if it's a village
+        $tile_id = $this->getGameStateValue('selected_tile');
+        if (!$tile_id) {
+            throw new BgaUserException($this->_("No tile selected"));
+        }
+        
+        $tile = $this->getObjectFromDB("SELECT * FROM tile WHERE tile_id = $tile_id");
+        if (!$tile) {
+            throw new BgaUserException($this->_("Tile not found"));
+        }
+        
+        // Power only works on villages
+        if ($tile['tile_type'] !== 'village') {
+            throw new BgaUserException($this->_("This power only works on villages"));
+        }
+        
+        // Get ALL challenge dice
+        $challenge_dice = $this->getObjectListFromDB("SELECT * FROM dice_roll WHERE dice_owner = 'challenge'");
+        
+        // Build list of all challenge dice IDs to ignore (if any)
+        $ignored_dice = [];
+        foreach ($challenge_dice as $dice) {
+            $ignored_dice[] = (int)$dice['dice_id'];
+        }
+        
+        if (!empty($ignored_dice)) {
+            // Add to ignored dice
+            $current_ignored = json_decode($this->getGlobalVariable('uther_ignored_dice') ?? '[]', true);
+            $current_ignored = array_merge($current_ignored, $ignored_dice);
+            $this->setGlobalVariable('uther_ignored_dice', json_encode($current_ignored));
+        }
+        
+        // Set flag to treat this village as a city for recruitment
+        $this->setGlobalVariable('lyara_village_as_city', json_encode([
+            'active' => true,
+            'tile_id' => $tile_id,
+            'player_id' => $player_id
+        ]));
+        
+        $village_name = $this->village_types[$tile['tile_subtype']]['name'] ?? 'Village';
+        
+        $this->notifyAllPlayers('lyaraPowerUsed', clienttranslate('${player_name} uses Lyara\'s power: ${village_name} is treated as a city! All challenge dice ignored, any card type can be recruited.'), [
+            'player_id' => $player_id,
+            'player_name' => $this->getActivePlayerName(),
+            'village_name' => $village_name,
+            'ignored_dice' => $ignored_dice,
+            'count' => count($ignored_dice)
+        ]);
+    }
+    
+    /**
+     * Topilzin's power: Discard to set wind force to 3
+     * :discard:: :force-x: ⮕ :force-3:
+     */
+    private function applyTopilzinPower(int $player_id, int $card_id): void
+    {
+        // Get the selected tile
+        $tile_id = $this->getGameStateValue('selected_tile');
+        if (!$tile_id) {
+            throw new BgaUserException($this->_("No tile selected"));
+        }
+        
+        $tile = $this->getObjectFromDB("SELECT * FROM tile WHERE tile_id = $tile_id");
+        if (!$tile) {
+            throw new BgaUserException($this->_("Tile not found"));
+        }
+        
+        $old_force = (int)($tile['tile_wind_force'] ?? 0);
+        $new_force = 3;
+        
+        // Discard Topilzin
+        $this->DbQuery("UPDATE card SET card_location = 'discard' WHERE card_id = $card_id");
+        
+        // Set temporary wind force (stored in global variable for this confrontation)
+        $this->setGlobalVariable('modified_wind_force', json_encode([
+            'force' => $new_force,
+            'original' => $old_force,
+            'tile_id' => $tile_id
+        ]));
+        
+        // Update the tile's wind force temporarily in the DB for this confrontation
+        $this->DbQuery("UPDATE tile SET tile_wind_force = $new_force WHERE tile_id = $tile_id");
+        
+        $this->notifyAllPlayers('windForceChanged', clienttranslate('${player_name} sacrifices Topilzin: Wind force changes from ${old_force} to ${new_force}!'), [
+            'player_id' => $player_id,
+            'player_name' => $this->getActivePlayerName(),
+            'card_id' => $card_id,
+            'old_force' => $old_force,
+            'new_force' => $new_force,
+            'tile_id' => $tile_id
+        ]);
+    }
+    
+    /**
+     * Osuros's power: Discard to set wind force to 6 (FUREVENT)
+     * :discard:: :force-x: ⮕ :force-6:
+     */
+    private function applyOsurosPower(int $player_id, int $card_id): void
+    {
+        // Get the selected tile
+        $tile_id = $this->getGameStateValue('selected_tile');
+        if (!$tile_id) {
+            throw new BgaUserException($this->_("No tile selected"));
+        }
+        
+        $tile = $this->getObjectFromDB("SELECT * FROM tile WHERE tile_id = $tile_id");
+        if (!$tile) {
+            throw new BgaUserException($this->_("Tile not found"));
+        }
+        
+        $old_force = (int)($tile['tile_wind_force'] ?? 0);
+        $new_force = 6;
+        
+        // Discard Osuros
+        $this->DbQuery("UPDATE card SET card_location = 'discard' WHERE card_id = $card_id");
+        
+        // Set temporary wind force (stored in global variable for this confrontation)
+        $this->setGlobalVariable('modified_wind_force', json_encode([
+            'force' => $new_force,
+            'original' => $old_force,
+            'tile_id' => $tile_id
+        ]));
+        
+        // Update the tile's wind force in the DB
+        $this->DbQuery("UPDATE tile SET tile_wind_force = $new_force WHERE tile_id = $tile_id");
+        
+        $this->notifyAllPlayers('windForceChanged', clienttranslate('${player_name} sacrifices Osuros: Wind force changes from ${old_force} to ${new_force} (FUREVENT)!'), [
+            'player_id' => $player_id,
+            'player_name' => $this->getActivePlayerName(),
+            'card_id' => $card_id,
+            'old_force' => $old_force,
+            'new_force' => $new_force,
+            'tile_id' => $tile_id
+        ]);
+    }
+    
+    /**
+     * Tula's power: Discard to set wind force to 2
+     * :discard:: :force-x: ⮕ :force-2:
+     */
+    private function applyTulaPower(int $player_id, int $card_id): void
+    {
+        // Get the selected tile
+        $tile_id = $this->getGameStateValue('selected_tile');
+        if (!$tile_id) {
+            throw new BgaUserException($this->_("No tile selected"));
+        }
+        
+        $tile = $this->getObjectFromDB("SELECT * FROM tile WHERE tile_id = $tile_id");
+        if (!$tile) {
+            throw new BgaUserException($this->_("Tile not found"));
+        }
+        
+        $old_force = (int)($tile['tile_wind_force'] ?? 0);
+        $new_force = 2;
+        
+        // Discard Tula
+        $this->DbQuery("UPDATE card SET card_location = 'discard' WHERE card_id = $card_id");
+        
+        // Set temporary wind force (stored in global variable for this confrontation)
+        $this->setGlobalVariable('modified_wind_force', json_encode([
+            'force' => $new_force,
+            'original' => $old_force,
+            'tile_id' => $tile_id
+        ]));
+        
+        // Update the tile's wind force in the DB
+        $this->DbQuery("UPDATE tile SET tile_wind_force = $new_force WHERE tile_id = $tile_id");
+        
+        $this->notifyAllPlayers('windForceChanged', clienttranslate('${player_name} sacrifices Tula: Wind force changes from ${old_force} to ${new_force}!'), [
+            'player_id' => $player_id,
+            'player_name' => $this->getActivePlayerName(),
+            'card_id' => $card_id,
+            'old_force' => $old_force,
+            'new_force' => $new_force,
+            'tile_id' => $tile_id
+        ]);
+    }
+    
+    /**
+     * Charlize Soulages's power: Discard to gain +2 moral per black die
+     * :discard:: Gagnez +2 :moral: / :d6-black:
+     */
+    private function applyCharlizePower(int $player_id, int $card_id): void
+    {
+        // Count black dice in challenge
+        $black_dice_count = (int)$this->getUniqueValueFromDB(
+            "SELECT COUNT(*) FROM dice_roll WHERE dice_owner = 'challenge' AND dice_type = 'black'"
+        );
+        
+        if ($black_dice_count == 0) {
+            throw new BgaUserException($this->_("No black dice present - cannot use this power"));
+        }
+        
+        // Discard Charlize
+        $this->DbQuery("UPDATE card SET card_location = 'discard' WHERE card_id = $card_id");
+        
+        // Calculate moral gain: +2 per black die
+        $moral_gain = $black_dice_count * 2;
+        
+        // Apply moral
+        $new_moral = $this->modifyPlayerMoral($player_id, $moral_gain);
+        
+        $this->notifyAllPlayers('moralChanged', clienttranslate('${player_name} sacrifices Charlize: +${amount} moral (${black_count} black dice × 2)!'), [
+            'player_id' => $player_id,
+            'player_name' => $this->getActivePlayerName(),
+            'amount' => $moral_gain,
+            'new_moral' => $new_moral,
+            'black_count' => $black_dice_count,
+            'terrain_name' => 'Charlize'
+        ]);
+        
+        // Notify card discarded
+        $this->notifyAllPlayers('hordierLost', '', [
+            'player_id' => $player_id,
+            'card_id' => $card_id,
+            'character_name' => 'Charlize Soulages'
+        ]);
+    }
+    
+    /**
+     * Jonas's power: Choose wind token from bag and place on current tile
+     * :discard:: Choisissez le vent dans la pioche (le vôtre ou celui de l'adversaire).
+     * Client must pass wind_force = chosen wind force (1-6)
+     */
+    private function applyJonasPower(int $player_id, int $card_id, array $params): void
+    {
+        // Get chosen wind force from params
+        $chosen_force = (int)($params['wind_force'] ?? 0);
+        
+        if ($chosen_force < 1 || $chosen_force > 6) {
+            throw new BgaUserException($this->_("Invalid wind force selected"));
+        }
+        
+        // Get current tile
+        $tile_id = $this->getGameStateValue('selected_tile');
+        if (!$tile_id) {
+            throw new BgaUserException($this->_("No tile selected"));
+        }
+        
+        $tile = $this->getObjectFromDB("SELECT * FROM tile WHERE tile_id = $tile_id");
+        if (!$tile) {
+            throw new BgaUserException($this->_("Tile not found"));
+        }
+        
+        // Get a token with that force from the bag
+        $token = $this->getObjectFromDB(
+            "SELECT * FROM wind_token WHERE token_location = 'bag' AND token_force = $chosen_force LIMIT 1"
+        );
+        
+        if (!$token) {
+            throw new BgaUserException(sprintf(
+                $this->_("No wind token with force %d available in the bag"),
+                $chosen_force
+            ));
+        }
+        
+        // Get old wind force for notification
+        $old_force = (int)($tile['tile_wind_force'] ?? 0);
+        
+        // Discard Jonas first
+        $this->DbQuery("UPDATE card SET card_location = 'discard' WHERE card_id = $card_id");
+        
+        // Place the token on the tile
+        $this->DbQuery("UPDATE tile SET tile_wind_force = $chosen_force, tile_discovered = 1 WHERE tile_id = $tile_id");
+        $this->DbQuery("UPDATE wind_token SET token_location = 'tile', token_tile_id = $tile_id WHERE token_id = {$token['token_id']}");
+        
+        // Store modified wind force for challenge resolution
+        $this->setGlobalVariable('modified_wind_force', $chosen_force);
+        
+        // Notify all players about wind change
+        $this->notifyAllPlayers('windForceChanged', clienttranslate('${player_name} sacrifices Jonas: chooses wind force ${new_force}!'), [
+            'player_id' => $player_id,
+            'player_name' => $this->getActivePlayerName(),
+            'tile_id' => $tile_id,
+            'old_force' => $old_force,
+            'new_force' => $chosen_force
+        ]);
+        
+        // Notify card discarded
+        $this->notifyAllPlayers('hordierLost', '', [
+            'player_id' => $player_id,
+            'card_id' => $card_id,
+            'character_name' => 'Jonas'
+        ]);
+    }
+    
+    /**
+     * Lihn's power: Double points gained this turn
+     * :discard:: Doublez les points gagnés de ce tour.
+     */
+    private function applyLihnPower(int $player_id, int $card_id): void
+    {
+        // Discard Lihn
+        $this->DbQuery("UPDATE card SET card_location = 'discard' WHERE card_id = $card_id");
+        
+        // Set the double points flag for this turn
+        $this->setGlobalVariable('lihn_double_points', 1);
+        
+        // Notify all players
+        $this->notifyAllPlayers('lihnPowerActivated', clienttranslate('${player_name} sacrifices Lihn: points gained this turn will be doubled!'), [
+            'player_id' => $player_id,
+            'player_name' => $this->getActivePlayerName()
+        ]);
+        
+        // Notify card discarded
+        $this->notifyAllPlayers('hordierLost', '', [
+            'player_id' => $player_id,
+            'card_id' => $card_id,
+            'character_name' => 'Lihn'
         ]);
     }
     
@@ -1314,7 +1808,7 @@ trait WW_Confrontation
     
     /**
      * Blanchette de Gaude's power: ±1 on blue horde dice, number of modifications = wind force
-     * Client must pass dice_modifiers = array of {dice_id, modifier (+1 or -1)}
+     * Client must pass dice_modifiers = array of {dice_id, modifier (+1/-1 or cumulative)}
      */
     private function applyBlanchettePower(int $player_id, array $params): void
     {
@@ -1329,9 +1823,15 @@ trait WW_Confrontation
         
         $dice_modifiers = $params['dice_modifiers'] ?? [];
         
-        if (count($dice_modifiers) > $wind_force) {
+        // Count total modifications (sum of absolute values of modifiers)
+        $total_modifications = 0;
+        foreach ($dice_modifiers as $mod) {
+            $total_modifications += abs((int)($mod['modifier'] ?? 0));
+        }
+        
+        if ($total_modifications > $wind_force) {
             throw new BgaUserException(sprintf(
-                $this->_("You can only modify %d dice (wind force)"),
+                $this->_("You can only apply %d modifications (wind force)"),
                 $wind_force
             ));
         }
@@ -1340,7 +1840,7 @@ trait WW_Confrontation
         $player_dice = $this->getObjectListFromDB("SELECT * FROM dice_roll WHERE dice_owner = 'player' AND dice_type = 'blue'");
         $player_dice_ids = array_column($player_dice, 'dice_id');
         
-        // Apply each modifier
+        // Apply each modifier (can be cumulative now)
         foreach ($dice_modifiers as $mod) {
             $dice_id = (int)($mod['dice_id'] ?? 0);
             $modifier = (int)($mod['modifier'] ?? 0);
@@ -1349,7 +1849,7 @@ trait WW_Confrontation
                 continue;
             }
             
-            if ($modifier !== 1 && $modifier !== -1) {
+            if ($modifier === 0) {
                 continue;
             }
             
@@ -1364,8 +1864,84 @@ trait WW_Confrontation
             'player_id' => $player_id,
             'player_name' => $this->getActivePlayerName(),
             'dice_modifiers' => $dice_modifiers,
-            'count' => count($dice_modifiers)
+            'count' => $total_modifications
         ]);
+    }
+    
+    /**
+     * Ukkiba Tomoshi's power: -1 moral, then ±1 on blue dice (X = remaining moral)
+     * :tap:: Perdez -1 :moral:. Faites ±1 / :moral: restant sur :d6-blue:
+     */
+    private function applyUkkibaPower(int $player_id, array $params): void
+    {
+        // Get current moral
+        $current_moral = $this->getPlayerMoral($player_id);
+        
+        if ($current_moral <= 0) {
+            throw new BgaUserException($this->_("You need at least 1 moral to use this power"));
+        }
+        
+        // Lose 1 moral first
+        $new_moral = $this->modifyPlayerMoral($player_id, -1);
+        
+        // Notify moral loss
+        $this->notifyAllPlayers('moralChanged', clienttranslate('${player_name} loses 1 moral (Ukkiba)'), [
+            'player_id' => $player_id,
+            'player_name' => $this->getActivePlayerName(),
+            'new_moral' => $new_moral,
+            'amount' => -1
+        ]);
+        
+        // Max modifications = remaining moral after loss
+        $max_modifications = $new_moral;
+        
+        $dice_modifiers = $params['dice_modifiers'] ?? [];
+        
+        // Count total modifications (absolute values)
+        $total_modifications = 0;
+        foreach ($dice_modifiers as $mod) {
+            $total_modifications += abs((int)($mod['modifier'] ?? 0));
+        }
+        
+        if ($total_modifications > $max_modifications) {
+            throw new BgaUserException(sprintf(
+                $this->_("You can only make %d modifications (remaining moral)"),
+                $max_modifications
+            ));
+        }
+        
+        // Get only blue player dice
+        $player_dice = $this->getObjectListFromDB("SELECT * FROM dice_roll WHERE dice_owner = 'player' AND dice_type = 'blue'");
+        $player_dice_ids = array_column($player_dice, 'dice_id');
+        
+        // Apply each modifier (can be cumulative on same die)
+        foreach ($dice_modifiers as $mod) {
+            $dice_id = (int)($mod['dice_id'] ?? 0);
+            $modifier = (int)($mod['modifier'] ?? 0);
+            
+            if (!in_array($dice_id, $player_dice_ids)) {
+                continue;
+            }
+            
+            if ($modifier == 0) {
+                continue;
+            }
+            
+            $dice = $this->getObjectFromDB("SELECT * FROM dice_roll WHERE dice_id = $dice_id");
+            if ($dice) {
+                $new_value = max(1, min(6, $dice['dice_value'] + $modifier));
+                $this->DbQuery("UPDATE dice_roll SET dice_value = $new_value WHERE dice_id = $dice_id");
+            }
+        }
+        
+        if ($total_modifications > 0) {
+            $this->notifyAllPlayers('diceModified', clienttranslate('${player_name} modifies dice ${count} times (Ukkiba Tomoshi)'), [
+                'player_id' => $player_id,
+                'player_name' => $this->getActivePlayerName(),
+                'dice_modifiers' => $dice_modifiers,
+                'count' => $total_modifications
+            ]);
+        }
     }
     
     /**
@@ -1507,6 +2083,12 @@ trait WW_Confrontation
             throw new BgaUserException($this->_("This Hordier is not exhausted"));
         }
         
+        // Check if target is protected (like Régitha)
+        $protected_cards = json_decode($this->getGlobalVariable('protected_cards') ?? '[]', true);
+        if (in_array($target_card_id, $protected_cards)) {
+            throw new BgaUserException($this->_("This card cannot be rested"));
+        }
+        
         // Rest the target
         $this->DbQuery("UPDATE card SET card_power_used = 0 WHERE card_id = $target_card_id");
         
@@ -1518,6 +2100,61 @@ trait WW_Confrontation
             'player_id' => $player_id,
             'card_id' => $target_card_id,
             'character_name' => $target_char['name']
+        ]);
+    }
+
+    /**
+     * Dragon's power: Tap another hordier to gain +4 moral
+     * :tap:: :tap: 1 autre :card: et gagnez +4 :moral:
+     */
+    private function applyDragonPower(int $player_id, int $dragon_card_id, ?int $target_card_id): void
+    {
+        if ($target_card_id === null) {
+            throw new BgaUserException($this->_("You must select a Hordier to exhaust"));
+        }
+        
+        // Can't target itself
+        if ($target_card_id === $dragon_card_id) {
+            throw new BgaUserException($this->_("Dragon cannot target itself"));
+        }
+        
+        // Check target is in player's horde
+        $target = $this->getObjectFromDB(
+            "SELECT * FROM card WHERE card_id = $target_card_id AND card_location = 'horde_$player_id'"
+        );
+        
+        if (!$target) {
+            throw new BgaUserException($this->_("Invalid target"));
+        }
+        
+        // Check if target is already exhausted
+        if ($target['card_power_used']) {
+            throw new BgaUserException($this->_("This Hordier is already exhausted"));
+        }
+        
+        // Exhaust the target
+        $this->DbQuery("UPDATE card SET card_power_used = 1 WHERE card_id = $target_card_id");
+        
+        // Notify exhaustion
+        $target_type_arg = (int)$target['card_type_arg'];
+        $target_char = $this->characters[$target_type_arg] ?? ['name' => 'Hordier'];
+        
+        $this->notifyAllPlayers('hordierExhausted', clienttranslate('${character_name} is exhausted by Dragon'), [
+            'player_id' => $player_id,
+            'card_id' => $target_card_id,
+            'character_name' => $target_char['name']
+        ]);
+        
+        // Gain +4 moral
+        $this->DbQuery("UPDATE player SET player_moral = player_moral + 4 WHERE player_id = $player_id");
+        $newMoral = $this->getUniqueValueFromDB("SELECT player_moral FROM player WHERE player_id = $player_id");
+        
+        $this->notifyAllPlayers('moralChanged', clienttranslate('${player_name} gains ${points} moral from Dragon\'s power'), [
+            'player_id' => $player_id,
+            'player_name' => $this->getPlayerNameById($player_id),
+            'moral' => (int)$newMoral,
+            'points' => 4,
+            'reason' => 'dragon_power'
         ]);
     }
 
@@ -1995,19 +2632,29 @@ trait WW_Confrontation
     {
         $player_id = $this->getActivePlayerId();
         $tile_id = $this->getGameStateValue('selected_tile');
-        $tile = $this->getObjectFromDB("SELECT * FROM tile WHERE tile_id = $tile_id");
+        $tile = null;
+        $wind_force = 0;
+        if ($tile_id) {
+            $tile = $this->getObjectFromDB("SELECT * FROM tile WHERE tile_id = $tile_id");
+            $wind_force = $tile ? (int)$tile['tile_wind_force'] : 0;
+        }
         $player = $this->getObjectFromDB("SELECT player_moral FROM player WHERE player_id = $player_id");
         
         $horde_dice = $this->getCollectionFromDb("SELECT * FROM dice_roll WHERE dice_owner = 'player'");
         $challenge_dice = $this->getCollectionFromDb("SELECT * FROM dice_roll WHERE dice_owner = 'challenge'");
         
+        // Get ignored dice IDs (from powers like Lyara, Uther, Wanda, etc.)
+        $ignored_dice_json = $this->getGlobalVariable('uther_ignored_dice');
+        $ignored_dice = $ignored_dice_json ? json_decode($ignored_dice_json, true) : [];
+        
         return [
             'tile' => $tile,
-            'wind_force' => $tile['tile_wind_force'],
-            'moral' => (int)$player['player_moral'],
+            'wind_force' => $wind_force,
+            'moral' => (int)($player['player_moral'] ?? 0),
             'horde_dice' => array_values($horde_dice),
             'challenge_dice' => array_values($challenge_dice),
-            'horde' => $this->getHordeWithPowerStatus($player_id)
+            'horde' => $this->getHordeWithPowerStatus($player_id),
+            'ignored_dice' => $ignored_dice
         ];
     }
 
