@@ -171,6 +171,19 @@ class Windwalkers extends Table
             $this->initStat('player', 'chapter_4_par_bonus', 0, $player_id);
             $this->initStat('player', 'total_par_bonus', 0, $player_id);
             $this->initStat('player', 'total_days', 0, $player_id);
+            // Character preferences
+            $this->initStat('player', 'favorite_character_id', 0, $player_id);
+            $this->initStat('player', 'favorite_character_picks', 0, $player_id);
+            $this->initStat('player', 'most_played_character_id', 0, $player_id);
+            $this->initStat('player', 'most_played_character_uses', 0, $player_id);
+            $this->initStat('player', 'most_ignored_character_id', 0, $player_id);
+            $this->initStat('player', 'most_ignored_character_seen', 0, $player_id);
+            $this->initStat('player', 'most_benched_character_id', 0, $player_id);
+            $this->initStat('player', 'most_benched_character_picks', 0, $player_id);
+            $this->initStat('player', 'unique_characters_picked', 0, $player_id);
+            $this->initStat('player', 'unique_powers_used', 0, $player_id);
+            $this->initStat('player', 'traceur_name', '', $player_id);
+            $this->initStat('player', 'final_team', '', $player_id);
         }
     }
 
@@ -222,11 +235,28 @@ class Windwalkers extends Table
     }
 
     //////////////////////////////////////////////////////////////////////////////
-    //////////// Character Statistics Tracking
+    //////////// Character Statistics Tracking (Per-Player)
     //////////////////////////////////////////////////////////////////////////////
 
     /**
-     * Get character stats (proposed, selected, power_used counts)
+     * Get character stats for a player (proposed, selected, power_used counts)
+     */
+    protected function getPlayerCharacterStats(int $player_id): array
+    {
+        $json = $this->getGlobalVariable('character_stats_' . $player_id);
+        return $json ? json_decode($json, true) : [];
+    }
+
+    /**
+     * Save character stats for a player
+     */
+    protected function savePlayerCharacterStats(int $player_id, array $stats): void
+    {
+        $this->setGlobalVariable('character_stats_' . $player_id, json_encode($stats));
+    }
+
+    /**
+     * Get global character stats (for table-wide tracking)
      */
     protected function getCharacterStats(): array
     {
@@ -235,7 +265,7 @@ class Windwalkers extends Table
     }
 
     /**
-     * Save character stats
+     * Save global character stats
      */
     protected function saveCharacterStats(array $stats): void
     {
@@ -243,33 +273,49 @@ class Windwalkers extends Table
     }
 
     /**
-     * Increment a character stat
+     * Increment a character stat (global + per-player)
      * @param int $typeArg The character type_arg (ID)
      * @param string $statType One of: 'proposed', 'selected', 'power_used'
+     * @param int|null $player_id Optional player ID for per-player tracking
      */
-    protected function incCharacterStat(int $typeArg, string $statType): void
+    protected function incCharacterStat(int $typeArg, string $statType, ?int $player_id = null): void
     {
+        // Update global stats
         $stats = $this->getCharacterStats();
-
         if (!isset($stats[$typeArg])) {
             $stats[$typeArg] = ['proposed' => 0, 'selected' => 0, 'power_used' => 0];
         }
-
         if (isset($stats[$typeArg][$statType])) {
             $stats[$typeArg][$statType]++;
         }
-
         $this->saveCharacterStats($stats);
+
+        // Update per-player stats if player_id provided
+        if ($player_id !== null) {
+            $playerStats = $this->getPlayerCharacterStats($player_id);
+            if (!isset($playerStats[$typeArg])) {
+                $playerStats[$typeArg] = ['proposed' => 0, 'selected' => 0, 'power_used' => 0];
+            }
+            if (isset($playerStats[$typeArg][$statType])) {
+                $playerStats[$typeArg][$statType]++;
+            }
+            $this->savePlayerCharacterStats($player_id, $playerStats);
+        }
     }
 
     /**
-     * Track multiple characters as proposed (batch)
+     * Track multiple characters as proposed (batch) - for all players in current draft
      * @param array $typeArgs Array of character type_args
+     * @param array|null $playerIds Array of player IDs (null = all players)
      */
-    protected function trackCharactersProposed(array $typeArgs): void
+    protected function trackCharactersProposed(array $typeArgs, ?array $playerIds = null): void
     {
-        $stats = $this->getCharacterStats();
+        if ($playerIds === null) {
+            $playerIds = array_keys($this->loadPlayersBasicInfos());
+        }
 
+        // Update global stats
+        $stats = $this->getCharacterStats();
         foreach ($typeArgs as $typeArg) {
             $typeArg = (int) $typeArg;
             if (!isset($stats[$typeArg])) {
@@ -277,8 +323,77 @@ class Windwalkers extends Table
             }
             $stats[$typeArg]['proposed']++;
         }
-
         $this->saveCharacterStats($stats);
+
+        // Update per-player stats
+        foreach ($playerIds as $player_id) {
+            $playerStats = $this->getPlayerCharacterStats($player_id);
+            foreach ($typeArgs as $typeArg) {
+                $typeArg = (int) $typeArg;
+                if (!isset($playerStats[$typeArg])) {
+                    $playerStats[$typeArg] = ['proposed' => 0, 'selected' => 0, 'power_used' => 0];
+                }
+                $playerStats[$typeArg]['proposed']++;
+            }
+            $this->savePlayerCharacterStats($player_id, $playerStats);
+        }
+    }
+
+    /**
+     * Calculate character preference stats for a player at end of game
+     * Returns: favorite (most picked), most_played (power used most), most_ignored (seen but never picked), most_benched (picked but never used)
+     */
+    protected function calculateCharacterPreferences(int $player_id): array
+    {
+        $stats = $this->getPlayerCharacterStats($player_id);
+
+        $favorite = ['id' => 0, 'count' => 0];
+        $mostPlayed = ['id' => 0, 'count' => 0];
+        $mostIgnored = ['id' => 0, 'count' => 0];
+        $mostBenched = ['id' => 0, 'count' => 0];
+        $uniquePicked = 0;
+        $uniquePowerUsed = 0;
+
+        foreach ($stats as $charId => $charStats) {
+            $proposed = $charStats['proposed'] ?? 0;
+            $selected = $charStats['selected'] ?? 0;
+            $powerUsed = $charStats['power_used'] ?? 0;
+
+            // Favorite = most selected
+            if ($selected > $favorite['count']) {
+                $favorite = ['id' => (int) $charId, 'count' => $selected];
+            }
+
+            // Most played = most power used
+            if ($powerUsed > $mostPlayed['count']) {
+                $mostPlayed = ['id' => (int) $charId, 'count' => $powerUsed];
+            }
+
+            // Most ignored = proposed but never selected (highest proposed with selected=0)
+            if ($selected == 0 && $proposed > $mostIgnored['count']) {
+                $mostIgnored = ['id' => (int) $charId, 'count' => $proposed];
+            }
+
+            // Most benched = selected but never used power (highest selected with power_used=0)
+            if ($selected > 0 && $powerUsed == 0 && $selected > $mostBenched['count']) {
+                $mostBenched = ['id' => (int) $charId, 'count' => $selected];
+            }
+
+            // Count unique characters
+            if ($selected > 0)
+                $uniquePicked++;
+            if ($powerUsed > 0)
+                $uniquePowerUsed++;
+        }
+
+        return [
+            'favorite' => $favorite,
+            'most_played' => $mostPlayed,
+            'most_ignored' => $mostIgnored,
+            'most_benched' => $mostBenched,
+            'unique_picked' => $uniquePicked,
+            'unique_power_used' => $uniquePowerUsed
+        ];
     }
 
     //////////////////////////////////////////////////////////////////////////////
@@ -839,7 +954,7 @@ class Windwalkers extends Table
             // Track chapter days and par difference
             $this->setStat($chapterDays, 'chapter_' . $chapter . '_days', $player_id);
             $this->incStat($parDiff, 'total_par_difference', $player_id);
-            
+
             // Track PAR bonus for this chapter
             $this->setStat($parBonus, 'chapter_' . $chapter . '_par_bonus', $player_id);
             $this->incStat($parBonus, 'total_par_bonus', $player_id);
@@ -883,8 +998,34 @@ class Windwalkers extends Table
         // Ensure final scores are computed and persisted (avoid null/0 on abandon)
         $this->calculateFinalScores();
 
-        // Force eliminated players (if any) to score 0
+        // Record final team stats
         $players = $this->loadPlayersBasicInfos();
+        foreach ($players as $player_id => $player) {
+            // Get player's horde
+            $horde = $this->getObjectListFromDB("SELECT * FROM card WHERE card_location = 'horde_$player_id'");
+
+            $traceur_name = '';
+            $team_names = [];
+
+            foreach ($horde as $card) {
+                $type_arg = (int) $card['card_type_arg'];
+                $char = $this->characters[$type_arg] ?? null;
+                $name = $char['name'] ?? 'Unknown';
+
+                $team_names[] = $name;
+
+                // Check if this is the traceur (leader)
+                if (!empty($card['card_is_leader'])) {
+                    $traceur_name = $name;
+                }
+            }
+
+            // Set stats
+            $this->setStat($traceur_name, 'traceur_name', $player_id);
+            $this->setStat(implode(', ', $team_names), 'final_team', $player_id);
+        }
+
+        // Force eliminated players (if any) to score 0
         foreach ($players as $player_id => $player) {
             if (isset($player['player_eliminated']) && $player['player_eliminated']) {
                 $this->DbQuery("UPDATE player SET player_score = 0 WHERE player_id = $player_id");
@@ -1145,6 +1286,19 @@ class Windwalkers extends Table
             $this->DbQuery("UPDATE player SET player_score = $score WHERE player_id = $player_id");
             $this->setStat($score, 'total_score', $player_id);
             $this->setStat($total_days, 'total_days', $player_id);
+
+            // Calculate and save character preferences
+            $prefs = $this->calculateCharacterPreferences($player_id);
+            $this->setStat($prefs['favorite']['id'], 'favorite_character_id', $player_id);
+            $this->setStat($prefs['favorite']['count'], 'favorite_character_picks', $player_id);
+            $this->setStat($prefs['most_played']['id'], 'most_played_character_id', $player_id);
+            $this->setStat($prefs['most_played']['count'], 'most_played_character_uses', $player_id);
+            $this->setStat($prefs['most_ignored']['id'], 'most_ignored_character_id', $player_id);
+            $this->setStat($prefs['most_ignored']['count'], 'most_ignored_character_seen', $player_id);
+            $this->setStat($prefs['most_benched']['id'], 'most_benched_character_id', $player_id);
+            $this->setStat($prefs['most_benched']['count'], 'most_benched_character_picks', $player_id);
+            $this->setStat($prefs['unique_picked'], 'unique_characters_picked', $player_id);
+            $this->setStat($prefs['unique_power_used'], 'unique_powers_used', $player_id);
 
             // Format PAR text
             $parText = $total_par_diff == 0 ? 'PAR' : ($total_par_diff < 0 ? $total_par_diff : '+' . $total_par_diff);

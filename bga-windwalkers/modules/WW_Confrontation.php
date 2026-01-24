@@ -29,6 +29,34 @@ trait WW_Confrontation
         return max(0, self::MAX_HORDE_SIZE - $horde_count);
     }
 
+    /**
+     * Common function to discard a traine card (self-discard powers)
+     * Handles: moving to discard, incrementing stat, sending notification
+     * @param int $player_id Player ID
+     * @param int $card_id Card ID to discard
+     * @param bool $to_use_its_power Whether the card is discarded to use its power (default: true)
+     */
+    private function discardCard(int $player_id, int $card_id, bool $to_use_its_power = true): void
+    {
+        // Move card to discard
+        $this->cards->moveCard($card_id, 'discard');
+
+        // Increment hordiers lost stat
+        $this->incStat(1, 'hordiers_lost', $player_id);
+
+        // find card name
+        $character_name = $this->getUniqueValueFromDB("SELECT card_name FROM card WHERE card_id = $card_id");
+
+        // Notify about discard
+        $to_use_its_power_string = $to_use_its_power ? "(to use its power)" : "";
+        $this->notifyAllPlayers('hordierDiscarded', clienttranslate('${player_name} abandons ${character_name} ' . $to_use_its_power_string), [
+            'player_id' => $player_id,
+            'player_name' => $this->getActivePlayerName(),
+            'card_id' => $card_id,
+            'character_name' => $character_name
+        ]);
+    }
+
     //////////////////////////////////////////////////////////////////////////////
     // Dice Actions
     //////////////////////////////////////////////////////////////////////////////
@@ -258,7 +286,8 @@ trait WW_Confrontation
                 'count' => count($actions_array),
                 'new_moral' => $new_moral,
                 'updated_dice' => array_values($updated_dice),
-                'ignored_dice' => $ignored_dice
+                'ignored_dice' => $ignored_dice,
+                'stay_in_confrontation' => !$andConfirm
             ]);
         }
 
@@ -436,8 +465,9 @@ trait WW_Confrontation
                 $this->applyThutmusPower($player_id);
                 break;
             case 'amon_power':
-                // Amon Amon: Ignore all white dice (wind) per black dice (fatalite)
-                $this->applyAmonPower($player_id);
+                // Amon Amon: Ignore selected white dice (max = black dice count)
+                $dice_ids = $params['dice_ids'] ?? [];
+                $this->applyAmonPower($player_id, $dice_ids);
                 break;
             case 'duke_power':
                 // Duke Arnaud N.: Discard to place 2 of your dice
@@ -483,12 +513,57 @@ trait WW_Confrontation
                 // Dragon: Tap another hordier to gain +4 moral
                 $this->applyDragonPower($player_id, $card_id, $target_card_id);
                 break;
+            case 'kon_power':
+                // Kon: Reroll all or some blue dice (horde dice)
+                $this->applyKonPower($player_id, $params);
+                break;
 
             // Add more powers here as they are implemented
             default:
                 // Unknown or unimplemented power - no effect
                 break;
         }
+    }
+
+    /**
+     * Kon's power: Reroll all or some blue dice (horde dice)
+     * :tap:: Relancez tout ou partie de :d6-blue:
+     */
+    private function applyKonPower(int $player_id, array $params): void
+    {
+        // Get dice IDs to reroll from params
+        $dice_ids = $params['dice_ids'] ?? [];
+
+        if (empty($dice_ids)) {
+            throw new BgaUserException($this->_("You must select at least one die to reroll"));
+        }
+
+        // Validate all dice are blue and belong to player
+        $dice_ids_sql = implode(',', array_map('intval', $dice_ids));
+        $valid_dice = $this->getCollectionFromDb(
+            "SELECT dice_id FROM dice_roll WHERE dice_id IN ($dice_ids_sql) AND dice_type = 'blue' AND dice_owner = 'player'"
+        );
+
+        if (count($valid_dice) !== count($dice_ids)) {
+            throw new BgaUserException($this->_("Invalid dice selection - only blue dice can be rerolled"));
+        }
+
+        // Delete selected dice
+        $this->DbQuery("DELETE FROM dice_roll WHERE dice_id IN ($dice_ids_sql)");
+
+        // Roll new blue dice
+        $count = count($dice_ids);
+        $new_dice = $this->rollDice($count, 'blue', 'player');
+        $stored_dice = $this->storeDiceRolls($new_dice);
+
+        // Notify with removed IDs and new dice
+        $this->notifyAllPlayers('selectedDiceRerolled', clienttranslate('${player_name} uses Kon\'s power to reroll ${count} blue dice'), [
+            'player_id' => $player_id,
+            'player_name' => $this->getActivePlayerName(),
+            'count' => $count,
+            'removed_dice_ids' => array_map('intval', $dice_ids),
+            'new_dice' => $stored_dice
+        ]);
     }
 
     /**
@@ -623,15 +698,8 @@ trait WW_Confrontation
             throw new BgaUserException($this->_("No challenge dice with value less than wind force"));
         }
 
-        // Discard Ivana
-        $this->cards->moveCard($card_id, 'discard');
-
-        // Notify about discard
-        $this->notifyAllPlayers('hordierDiscarded', clienttranslate('${player_name} discards Ivana to use her power'), [
-            'player_id' => $player_id,
-            'player_name' => $this->getActivePlayerName(),
-            'card_id' => $card_id
-        ]);
+        // Discard Ivana using common function
+        $this->discardCard($player_id, $card_id, true);
 
         // Build list of dice IDs to ignore
         $ignored_dice = array_keys($challenge_dice);
@@ -701,10 +769,10 @@ trait WW_Confrontation
     }
 
     /**
-     * Amon Amon's power: Ignore 1 white die per black die
+     * Amon Amon's power: Ignore selected white dice (1 per black die max)
      * :tap:: Ignorez :d6-white: / :d6-black:
      */
-    private function applyAmonPower(int $player_id): void
+    private function applyAmonPower(int $player_id, array $dice_ids): void
     {
         // Count black dice (fatalite)
         $black_dice = $this->getCollectionFromDb("SELECT * FROM dice_roll WHERE dice_owner = 'challenge' AND dice_type = 'black'");
@@ -714,38 +782,35 @@ trait WW_Confrontation
             throw new BgaUserException($this->_("No black dice (fatalité) - cannot use this power"));
         }
 
-        // Get white dice (vent) to ignore
+        if (empty($dice_ids)) {
+            throw new BgaUserException($this->_("No dice selected to ignore"));
+        }
+
+        // Validate: can't ignore more than black dice count
+        if (count($dice_ids) > $black_count) {
+            throw new BgaUserException($this->_("Cannot ignore more white dice than black dice"));
+        }
+
+        // Validate selected dice are actually white dice
         $white_dice = $this->getCollectionFromDb("SELECT * FROM dice_roll WHERE dice_owner = 'challenge' AND dice_type = 'white'");
 
-        if (empty($white_dice)) {
-            throw new BgaUserException($this->_("No white dice to ignore"));
-        }
-
-        // Ignore up to black_count white dice
-        $ignored_dice = [];
-        $count = 0;
-        foreach ($white_dice as $dice_id => $dice) {
-            if ($count >= $black_count)
-                break;
-            $ignored_dice[] = $dice_id;
-            $count++;
-        }
-
-        if (empty($ignored_dice)) {
-            return;
+        foreach ($dice_ids as $dice_id) {
+            if (!isset($white_dice[$dice_id])) {
+                throw new BgaUserException($this->_("Invalid die selected - must be a white die"));
+            }
         }
 
         // Add to ignored dice
         $current_ignored = json_decode($this->getGlobalVariable('uther_ignored_dice') ?? '[]', true);
-        $current_ignored = array_merge($current_ignored, $ignored_dice);
+        $current_ignored = array_merge($current_ignored, $dice_ids);
         $this->setGlobalVariable('uther_ignored_dice', json_encode($current_ignored));
 
         // Notify all players
-        $this->notifyAllPlayers('diceIgnored', clienttranslate('${player_name} uses Amon Amon\'s power: ${count} white dice ignored (1 per black die)'), [
+        $this->notifyAllPlayers('diceIgnored', clienttranslate('${player_name} uses Amon Amon\'s power: ${count} white dice ignored'), [
             'player_id' => $player_id,
             'player_name' => $this->getActivePlayerName(),
-            'ignored_dice' => $ignored_dice,
-            'count' => count($ignored_dice)
+            'ignored_dice' => $dice_ids,
+            'count' => count($dice_ids)
         ]);
     }
 
@@ -789,15 +854,8 @@ trait WW_Confrontation
             ];
         }
 
-        // Discard Duke (this is a discard power)
-        $this->cards->moveCard($card_id, 'discard');
-
-        // Notify about discard
-        $this->notifyAllPlayers('hordierDiscarded', clienttranslate('${player_name} discards Duke Arnaud N. to use his power'), [
-            'player_id' => $player_id,
-            'player_name' => $this->getActivePlayerName(),
-            'card_id' => $card_id
-        ]);
+        // Discard Duke using common function
+        $this->discardCard($player_id, $card_id, true);
 
         // Notify about dice modification (one notification per die to reuse existing handler)
         foreach ($modified_dice as $dice) {
@@ -875,15 +933,7 @@ trait WW_Confrontation
         $target_name = $target_char['name'] ?? 'Unknown';
 
         // Discard the target
-        $this->DbQuery("UPDATE card SET card_location = 'discard' WHERE card_id = $target_card_id");
-
-        // Notify about the sacrifice
-        $this->notifyAllPlayers('hordierLost', clienttranslate('${player_name} sacrifices ${character_name}!'), [
-            'player_id' => $player_id,
-            'player_name' => $this->getActivePlayerName(),
-            'card_id' => $target_card_id,
-            'character_name' => $target_name
-        ]);
+        $this->discardCard($player_id, $target_card_id, false);
 
         // Get ignored dice from params
         $ignored_dice = $params['ignored_dice'] ?? [];
@@ -1522,8 +1572,8 @@ trait WW_Confrontation
         $old_force = (int) ($tile['tile_wind_force'] ?? 0);
         $new_force = 3;
 
-        // Discard Topilzin
-        $this->DbQuery("UPDATE card SET card_location = 'discard' WHERE card_id = $card_id");
+        // Discard Topilzin using common function
+        $this->discardCard($player_id, $card_id, true);
 
         // Set temporary wind force (stored in global variable for this confrontation)
         $this->setGlobalVariable('modified_wind_force', json_encode([
@@ -1566,8 +1616,8 @@ trait WW_Confrontation
         $old_force = (int) ($tile['tile_wind_force'] ?? 0);
         $new_force = 6;
 
-        // Discard Osuros
-        $this->DbQuery("UPDATE card SET card_location = 'discard' WHERE card_id = $card_id");
+        // Discard Osuros using common function
+        $this->discardCard($player_id, $card_id, true);
 
         // Set temporary wind force (stored in global variable for this confrontation)
         $this->setGlobalVariable('modified_wind_force', json_encode([
@@ -1610,8 +1660,8 @@ trait WW_Confrontation
         $old_force = (int) ($tile['tile_wind_force'] ?? 0);
         $new_force = 2;
 
-        // Discard Tula
-        $this->DbQuery("UPDATE card SET card_location = 'discard' WHERE card_id = $card_id");
+        // Discard Tula using common function
+        $this->discardCard($player_id, $card_id, true);
 
         // Set temporary wind force (stored in global variable for this confrontation)
         $this->setGlobalVariable('modified_wind_force', json_encode([
@@ -1649,8 +1699,8 @@ trait WW_Confrontation
             throw new BgaUserException($this->_("No black dice present - cannot use this power"));
         }
 
-        // Discard Charlize
-        $this->DbQuery("UPDATE card SET card_location = 'discard' WHERE card_id = $card_id");
+        // Discard Charlize using common function
+        $this->discardCard($player_id, $card_id, true);
 
         // Calculate moral gain: +2 per black die
         $moral_gain = $black_dice_count * 2;
@@ -1665,13 +1715,6 @@ trait WW_Confrontation
             'new_moral' => $new_moral,
             'black_count' => $black_dice_count,
             'terrain_name' => 'Charlize'
-        ]);
-
-        // Notify card discarded
-        $this->notifyAllPlayers('hordierLost', '', [
-            'player_id' => $player_id,
-            'card_id' => $card_id,
-            'character_name' => 'Charlize Soulages'
         ]);
     }
 
@@ -1715,8 +1758,8 @@ trait WW_Confrontation
         // Get old wind force for notification
         $old_force = (int) ($tile['tile_wind_force'] ?? 0);
 
-        // Discard Jonas first
-        $this->DbQuery("UPDATE card SET card_location = 'discard' WHERE card_id = $card_id");
+        // Discard Jonas using common function
+        $this->discardCard($player_id, $card_id, true);
 
         // Place the token on the tile
         $this->DbQuery("UPDATE tile SET tile_wind_force = $chosen_force, tile_discovered = 1 WHERE tile_id = $tile_id");
@@ -1734,13 +1777,6 @@ trait WW_Confrontation
             'new_force' => $chosen_force,
             'update_tile' => true  // Jonas physically replaces the wind token
         ]);
-
-        // Notify card discarded
-        $this->notifyAllPlayers('hordierLost', '', [
-            'player_id' => $player_id,
-            'card_id' => $card_id,
-            'character_name' => 'Jonas'
-        ]);
     }
 
     /**
@@ -1749,8 +1785,8 @@ trait WW_Confrontation
      */
     private function applyLihnPower(int $player_id, int $card_id): void
     {
-        // Discard Lihn
-        $this->DbQuery("UPDATE card SET card_location = 'discard' WHERE card_id = $card_id");
+        // Discard Lihn using common function
+        $this->discardCard($player_id, $card_id, true);
 
         // Set the double points flag for this turn
         $this->setGlobalVariable('lihn_double_points', 1);
@@ -1759,13 +1795,6 @@ trait WW_Confrontation
         $this->notifyAllPlayers('lihnPowerActivated', clienttranslate('${player_name} sacrifices Lihn: points gained this turn will be doubled!'), [
             'player_id' => $player_id,
             'player_name' => $this->getActivePlayerName()
-        ]);
-
-        // Notify card discarded
-        $this->notifyAllPlayers('hordierLost', '', [
-            'player_id' => $player_id,
-            'card_id' => $card_id,
-            'character_name' => 'Lihn'
         ]);
     }
 
@@ -2057,18 +2086,8 @@ trait WW_Confrontation
             return;
         }
 
-        // Discard Benelim (this is a discard power)
-        $this->cards->moveCard($card_id, 'discard');
-
-        // Mark as exhausted (power used)
-        $this->DbQuery("UPDATE card SET card_power_used = 1 WHERE card_id = $card_id");
-
-        // Notify about discard
-        $this->notifyAllPlayers('hordierDiscarded', clienttranslate('${player_name} discards Benelim to use his power'), [
-            'player_id' => $player_id,
-            'player_name' => $this->getActivePlayerName(),
-            'card_id' => $card_id
-        ]);
+        // Discard Benelim using common function
+        $this->discardCard($player_id, $card_id, true);
 
         // Roll +1 blue die per PACK card
         for ($i = 0; $i < $pack_count; $i++) {

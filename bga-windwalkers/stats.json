@@ -176,6 +176,66 @@
       "id": 39,
       "name": "Total PAR bonus (golf scoring)",
       "type": "int"
+    },
+    "favorite_character_id": {
+      "id": 40,
+      "name": "Favorite character (most picked)",
+      "type": "int"
+    },
+    "favorite_character_picks": {
+      "id": 41,
+      "name": "Times favorite was picked",
+      "type": "int"
+    },
+    "most_played_character_id": {
+      "id": 42,
+      "name": "Most played character (power used most)",
+      "type": "int"
+    },
+    "most_played_character_uses": {
+      "id": 43,
+      "name": "Times most played power was used",
+      "type": "int"
+    },
+    "most_ignored_character_id": {
+      "id": 44,
+      "name": "Most ignored character (seen but never picked)",
+      "type": "int"
+    },
+    "most_ignored_character_seen": {
+      "id": 45,
+      "name": "Times most ignored was seen",
+      "type": "int"
+    },
+    "most_benched_character_id": {
+      "id": 46,
+      "name": "Most benched character (picked but never used)",
+      "type": "int"
+    },
+    "most_benched_character_picks": {
+      "id": 47,
+      "name": "Times most benched was picked",
+      "type": "int"
+    },
+    "unique_characters_picked": {
+      "id": 48,
+      "name": "Unique characters picked",
+      "type": "int"
+    },
+    "unique_powers_used": {
+      "id": 49,
+      "name": "Unique powers used",
+      "type": "int"
+    },
+    "traceur_name": {
+      "id": 50,
+      "name": "Traceur (leader)",
+      "type": "str"
+    },
+    "final_team": {
+      "id": 51,
+      "name": "Final team",
+      "type": "str"
     }
   }
 }

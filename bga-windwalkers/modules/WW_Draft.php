@@ -200,7 +200,7 @@ trait WW_Draft
         foreach ($horde as $card) {
             $type_arg = (int) ($card['card_type_arg'] ?? $card['type_arg'] ?? 0);
             if ($type_arg) {
-                $this->incCharacterStat($type_arg, 'selected');
+                $this->incCharacterStat($type_arg, 'selected', $player_id);
             }
         }
 
@@ -456,7 +456,7 @@ trait WW_Draft
 
         // Track character selected
         if ($type_arg) {
-            $this->incCharacterStat((int) $type_arg, 'selected');
+            $this->incCharacterStat((int) $type_arg, 'selected', $player_id);
         }
         $card_type = $card['type'] ?? $card['card_type'] ?? '';
         $char_info = $this->characters[$type_arg] ?? ['name' => 'Unknown'];
@@ -924,7 +924,7 @@ trait WW_Draft
 
         // Track character power usage
         if ($type_arg) {
-            $this->incCharacterStat((int) $type_arg, 'power_used');
+            $this->incCharacterStat((int) $type_arg, 'power_used', $player_id);
         }
 
         $this->notifyAllPlayers('powerUsed', clienttranslate('${player_name} uses ${character_name}\'s power'), [

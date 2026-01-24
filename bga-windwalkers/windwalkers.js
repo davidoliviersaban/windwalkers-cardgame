@@ -644,6 +644,20 @@ function (dojo, declare) {
         },
         
         /**
+         * Commit current actions - prevents undo but keeps system active for new actions
+         * Used after discard powers (Duke, Jonas) that can't be undone
+         */
+        commit: function() {
+            if (!this.enabled) return;
+            
+            // Update originalState to computed state (incorporates all pending actions)
+            this.originalState = this.getComputedState();
+            // Clear the actions queue - nothing to undo
+            this.actions = [];
+            this.updateUI();
+        },
+        
+        /**
          * Get all pending actions for server submission
          */
         getActions: function() {
@@ -657,6 +671,18 @@ function (dojo, declare) {
          */
         hasPending: function() {
             return this.actions.length > 0;
+        },
+        
+        /**
+         * Remove pending actions that target a specific card
+         * Used when a card executes its power immediately (invalidates pending "rest" actions)
+         */
+        removeActionsTargeting: function(cardId) {
+            var cardIdNum = parseInt(cardId);
+            this.actions = this.actions.filter(function(a) {
+                return !(a.params && parseInt(a.params.target_card_id) === cardIdNum);
+            });
+            this.updateUI();
         },
         
         /**
@@ -835,13 +861,22 @@ function (dojo, declare) {
                                 } else {
                                     WW_DOM.removeClass(targetEl, 'ww_pending_discarded');
                                 }
+                            } else if (powerCode === 'dragon_power') {
+                                // Dragon exhausts target - mark as pending exhausted
+                                if (apply) {
+                                    WW_DOM.addClass(targetEl, 'ww_pending_exhausted');
+                                } else {
+                                    WW_DOM.removeClass(targetEl, 'ww_pending_exhausted');
+                                }
                             } else {
                                 // Other powers (like Vera) rest the target
                                 if (apply) {
                                     WW_DOM.removeClass(targetEl, 'ww_card_exhausted');
+                                    WW_DOM.removeClass(targetEl, 'ww_pending_exhausted');
                                     WW_DOM.addClass(targetEl, 'ww_pending_rested');
                                 } else {
                                     WW_DOM.addClass(targetEl, 'ww_card_exhausted');
+                                    WW_DOM.addClass(targetEl, 'ww_pending_exhausted');
                                     WW_DOM.removeClass(targetEl, 'ww_pending_rested');
                                 }
                             }
@@ -2079,6 +2114,7 @@ function (dojo, declare) {
             for (var cardId in hordeData) {
                 this.addHordeCard(hordeData[cardId]);
             }
+            this.sortHordeDisplay();
         }
     };
     
@@ -2525,7 +2561,6 @@ function (dojo, declare) {
                     
                     this.addActionButton('btn_moral_plus', _('+1 (spend moral)'), 'onMoralPlus');
                     this.addActionButton('btn_moral_minus', _('-1 (spend moral)'), 'onMoralMinus');
-                    this.addActionButton('btn_sort_dice', _('Sort Dice'), 'onSortDice', null, false, 'gray');
                     
                     // Add Undo buttons
                     this.addActionButton('btn_undo_action', _('↩ Undo') + ' <span id="ww_pending_count"></span>', 'onUndoAction', null, false, 'gray');
@@ -2655,7 +2690,6 @@ function (dojo, declare) {
             // Normal buttons for active confrontation
             this.addActionButton('btn_moral_plus', _('+1 (spend moral)'), 'onMoralPlus');
             this.addActionButton('btn_moral_minus', _('-1 (spend moral)'), 'onMoralMinus');
-            this.addActionButton('btn_sort_dice', _('Sort Dice'), 'onSortDice', null, false, 'gray');
             
             // Add Undo buttons
             this.addActionButton('btn_undo_action', _('↩ Undo') + ' <span id="ww_pending_count"></span>', 'onUndoAction', null, false, 'gray');
@@ -2914,6 +2948,38 @@ function (dojo, declare) {
             this.performAction('actChapterDraftDone', {});
         },
         
+        /**
+         * Build the state object for WW_PendingActions from current DOM state
+         * Used to re-enable pending mode after discard powers
+         */
+        buildPendingActionsState: function() {
+            var self = this;
+            var state = {
+                moral: this.gamedatas.players[this.player_id] ? (this.gamedatas.players[this.player_id].moral || 0) : 0,
+                dice: {},
+                horde: {}
+            };
+            
+            // Capture current dice state from DOM
+            WW_DOM.forEach('#ww_horde_dice .ww_dice', function(diceEl) {
+                var diceId = diceEl.id.replace('dice_', '');
+                state.dice[diceId] = {
+                    value: parseInt(WW_DOM.getAttr(diceEl, 'data-value')) || parseInt(WW_DOM.getHtml(diceEl)) || 1,
+                    type: WW_DOM.hasClass(diceEl, 'ww_dice_blue') ? 'blue' : 'violet'
+                };
+            });
+            
+            // Capture horde state from DOM
+            WW_DOM.forEach('#ww_horde_container .ww_card', function(cardEl) {
+                var cardId = cardEl.id.replace('ww_horde_item_', '');
+                state.horde[cardId] = {
+                    power_used: WW_DOM.hasClass(cardEl, 'ww_card_exhausted') ? 1 : 0
+                };
+            });
+            
+            return state;
+        },
+        
         ///////////////////////////////////////////////////
         //// Action Handlers
         
@@ -3106,7 +3172,7 @@ function (dojo, declare) {
          * Check if a power requires special UI interaction
          */
         powerRequiresSpecialUI: function(powerCode) {
-            var specialPowers = ['gianni_power', 'wanda_power', 'xavio_power', 'yavo_power', 'kyo_power', 'thomassin_power', 'blanchette_power', 'ukkiba_power', 'waldo_power', 'belkacem_power', 'galas_power', 'oranne_power', 'ivana_power', 'thutmus_power', 'amon_power', 'duke_power', 'lethune_power', 'kunigunde_power', 'regitha_power', 'lyara_power', 'topilzin_power', 'osuros_power', 'tula_power', 'charlize_power', 'jonas_power', 'lihn_power', 'benelim_power'];
+            var specialPowers = ['gianni_power', 'wanda_power', 'xavio_power', 'yavo_power', 'kyo_power', 'thomassin_power', 'blanchette_power', 'ukkiba_power', 'waldo_power', 'belkacem_power', 'galas_power', 'oranne_power', 'ivana_power', 'thutmus_power', 'amon_power', 'duke_power', 'lethune_power', 'kunigunde_power', 'regitha_power', 'lyara_power', 'topilzin_power', 'osuros_power', 'tula_power', 'charlize_power', 'jonas_power', 'lihn_power', 'benelim_power', 'kon_power'];
             return specialPowers.indexOf(powerCode) !== -1;
         },
         
@@ -3160,7 +3226,7 @@ function (dojo, declare) {
                     this.executeThutmusPower(cardId);
                     break;
                 case 'amon_power':
-                    this.executeAmonPower(cardId);
+                    this.enterAmonPowerMode(cardId);
                     break;
                 case 'benelim_power':
                     // Benelim: discard to roll +1 die per PACK card
@@ -3172,6 +3238,10 @@ function (dojo, declare) {
                 case 'jonas_power':
                     // Jonas: choose wind token from bag
                     this.enterJonasPowerMode(cardId);
+                    break;
+                case 'kon_power':
+                    // Kon: reroll all or some blue dice
+                    this.enterKonPowerMode(cardId);
                     break;
                 case 'galas_power':
                     // Galas: simple tap power - send directly to server
@@ -3341,9 +3411,10 @@ function (dojo, declare) {
         },
         
         /**
-         * Execute Amon Amon's power: Ignore 1 white die per black die
+         * Amon Amon's power: Ignore 1 white die per black die
+         * :tap:: Ignorez :d6-white: / :d6-black:
          */
-        executeAmonPower: function(cardId) {
+        enterAmonPowerMode: function(cardId) {
             var self = this;
             
             // Count black dice
@@ -3354,36 +3425,103 @@ function (dojo, declare) {
                 return;
             }
             
-            // Count white dice
-            var whiteDiceCount = dojo.query('#ww_wind_dice .ww_dice_white').length;
+            // Get white dice
+            var whiteDice = dojo.query('#ww_wind_dice .ww_dice_white');
             
-            if (whiteDiceCount === 0) {
+            if (whiteDice.length === 0) {
                 this.showMessage(_("No white dice to ignore"), "error");
                 return;
             }
             
-            var toIgnore = Math.min(blackDiceCount, whiteDiceCount);
+            WW_State.setSpecialPowerMode({
+                card_id: cardId,
+                power_code: 'amon_power',
+                selected_dice: [],
+                max_ignore: blackDiceCount
+            });
             
-            // Simple power - execute directly (or resolve pending first)
-            if (WW_PendingActions.isEnabled && WW_PendingActions.isEnabled() && WW_PendingActions.hasPending()) {
-                var actions = WW_PendingActions.getActions();
-                
-                this.bgaPerformAction('actBatchActions', {
-                    actions: JSON.stringify(actions),
-                    andConfirm: 0
-                }).then(function() {
-                    WW_PendingActions.clear();
-                    self.performAction('actUsePower', {
-                        card_id: parseInt(cardId),
-                        params: JSON.stringify({})
-                    });
-                }).catch(function() {
-                    WW_PendingActions.undoAll();
-                });
+            this.saveOriginalPageTitle();
+            this.gamedatas.gamestate.descriptionmyturn = dojo.string.substitute(_("Amon Amon: Select up to ${count} white dice to ignore"), { count: blackDiceCount });
+            this.updatePageTitle();
+            
+            // Make white dice selectable
+            WW_DOM.forEach('#ww_wind_dice .ww_dice_white', function(diceEl) {
+                WW_DOM.addClass(diceEl, 'ww_dice_selectable');
+                diceEl.onclick = function(evt) {
+                    WW_DOM.stopEvent(evt);
+                    self.onAmonDiceClick(diceEl);
+                };
+            });
+            
+            this.removeActionButtons();
+            this.addActionButton('btn_amon_confirm', _('Ignore Selected'), function() {
+                self.confirmAmonPower(cardId);
+            });
+            this.addActionButton('btn_amon_cancel', _('Cancel'), function() {
+                self.cancelSpecialPowerMode();
+            }, null, false, 'gray');
+        },
+        
+        /**
+         * Handle dice click in Amon ignore mode
+         */
+        onAmonDiceClick: function(diceEl) {
+            var mode = WW_State.getSpecialPowerMode();
+            if (!mode || mode.power_code !== 'amon_power') return;
+            
+            var diceId = diceEl.id.replace('dice_', '');
+            var idx = mode.selected_dice.indexOf(diceId);
+            
+            if (idx >= 0) {
+                // Deselect
+                mode.selected_dice.splice(idx, 1);
+                WW_DOM.removeClass(diceEl, 'ww_dice_selected');
+            } else {
+                // Check max
+                if (mode.selected_dice.length >= mode.max_ignore) {
+                    this.showMessage(dojo.string.substitute(_("Can only ignore up to ${count} white dice"), { count: mode.max_ignore }), "info");
+                    return;
+                }
+                // Select
+                mode.selected_dice.push(diceId);
+                WW_DOM.addClass(diceEl, 'ww_dice_selected');
+            }
+        },
+        
+        /**
+         * Confirm Amon power - ignore selected white dice
+         */
+        confirmAmonPower: function(cardId) {
+            var mode = WW_State.getSpecialPowerMode();
+            if (!mode || mode.power_code !== 'amon_power') return;
+            
+            if (mode.selected_dice.length === 0) {
+                this.showMessage(_("Select at least one white die to ignore"), "error");
+                return;
+            }
+            
+            // selected_dice contains IDs like 'white_0', 'white_1'
+            var diceIds = mode.selected_dice.slice();  // Copy array
+            
+            // Clean up
+            this.cancelSpecialPowerMode();
+            
+            // Remove any pending "rest this card" actions (since we just exhausted it)
+            WW_PendingActions.removeActionsTargeting(cardId);
+            
+            var inPendingActionsMode = WW_PendingActions.isEnabled && WW_PendingActions.isEnabled();
+            var params = { dice_ids: diceIds };
+            
+            if (inPendingActionsMode) {
+                // Queue the power for batch submission with undo support
+                WW_PendingActions.push('usePower', {
+                    card_id: parseInt(cardId),
+                    params: JSON.stringify(params)
+                }, { ignored_dice: diceIds });
             } else {
                 this.performAction('actUsePower', {
                     card_id: parseInt(cardId),
-                    params: JSON.stringify({})
+                    params: JSON.stringify(params)
                 });
             }
         },
@@ -3538,7 +3676,7 @@ function (dojo, declare) {
             
             var params = { dice_selections: diceSelections };
             
-            // Discard powers need to resolve pending actions first
+            // Discard powers need to resolve pending actions first, then disable undo
             if (WW_PendingActions.isEnabled && WW_PendingActions.isEnabled() && WW_PendingActions.hasPending()) {
                 var actions = WW_PendingActions.getActions();
                 
@@ -3546,7 +3684,7 @@ function (dojo, declare) {
                     actions: JSON.stringify(actions),
                     andConfirm: 0
                 }).then(function() {
-                    WW_PendingActions.clear();
+                    WW_PendingActions.commit();  // Duke is discard - commit but allow new actions
                     self.performAction('actUsePower', {
                         card_id: parseInt(cardId),
                         params: JSON.stringify(params)
@@ -3555,6 +3693,7 @@ function (dojo, declare) {
                     WW_PendingActions.undoAll();
                 });
             } else {
+                WW_PendingActions.commit();  // Duke is discard - commit but allow new actions
                 this.performAction('actUsePower', {
                     card_id: parseInt(cardId),
                     params: JSON.stringify(params)
@@ -3756,7 +3895,7 @@ function (dojo, declare) {
                     actions: JSON.stringify(actions),
                     andConfirm: 0
                 }).then(function() {
-                    WW_PendingActions.clear();
+                    WW_PendingActions.commit();  // Jonas is discard - commit but allow new actions
                     self.performAction('actUsePower', {
                         card_id: parseInt(cardId),
                         params: JSON.stringify(params)
@@ -3765,6 +3904,7 @@ function (dojo, declare) {
                     WW_PendingActions.undoAll();
                 });
             } else {
+                WW_PendingActions.commit();  // Jonas is discard - commit but allow new actions
                 this.performAction('actUsePower', {
                     card_id: parseInt(cardId),
                     params: JSON.stringify(params)
@@ -3824,10 +3964,12 @@ function (dojo, declare) {
          * Ukkiba: -1 moral, then ±1 on blue dice (X = remaining moral)
          */
         enterUkkibaPowerMode: function(cardId) {
-            var currentMoral = WW_State.getPlayerMoral() || 0;
+            // Get current moral from computed state (accounts for pending actions) or gamedatas
+            var computedState = WW_PendingActions.getComputedState();
+            var currentMoral = computedState ? computedState.moral : (this.gamedatas.players[this.player_id] || {}).moral || 0;
             
-            if (currentMoral <= 0) {
-                this.showMessage(_("You need at least 1 moral to use this power"), "error");
+            if (currentMoral <= 1) {
+                this.showMessage(_("You need at least 2 moral to use this power (1 will be spent)"), "error");
                 return;
             }
             
@@ -3958,7 +4100,7 @@ function (dojo, declare) {
                     WW_DOM.removeClass(diceEl, 'ww_dice_mod_minus');
                     WW_DOM.addClass(diceEl, clickModifier > 0 ? 'ww_dice_mod_plus' : 'ww_dice_mod_minus');
                 }
-            } else if (mode.power_code === 'blanchette_power') {
+            } else if (mode.power_code === 'blanchette_power' || mode.power_code === 'ukkiba_power') {
                 // Blanchette: Can stack modifiers, but limited by max_dice (total modifications)
                 var totalModifications = 0;
                 for (var did in mode.dice_modifiers) {
@@ -4312,6 +4454,100 @@ function (dojo, declare) {
         },
         
         // ============================================================
+        // KON POWER - Reroll blue dice
+        // ============================================================
+        
+        /**
+         * Enter Kon power mode (select blue dice to reroll)
+         * :tap:: Relancez tout ou partie de :d6-blue:
+         */
+        enterKonPowerMode: function(cardId) {
+            var self = this;
+            
+            // Check if there are any blue dice to reroll
+            var blueDice = dojo.query('#ww_horde_dice .ww_dice_blue');
+            if (blueDice.length === 0) {
+                this.showMessage(_("No blue dice to reroll"), "error");
+                return;
+            }
+            
+            WW_State.setSpecialPowerMode({
+                card_id: cardId,
+                power_code: 'kon_power',
+                selected_dice: []
+            });
+            
+            this.saveOriginalPageTitle();
+            this.gamedatas.gamestate.descriptionmyturn = _("Kon: Select blue dice to reroll");
+            this.updatePageTitle();
+            
+            // Make blue horde dice selectable
+            WW_DOM.forEach('#ww_horde_dice .ww_dice_blue', function(diceEl) {
+                WW_DOM.addClass(diceEl, 'ww_dice_selectable');
+                diceEl.onclick = function(evt) {
+                    WW_DOM.stopEvent(evt);
+                    self.onKonDiceClick(diceEl);
+                };
+            });
+            
+            this.removeActionButtons();
+            this.addActionButton('btn_kon_confirm', _('Reroll Selected'), function() {
+                self.confirmKonPower(cardId);
+            });
+            this.addActionButton('btn_kon_cancel', _('Cancel'), function() {
+                self.cancelSpecialPowerMode();
+            }, null, false, 'gray');
+        },
+        
+        /**
+         * Handle dice click in Kon reroll mode
+         */
+        onKonDiceClick: function(diceEl) {
+            var mode = WW_State.getSpecialPowerMode();
+            if (!mode || mode.power_code !== 'kon_power') return;
+            
+            var diceId = diceEl.id.replace('dice_', '');
+            var idx = mode.selected_dice.indexOf(diceId);
+            
+            if (idx >= 0) {
+                // Deselect
+                mode.selected_dice.splice(idx, 1);
+                WW_DOM.removeClass(diceEl, 'ww_dice_selected');
+            } else {
+                // Select
+                mode.selected_dice.push(diceId);
+                WW_DOM.addClass(diceEl, 'ww_dice_selected');
+            }
+        },
+        
+        /**
+         * Confirm Kon power - reroll selected blue dice
+         */
+        confirmKonPower: function(cardId) {
+            var mode = WW_State.getSpecialPowerMode();
+            if (!mode || mode.power_code !== 'kon_power') return;
+            
+            if (mode.selected_dice.length === 0) {
+                this.showMessage(_("Select at least one die to reroll"), "error");
+                return;
+            }
+            
+            var diceIds = mode.selected_dice.map(function(id) { return parseInt(id); });
+            
+            // Clean up
+            this.cancelSpecialPowerMode();
+            
+            // Remove any pending "rest this card" actions (since we just exhausted it)
+            WW_PendingActions.removeActionsTargeting(cardId);
+            
+            // Kon power modifies dice - MUST execute immediately (like Torantors)
+            this.performAction('actUsePower', {
+                card_id: parseInt(cardId),
+                params: JSON.stringify({ dice_ids: diceIds })
+            });
+        },
+        
+        // ============================================================
         // GENERIC POWER HANDLERS - Dice Ignore (Wanda/Waldo)
         // ============================================================
         
@@ -4485,6 +4721,8 @@ function (dojo, declare) {
                     return _("Select another Torantor to rest");
                 case 'kyo_power':
                     return _("Select another Torantor to rest (Kyo bonus)");
+                case 'dragon_power':
+                    return _("Select a Hordier to exhaust");
                 default:
                     return _("Select a target");
             }
@@ -4517,10 +4755,17 @@ function (dojo, declare) {
                             isExhausted = computedState.horde[cardId].power_used;
                         }
                         
-                        // Also check CSS class as fallback (most reliable)
+                        // Also check CSS classes as fallback for visual consistency
                         var cardEl = $('ww_horde_item_' + cardId);
-                        if (cardEl && WW_DOM.hasClass(cardEl, 'ww_card_exhausted')) {
-                            isExhausted = true;
+                        if (cardEl) {
+                            // If pending_rested class is present, card is rested (overrides computed state)
+                            if (WW_DOM.hasClass(cardEl, 'ww_pending_rested')) {
+                                isExhausted = false;
+                            }
+                            // If exhausted classes present and not pending_rested, card is exhausted
+                            else if (WW_DOM.hasClass(cardEl, 'ww_card_exhausted') || WW_DOM.hasClass(cardEl, 'ww_pending_exhausted')) {
+                                isExhausted = true;
+                            }
                         }
                         
                         if (isExhausted) {
@@ -4558,6 +4803,37 @@ function (dojo, declare) {
                         var typeArg = card ? card.type : null;
                         var charInfo = typeArg ? WW_State.getCharacter(typeArg) : null;
                         if (charInfo && charInfo.name && charInfo.name.indexOf('Torantor') !== -1) {
+                            WW_DOM.addClass('ww_horde_item_' + cardId, 'ww_power_target');
+                        }
+                    }
+                    break;
+                    
+                case 'dragon_power':
+                    // Dragon can exhaust any non-exhausted Hordier (not himself)
+                    for (var cardId in WW_State.getHordeCards()) {
+                        if (cardId == sourceCardId) continue;  // Can't target himself
+                        
+                        var card = WW_State.getHordeCard(cardId);
+                        var isExhausted = card && (card.powerUsed || card.power_used || parseInt(card.card_power_used) === 1);
+                        
+                        // Check pending state too
+                        if (computedState && computedState.horde && computedState.horde[cardId]) {
+                            isExhausted = computedState.horde[cardId].power_used;
+                        }
+                        
+                        // Check CSS classes as fallback
+                        var cardEl = $('ww_horde_item_' + cardId);
+                        if (cardEl) {
+                            if (WW_DOM.hasClass(cardEl, 'ww_pending_rested')) {
+                                isExhausted = false;
+                            }
+                            else if (WW_DOM.hasClass(cardEl, 'ww_card_exhausted') || WW_DOM.hasClass(cardEl, 'ww_pending_exhausted')) {
+                                isExhausted = true;
+                            }
+                        }
+                        
+                        // Only non-exhausted cards can be targeted
+                        if (!isExhausted) {
                             WW_DOM.addClass('ww_horde_item_' + cardId, 'ww_power_target');
                         }
                     }
@@ -4819,11 +5095,22 @@ function (dojo, declare) {
                     }
                     
                     var card = WW_State.getHordeCard(targetCardId);
-                    var isExhausted = card && card.powerUsed;
+                    var isExhausted = card && (card.powerUsed || card.power_used || parseInt(card.card_power_used) === 1);
                     
                     // Check pending state
                     if (computedState && computedState.horde && computedState.horde[targetCardId]) {
                         isExhausted = computedState.horde[targetCardId].power_used;
+                    }
+                    
+                    // Also check CSS classes as fallback (for immediate power executions)
+                    var cardEl = $('ww_horde_item_' + targetCardId);
+                    if (cardEl) {
+                        if (WW_DOM.hasClass(cardEl, 'ww_pending_rested')) {
+                            isExhausted = false;
+                        }
+                        else if (WW_DOM.hasClass(cardEl, 'ww_card_exhausted') || WW_DOM.hasClass(cardEl, 'ww_pending_exhausted')) {
+                            isExhausted = true;
+                        }
                     }
                     
                     if (!isExhausted) {
@@ -4835,6 +5122,37 @@ function (dojo, declare) {
                 case 'uther_power':
                     if (targetCardId == sourceCardId) {
                         this.showMessage(_("Uther cannot sacrifice himself"), "error");
+                        return false;
+                    }
+                    return true;
+                    
+                case 'dragon_power':
+                    if (targetCardId == sourceCardId) {
+                        this.showMessage(_("Dragon cannot exhaust himself"), "error");
+                        return false;
+                    }
+                    
+                    var card = WW_State.getHordeCard(targetCardId);
+                    var isExhausted = card && (card.powerUsed || card.power_used || parseInt(card.card_power_used) === 1);
+                    
+                    // Check pending state
+                    if (computedState && computedState.horde && computedState.horde[targetCardId]) {
+                        isExhausted = computedState.horde[targetCardId].power_used;
+                    }
+                    
+                    // Check CSS classes as fallback
+                    var cardEl = $('ww_horde_item_' + targetCardId);
+                    if (cardEl) {
+                        if (WW_DOM.hasClass(cardEl, 'ww_pending_rested')) {
+                            isExhausted = false;
+                        }
+                        else if (WW_DOM.hasClass(cardEl, 'ww_card_exhausted') || WW_DOM.hasClass(cardEl, 'ww_pending_exhausted')) {
+                            isExhausted = true;
+                        }
+                    }
+                    
+                    if (isExhausted) {
+                        this.showMessage(_("This Hordier is already exhausted"), "error");
                         return false;
                     }
                     return true;
@@ -4991,6 +5309,8 @@ function (dojo, declare) {
             
             dojo.subscribe('blueDiceRerolled', this, "notif_blueDiceRerolled");
             this.notifqueue.setSynchronous('blueDiceRerolled', 1000);
+            dojo.subscribe('selectedDiceRerolled', this, "notif_selectedDiceRerolled");
+            this.notifqueue.setSynchronous('selectedDiceRerolled', 1000);
             
             dojo.subscribe('challengeDiceAdded', this, "notif_challengeDiceAdded");
             this.notifqueue.setSynchronous('challengeDiceAdded', 500);
@@ -5176,8 +5496,22 @@ function (dojo, declare) {
                 WW_Player.updateMoral(notif.args.player_id, notif.args.new_moral);
             }
             
-            // Disable pending mode
-            WW_PendingActions.disable();
+            // Only disable pending mode if we're leaving confrontation
+            // (when andConfirm=1 was used, the game will transition state)
+            // Keep it enabled if we're staying in diceResult for more actions
+            if (!notif.args.stay_in_confrontation) {
+                WW_PendingActions.disable();
+            } else {
+                // Clear without disabling - allows new actions
+                WW_PendingActions.clear();
+                // Re-enable with current state if needed
+                if (this.gamedatas && this.gamedatas.gamestate && this.gamedatas.gamestate.name === 'diceResult') {
+                    var currentState = this.buildPendingActionsState();
+                    if (currentState) {
+                        WW_PendingActions.enable(currentState);
+                    }
+                }
+            }
         },
         
         notif_playerSurpasses: function(notif) {
@@ -5241,6 +5575,7 @@ function (dojo, declare) {
                 for (var cardId in notif.args.cards) {
                     WW_Cards.addHordeCard(notif.args.cards[cardId]);
                 }
+                WW_Cards.sortHordeDisplay();
             }
             // Hide the draft panel
             WW_Cards.hideChapterDraftInterface();
@@ -5269,6 +5604,7 @@ function (dojo, declare) {
                     card_type_arg: notif.args.card_type_arg
                 };
                 WW_Cards.addHordeCard(card);
+                WW_Cards.sortHordeDisplay();
             }
             // Remove from recruitment panel
             var recruitCard = $('recruit_card_' + notif.args.card_id);
@@ -5471,6 +5807,50 @@ function (dojo, declare) {
             });
             
             // Sort all dice in container
+            WW_Dice.sortDiceInContainer('ww_horde_dice');
+            WW_Dice.updateConfrontationPreview();
+            
+            // Animate the new dice
+            var animationDelay = 0;
+            sortedDice.forEach(function(dice) {
+                setTimeout(function() {
+                    var diceEl = $('dice_' + dice.id);
+                    if (diceEl) WW_Dice.animateDiceRoll(diceEl, dice.value);
+                }, animationDelay);
+                animationDelay += 100;
+            });
+        },
+        
+        // Kon power: reroll only selected dice (not all blue dice)
+        notif_selectedDiceRerolled: function(notif) {
+            var self = this;
+            
+            // Remove only the specific selected dice
+            var removedIds = notif.args.removed_dice_ids || [];
+            removedIds.forEach(function(diceId) {
+                var diceEl = $('dice_' + diceId);
+                if (diceEl) {
+                    WW_DOM.destroy(diceEl);
+                }
+            });
+            
+            // Add new dice
+            var newDice = notif.args.new_dice || [];
+            var sortedDice = newDice.slice().sort(function(a, b) {
+                return (a.value || 0) - (b.value || 0);
+            });
+            
+            sortedDice.forEach(function(dice) {
+                WW_Dice.createDice({
+                    dice_id: dice.id,
+                    dice_type: dice.type,
+                    dice_value: dice.value
+                }, 'ww_horde_dice', function(diceId) {
+                    self.onDiceClick(diceId);
+                });
+            });
+            
+            // Sort all dice and update preview
             WW_Dice.sortDiceInContainer('ww_horde_dice');
             WW_Dice.updateConfrontationPreview();
             
