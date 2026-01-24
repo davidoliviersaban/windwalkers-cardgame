@@ -375,7 +375,172 @@
     50% { transform: scale(1.3); color: var(--color-moral); }
 }
 
-/* Game Info Panel (Chapter, Day) */
+/* ==========================================
+   PLAYER PANEL V2 - Improved display
+   ========================================== */
+
+.ww_player_info_v2 {
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* Traceur name */
+.ww_traceur_row {
+    margin-bottom: 2px;
+}
+
+.ww_traceur_name {
+    font-weight: bold;
+    font-size: 13px;
+    color: #8b4513;
+    font-style: italic;
+}
+
+/* Moral flames row */
+.ww_moral_row {
+    display: flex;
+    align-items: center;
+}
+
+.ww_moral_flames {
+    display: flex;
+    gap: 2px;
+}
+
+.ww_moral_flame {
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    transition: transform 0.2s, filter 0.2s;
+}
+
+.ww_moral_flame_filled {
+    background-image: url('img/helpers/moral.png');
+    filter: drop-shadow(0 1px 2px rgba(255, 107, 53, 0.5));
+}
+
+.ww_moral_flame_empty {
+    background-image: url('img/helpers/moral-down.png');
+    opacity: 0.6;
+}
+
+/* Dice icons row */
+.ww_dice_row_panel {
+    display: flex;
+    align-items: center;
+}
+
+.ww_dice_icons {
+    display: flex;
+    gap: 3px;
+}
+
+.ww_panel_die {
+    width: 18px;
+    height: 18px;
+    display: inline-block;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.ww_panel_die_blue {
+    background-image: url('img/helpers/d6-blue.png');
+}
+
+.ww_panel_die_empty {
+    background-image: url('img/helpers/d6-blue-down.png');
+    opacity: 0.6;
+}
+
+.ww_panel_die_violet {
+    background: linear-gradient(135deg, #ba68c8 0%, #7b1fa2 100%);
+    border-radius: 3px;
+    box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Rest counter */
+.ww_rest_counter {
+    display: inline-flex;
+    display: flex;
+    align-items: center;
+}
+
+.ww_rest_icon {
+    width: 24px;
+    height: 24px;
+    display: inline-block;
+    background-image: url('img/helpers/tent.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    margin-right: 6px;
+}
+
+.ww_rest_count {
+    font-size: 16px;
+    font-weight: bold;
+    color: #000000;
+}
+
+/* ==========================================
+   GAME INFO PANEL V2 (Chapter, Day)
+   ========================================== */
+
+.ww_game_info_v2 {
+    background: linear-gradient(135deg, #2d3436 0%, #1e272e 100%);
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 10px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+}
+
+.ww_gi_row {
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+}
+
+.ww_gi_item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ww_gi_icon {
+    font-size: 22px;
+}
+
+.ww_gi_label {
+    font-size: 11px;
+    color: #b2bec3;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 500;
+}
+
+.ww_gi_value {
+    font-size: 26px;
+    font-weight: bold;
+    min-width: 24px;
+    text-align: center;
+    text-shadow: 0 2px 3px rgba(0,0,0,0.5);
+}
+
+.ww_gi_chapter .ww_gi_value {
+    color: #ffeaa7;
+}
+
+.ww_gi_day .ww_gi_value {
+    color: #a29bfe;
+}
+
+/* Legacy game info panel styles - kept for backward compatibility */
 #ww_game_info_panel {
     display: flex;
     gap: 20px;
@@ -1417,6 +1582,29 @@
 .ww_card_preview_overlay.ww_visible {
     opacity: 1;
     pointer-events: auto;
+}
+
+/* Magnifying glass icon on cards */
+.ww_card_zoom_icon {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 22px;
+    height: 22px;
+    font-size: 12px;
+    line-height: 22px;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    cursor: pointer;
+    opacity: 0.5;
+    transition: opacity 0.2s, transform 0.2s;
+    z-index: 10;
+}
+
+.ww_card_zoom_icon:hover {
+    opacity: 1;
+    transform: scale(1.15);
 }
 
 .ww_card_preview {

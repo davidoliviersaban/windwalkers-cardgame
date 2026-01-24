@@ -38,14 +38,17 @@ trait WW_Confrontation
      */
     private function discardCard(int $player_id, int $card_id, bool $to_use_its_power = true): void
     {
+        // Get card info before moving
+        $card = $this->getObjectFromDB("SELECT card_type_arg FROM card WHERE card_id = $card_id");
+        $type_arg = (int) $card['card_type_arg'];
+        $char_info = $this->characters[$type_arg] ?? ['name' => 'Hordier'];
+        $character_name = $char_info['name'];
+
         // Move card to discard
         $this->cards->moveCard($card_id, 'discard');
 
         // Increment hordiers lost stat
         $this->incStat(1, 'hordiers_lost', $player_id);
-
-        // find card name
-        $character_name = $this->getUniqueValueFromDB("SELECT card_name FROM card WHERE card_id = $card_id");
 
         // Notify about discard
         $to_use_its_power_string = $to_use_its_power ? "(to use its power)" : "";
@@ -359,6 +362,9 @@ trait WW_Confrontation
         // Apply power effect based on power_code
         $this->applyPowerEffect($player_id, $card_id, $power_code, $target_card_id, $power_params);
 
+        // Increment powers_used stat
+        $this->incStat(1, 'powers_used', $player_id);
+
         // Notify power used
         $this->notifyAllPlayers('powerUsed', clienttranslate('${player_name} uses ${character_name}\'s power'), [
             'player_id' => $player_id,
@@ -598,6 +604,26 @@ trait WW_Confrontation
         if (!empty($protected_cards)) {
             $exclude_ids = array_merge($exclude_ids, array_map('intval', $protected_cards));
         }
+
+        // Also find any exhausted Régitha cards - they can NEVER rest
+        $regitha_type_arg = null;
+        foreach ($this->characters as $type_arg => $char) {
+            if (($char['power_code'] ?? '') === 'regitha_power') {
+                $regitha_type_arg = $type_arg;
+                break;
+            }
+        }
+        if ($regitha_type_arg !== null) {
+            $exhausted_regitha = $this->getObjectFromDB(
+                "SELECT card_id FROM card WHERE card_location = 'horde_$player_id' 
+                 AND card_type_arg = $regitha_type_arg AND card_power_used = 1"
+            );
+            if ($exhausted_regitha) {
+                $exclude_ids[] = (int) $exhausted_regitha['card_id'];
+            }
+        }
+
+        $exclude_ids = array_unique($exclude_ids);
         $exclude_sql = implode(',', $exclude_ids);
 
         // Rest all hordiers EXCEPT Galas himself and protected cards (set card_power_used = 0)

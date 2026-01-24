@@ -273,8 +273,20 @@ function (dojo, declare) {
             this._data.playerMoral[playerId] = moral;
         },
         
+        getPlayerMoral: function(playerId) {
+            // Return value if set, undefined if not (so caller can distinguish from 0 moral)
+            if (playerId in this._data.playerMoral) {
+                return this._data.playerMoral[playerId];
+            }
+            return undefined;
+        },
+        
         setPlayerDice: function(playerId, count) {
             this._data.playerDice[playerId] = count;
+        },
+        
+        getPlayerDice: function(playerId) {
+            return this._data.playerDice[playerId] || 0;
         },
         
         // Selection
@@ -463,12 +475,10 @@ function (dojo, declare) {
     };
     
     // ============================================================
-    // WW_CardPreview - Card preview tooltip on hover
+    // WW_CardPreview - Card preview on magnifying glass click
     // ============================================================
     var WW_CardPreview = {
-        hoverTimer: null,
         previewVisible: false,
-        HOVER_DELAY: 1000, // 1 second
         
         init: function() {
             // Create overlay if not exists
@@ -490,33 +500,22 @@ function (dojo, declare) {
             }
         },
         
-        setupHover: function(cardEl, typeArg) {
+        // Add magnifying glass icon to card for zooming
+        setupZoom: function(cardEl, typeArg) {
             var self = this;
+            var cardId = cardEl.id;
             
-            // Mouse enter - start timer
-            dojo.connect(cardEl, 'onmouseenter', function() {
-                self.cancelTimer();
-                self.hoverTimer = setTimeout(function() {
-                    self.show(typeArg);
-                }, self.HOVER_DELAY);
-            });
+            // Add magnifying glass icon
+            var zoomIcon = document.createElement('div');
+            zoomIcon.className = 'ww_card_zoom_icon';
+            zoomIcon.innerHTML = '🔍';
+            cardEl.appendChild(zoomIcon);
             
-            // Mouse leave - cancel timer
-            dojo.connect(cardEl, 'onmouseleave', function() {
-                self.cancelTimer();
+            // Click on magnifying glass to show preview
+            dojo.connect(zoomIcon, 'onclick', function(evt) {
+                WW_DOM.stopEvent(evt);
+                self.show(typeArg);
             });
-            
-            // Click - cancel timer (don't show preview on click)
-            dojo.connect(cardEl, 'onclick', function() {
-                self.cancelTimer();
-            });
-        },
-        
-        cancelTimer: function() {
-            if (this.hoverTimer) {
-                clearTimeout(this.hoverTimer);
-                this.hoverTimer = null;
-            }
         },
         
         show: function(typeArg) {
@@ -1011,16 +1010,23 @@ function (dojo, declare) {
             
             // Send batch to server using bgaPerformAction (returns promise)
             var self = this;
-            this.gameInstance.bgaPerformAction('actBatchActions', {
+            var result = this.gameInstance.bgaPerformAction('actBatchActions', {
                 actions: JSON.stringify(actions)
-            }).then(function() {
+            });
+            if (result && result.then) {
+                result.then(function() {
+                    self.clear();
+                    if (callback) callback(true);
+                }).catch(function() {
+                    // Server rejected - restore original
+                    self.undoAll();
+                    if (callback) callback(false);
+                });
+            } else {
+                // Fallback if bgaPerformAction doesn't return a promise
                 self.clear();
                 if (callback) callback(true);
-            }).catch(function() {
-                // Server rejected - restore original
-                self.undoAll();
-                if (callback) callback(false);
-            });
+            }
         }
     };
     
@@ -1630,8 +1636,8 @@ function (dojo, declare) {
             
             var cardEl = $(options.prefix + '_' + cardId);
             
-            // Setup hover preview (1 second delay)
-            WW_CardPreview.setupHover(cardEl, typeArg);
+            // Setup zoom icon for preview
+            WW_CardPreview.setupZoom(cardEl, typeArg);
             
             if (options.onClick) {
                 WW_DOM.connect(options.prefix + '_' + cardId, 'onclick', null, function(evt) {
@@ -2126,29 +2132,53 @@ function (dojo, declare) {
             var panel = $('player_board_' + playerId);
             if (!panel) return;
             
-            var moralHtml = '<div class="ww_player_info">' +
-                '<div class="ww_stat_row">' +
-                    '<div class="ww_moral_container">' +
-                        '<span class="ww_moral_icon"></span>' +
-                        '<span id="moral_counter_' + playerId + '" class="ww_moral_value">' + player.moral + '</span>' +
-                        '<span class="ww_moral_max">/9</span>' +
-                    '</div>' +
-                    '<div class="ww_dice_container">' +
-                        '<span class="ww_dice_icon_small"></span>' +
-                        '<span id="dice_counter_' + playerId + '" class="ww_dice_value">' + 
-                            (player.dice_count - player.surpass) + '</span>' +
-                    '</div>' +
+            var traceurName = player.traceur_name || '';
+            var moral = player.moral || 0;
+            var diceCount = (player.dice_count || 0) - (player.surpass || 0);
+            
+            // Generate moral flames (filled/empty)
+            var moralFlamesHtml = '';
+            for (var i = 1; i <= 9; i++) {
+                var filled = i <= moral ? 'filled' : 'empty';
+                moralFlamesHtml += '<span class="ww_moral_flame ww_moral_flame_' + filled + '"></span>';
+            }
+            
+            // Generate dice icons (mini blue dice) - show up to max, filled for actual, empty for missing
+            var diceIconsHtml = '';
+            var maxDice = 6; // Based on game difficulty
+            for (var d = 1; d <= maxDice; d++) {
+                var diceClass = d <= diceCount ? 'ww_panel_die_blue' : 'ww_panel_die_empty';
+                diceIconsHtml += '<span class="ww_panel_die ' + diceClass + '"></span>';
+            }
+            
+            // Rest counter
+            var restCount = player.rest_count || 0;
+            
+            var panelHtml = '<div class="ww_player_info_v2">' +
+                // Traceur name row
+                (traceurName ? '<div class="ww_traceur_row"><span class="ww_traceur_name">' + traceurName + '</span></div>' : '') +
+                // Moral flames row
+                '<div class="ww_moral_row">' +
+                    '<div id="moral_flames_' + playerId + '" class="ww_moral_flames">' + moralFlamesHtml + '</div>' +
+                '</div>' +
+                // Dice row
+                '<div class="ww_dice_row_panel">' +
+                    '<div id="dice_icons_' + playerId + '" class="ww_dice_icons">' + diceIconsHtml + '</div>' +
+                '</div>' +
+                // Rest counter row (below dice)
+                '<div class="ww_rest_row">' +
+                    '<div id="rest_counter_' + playerId + '" class="ww_rest_counter"><span class="ww_rest_icon"></span><span class="ww_rest_count">' + restCount + '</span></div>' +
                 '</div>' +
             '</div>';
             
-            WW_DOM.place(moralHtml, panel);
+            WW_DOM.place(panelHtml, panel);
             
             WW_State.setPlayerMoral(playerId, player.moral);
-            WW_State.setPlayerDice(playerId, player.dice_count);
+            WW_State.setPlayerDice(playerId, diceCount);  // Store effective dice count (after surpass)
         },
         
         setupGameInfoPanel: function(gamedatas) {
-            // Create game info panel in page title area or dedicated zone
+            // Create game info panel above player boards
             var chapter = gamedatas.current_chapter || 1;
             var chapterDay = gamedatas.chapter_round || 1;
             var totalDays = gamedatas.current_round || 1;
@@ -2161,37 +2191,28 @@ function (dojo, declare) {
                 return;
             }
             
-            var infoHtml = '<div id="ww_game_info_panel" class="ww_game_info">' +
-                '<div class="ww_chapter_info">' +
-                    '<span class="ww_chapter_icon">📖</span>' +
-                    '<span class="ww_chapter_label">Chapter</span>' +
-                    '<span id="ww_chapter_value" class="ww_chapter_value">' + chapter + '</span>' +
-                '</div>' +
-                '<div class="ww_day_info">' +
-                    '<span class="ww_day_icon">🌙</span>' +
-                    '<span class="ww_day_label">Day</span>' +
-                    '<span id="ww_chapter_day_value" class="ww_day_value">' + chapterDay + '</span>' +
-                '</div>' +
-                '<div class="ww_total_days_info">' +
-                    '<span class="ww_total_icon">📅</span>' +
-                    '<span class="ww_total_label">Total</span>' +
-                    '<span id="ww_total_days_value" class="ww_total_value">' + totalDays + '</span>' +
+            var infoHtml = '<div id="ww_game_info_panel" class="ww_game_info_v2">' +
+                '<div class="ww_gi_row">' +
+                    '<div class="ww_gi_item ww_gi_chapter">' +
+                        '<span class="ww_gi_icon">📖</span>' +
+                        '<span class="ww_gi_label">CHAPTER</span>' +
+                        '<span id="ww_chapter_value" class="ww_gi_value">' + chapter + '</span>' +
+                    '</div>' +
+                    '<div class="ww_gi_item ww_gi_day">' +
+                        '<span class="ww_gi_icon">🌙</span>' +
+                        '<span class="ww_gi_label">DAY</span>' +
+                        '<span id="ww_chapter_day_value" class="ww_gi_value">' + chapterDay + '</span>' +
+                    '</div>' +
                 '</div>' +
             '</div>';
             
-            // Place in right column, player boards, or page title area
-            var rightCol = $('right-side-first-part');
+            // Place above player boards
             var playerBoards = $('player_boards');
-            var pageTitle = $('page-title');
             
-            if (rightCol) {
-                WW_DOM.place(infoHtml, rightCol, 'first');
-            } else if (playerBoards) {
+            if (playerBoards) {
                 WW_DOM.place(infoHtml, playerBoards, 'before');
-            } else if (pageTitle) {
-                WW_DOM.place(infoHtml, pageTitle, 'after');
             } else {
-                console.warn('Could not find container for game info panel');
+                console.warn('Could not find player_boards for game info panel');
             }
         },
         
@@ -2208,13 +2229,43 @@ function (dojo, declare) {
         
         updateMoral: function(playerId, newMoral) {
             WW_State.setPlayerMoral(playerId, newMoral);
-            WW_DOM.setHtml('moral_counter_' + playerId, newMoral);
-            WW_DOM.animateClass('moral_counter_' + playerId, 'ww_value_changed', 500);
+            // Update moral counter if exists (legacy)
+            var counter = $('moral_counter_' + playerId);
+            if (counter) {
+                WW_DOM.setHtml(counter, newMoral);
+                WW_DOM.animateClass(counter, 'ww_value_changed', 500);
+            }
+            // Update moral flames (new style)
+            var flamesContainer = $('moral_flames_' + playerId);
+            if (flamesContainer) {
+                var flamesHtml = '';
+                for (var i = 1; i <= 9; i++) {
+                    var filled = i <= newMoral ? 'filled' : 'empty';
+                    flamesHtml += '<span class="ww_moral_flame ww_moral_flame_' + filled + '"></span>';
+                }
+                WW_DOM.setHtml(flamesContainer, flamesHtml);
+                WW_DOM.animateClass(flamesContainer, 'ww_value_changed', 500);
+            }
         },
         
         updateDiceCount: function(playerId, newCount) {
             WW_State.setPlayerDice(playerId, newCount);
-            WW_DOM.setHtml('dice_counter_' + playerId, newCount);
+            // Update dice counter if exists (legacy)
+            var counter = $('dice_counter_' + playerId);
+            if (counter) {
+                WW_DOM.setHtml(counter, newCount);
+            }
+            // Update dice icons (new style) - show up to max, filled for actual, empty for missing
+            var diceContainer = $('dice_icons_' + playerId);
+            if (diceContainer) {
+                var diceHtml = '';
+                var maxDice = 6; // Based on game difficulty
+                for (var d = 1; d <= maxDice; d++) {
+                    var diceClass = d <= newCount ? 'ww_panel_die_blue' : 'ww_panel_die_empty';
+                    diceHtml += '<span class="ww_panel_die ' + diceClass + '"></span>';
+                }
+                WW_DOM.setHtml(diceContainer, diceHtml);
+            }
         },
         
         updatePosition: function(playerId, q, r) {
@@ -2222,8 +2273,7 @@ function (dojo, declare) {
         },
         
         getCurrentDiceCount: function(playerId) {
-            var countEl = $('dice_counter_' + playerId);
-            return countEl ? parseInt(WW_DOM.getHtml(countEl)) : 0;
+            return WW_State.getPlayerDice(playerId);
         }
     };
     
@@ -2267,14 +2317,25 @@ function (dojo, declare) {
                 self._actionInProgress = false;
             }, 10000);
             
-            this.bgaPerformAction(action, args || {}).then(function() {
-                clearTimeout(timeoutId);
-                self._actionInProgress = false;
-            }).catch(function(err) {
-                clearTimeout(timeoutId);
-                self._actionInProgress = false;
-                console.log('[performAction] Error:', err);
-            });
+            var result = this.bgaPerformAction(action, args || {});
+            
+            // Handle both promise and non-promise returns
+            if (result && typeof result.then === 'function') {
+                result.then(function() {
+                    clearTimeout(timeoutId);
+                    self._actionInProgress = false;
+                }).catch(function(err) {
+                    clearTimeout(timeoutId);
+                    self._actionInProgress = false;
+                    console.log('[performAction] Error:', err);
+                });
+            } else {
+                // If no promise, reset flag after short delay
+                setTimeout(function() {
+                    clearTimeout(timeoutId);
+                    self._actionInProgress = false;
+                }, 500);
+            }
         },
         
         /*
@@ -3088,14 +3149,22 @@ function (dojo, declare) {
                 
                 // Send batch actions with confirm flag - single request
                 // Use 1 instead of true for BGA compatibility
-                this.bgaPerformAction('actBatchActions', {
+                var result = this.bgaPerformAction('actBatchActions', {
                     actions: JSON.stringify(actions),
                     andConfirm: 1
-                }).then(function() {
-                    WW_PendingActions.clear();
-                }).catch(function() {
-                    WW_PendingActions.undoAll();
                 });
+                
+                // Handle both promise and non-promise returns
+                if (result && typeof result.then === 'function') {
+                    result.then(function() {
+                        WW_PendingActions.clear();
+                    }).catch(function() {
+                        WW_PendingActions.undoAll();
+                    });
+                } else {
+                    // If no promise, just clear pending actions
+                    WW_PendingActions.clear();
+                }
             } else {
                 this.performAction('actConfirmRoll', {});
             }
@@ -3284,14 +3353,19 @@ function (dojo, declare) {
                 // Now send all actions together (including the power)
                 var actions = WW_PendingActions.getActions();
                 
-                this.bgaPerformAction('actBatchActions', {
+                var result = this.bgaPerformAction('actBatchActions', {
                     actions: JSON.stringify(actions),
                     andConfirm: 0  // Don't confirm roll, just apply the actions
-                }).then(function() {
-                    WW_PendingActions.clear();
-                }).catch(function() {
-                    WW_PendingActions.undoAll();
                 });
+                if (result && result.then) {
+                    result.then(function() {
+                        WW_PendingActions.clear();
+                    }).catch(function() {
+                        WW_PendingActions.undoAll();
+                    });
+                } else {
+                    WW_PendingActions.clear();
+                }
             } else {
                 // No pending actions, just execute directly
                 this.performAction('actUsePower', {
@@ -3339,18 +3413,27 @@ function (dojo, declare) {
                     if (WW_PendingActions.isEnabled && WW_PendingActions.isEnabled() && WW_PendingActions.hasPending()) {
                         var actions = WW_PendingActions.getActions();
                         
-                        self.bgaPerformAction('actBatchActions', {
+                        var result = self.bgaPerformAction('actBatchActions', {
                             actions: JSON.stringify(actions),
                             andConfirm: 0
-                        }).then(function() {
+                        });
+                        if (result && result.then) {
+                            result.then(function() {
+                                WW_PendingActions.clear();
+                                self.performAction('actUsePower', {
+                                    card_id: parseInt(cardId),
+                                    params: JSON.stringify({})
+                                });
+                            }).catch(function() {
+                                WW_PendingActions.undoAll();
+                            });
+                        } else {
                             WW_PendingActions.clear();
                             self.performAction('actUsePower', {
                                 card_id: parseInt(cardId),
                                 params: JSON.stringify({})
                             });
-                        }).catch(function() {
-                            WW_PendingActions.undoAll();
-                        });
+                        }
                     } else {
                         self.performAction('actUsePower', {
                             card_id: parseInt(cardId),
@@ -3388,18 +3471,27 @@ function (dojo, declare) {
                     if (WW_PendingActions.isEnabled && WW_PendingActions.isEnabled() && WW_PendingActions.hasPending()) {
                         var actions = WW_PendingActions.getActions();
                         
-                        self.bgaPerformAction('actBatchActions', {
+                        var result = self.bgaPerformAction('actBatchActions', {
                             actions: JSON.stringify(actions),
                             andConfirm: 0
-                        }).then(function() {
+                        });
+                        if (result && result.then) {
+                            result.then(function() {
+                                WW_PendingActions.clear();
+                                self.performAction('actUsePower', {
+                                    card_id: parseInt(cardId),
+                                    params: JSON.stringify({})
+                                });
+                            }).catch(function() {
+                                WW_PendingActions.undoAll();
+                            });
+                        } else {
                             WW_PendingActions.clear();
                             self.performAction('actUsePower', {
                                 card_id: parseInt(cardId),
                                 params: JSON.stringify({})
                             });
-                        }).catch(function() {
-                            WW_PendingActions.undoAll();
-                        });
+                        }
                     } else {
                         self.performAction('actUsePower', {
                             card_id: parseInt(cardId),
@@ -3680,18 +3772,27 @@ function (dojo, declare) {
             if (WW_PendingActions.isEnabled && WW_PendingActions.isEnabled() && WW_PendingActions.hasPending()) {
                 var actions = WW_PendingActions.getActions();
                 
-                this.bgaPerformAction('actBatchActions', {
+                var result = this.bgaPerformAction('actBatchActions', {
                     actions: JSON.stringify(actions),
                     andConfirm: 0
-                }).then(function() {
-                    WW_PendingActions.commit();  // Duke is discard - commit but allow new actions
+                });
+                if (result && result.then) {
+                    result.then(function() {
+                        WW_PendingActions.commit();  // Duke is discard - commit but allow new actions
+                        self.performAction('actUsePower', {
+                            card_id: parseInt(cardId),
+                            params: JSON.stringify(params)
+                        });
+                    }).catch(function() {
+                        WW_PendingActions.undoAll();
+                    });
+                } else {
+                    WW_PendingActions.commit();
                     self.performAction('actUsePower', {
                         card_id: parseInt(cardId),
                         params: JSON.stringify(params)
                     });
-                }).catch(function() {
-                    WW_PendingActions.undoAll();
-                });
+                }
             } else {
                 WW_PendingActions.commit();  // Duke is discard - commit but allow new actions
                 this.performAction('actUsePower', {
@@ -3891,18 +3992,27 @@ function (dojo, declare) {
             if (WW_PendingActions.isEnabled && WW_PendingActions.isEnabled() && WW_PendingActions.hasPending()) {
                 var actions = WW_PendingActions.getActions();
                 
-                this.bgaPerformAction('actBatchActions', {
+                var result = this.bgaPerformAction('actBatchActions', {
                     actions: JSON.stringify(actions),
                     andConfirm: 0
-                }).then(function() {
-                    WW_PendingActions.commit();  // Jonas is discard - commit but allow new actions
+                });
+                if (result && result.then) {
+                    result.then(function() {
+                        WW_PendingActions.commit();  // Jonas is discard - commit but allow new actions
+                        self.performAction('actUsePower', {
+                            card_id: parseInt(cardId),
+                            params: JSON.stringify(params)
+                        });
+                    }).catch(function() {
+                        WW_PendingActions.undoAll();
+                    });
+                } else {
+                    WW_PendingActions.commit();
                     self.performAction('actUsePower', {
                         card_id: parseInt(cardId),
                         params: JSON.stringify(params)
                     });
-                }).catch(function() {
-                    WW_PendingActions.undoAll();
-                });
+                }
             } else {
                 WW_PendingActions.commit();  // Jonas is discard - commit but allow new actions
                 this.performAction('actUsePower', {
@@ -3964,9 +4074,13 @@ function (dojo, declare) {
          * Ukkiba: -1 moral, then ±1 on blue dice (X = remaining moral)
          */
         enterUkkibaPowerMode: function(cardId) {
-            // Get current moral from computed state (accounts for pending actions) or gamedatas
-            var computedState = WW_PendingActions.getComputedState();
-            var currentMoral = computedState ? computedState.moral : (this.gamedatas.players[this.player_id] || {}).moral || 0;
+            // Get current moral from WW_State (updated by notifications) or gamedatas as fallback
+            var currentMoral = WW_State.getPlayerMoral(this.player_id);
+            if (currentMoral === undefined) {
+                // Fallback to gamedatas if WW_State not initialized
+                currentMoral = (this.gamedatas.players[this.player_id] || {}).moral || 0;
+            }
+            console.log('[Ukkiba] currentMoral from WW_State:', currentMoral, 'player_id:', this.player_id);
             
             if (currentMoral <= 1) {
                 this.showMessage(_("You need at least 2 moral to use this power (1 will be spent)"), "error");
@@ -4856,6 +4970,16 @@ function (dojo, declare) {
                 return;
             }
             
+            // Update local moral immediately for Dragon (+4 capped at 9)
+            // This makes the moral available for subsequent powers like Ukkiba
+            if (powerCode === 'dragon_power') {
+                var currentMoral = WW_State.getPlayerMoral(this.player_id);
+                if (currentMoral === undefined) {
+                    currentMoral = parseInt((this.gamedatas.players[this.player_id] || {}).moral) || 0;
+                }
+                WW_State.setPlayerMoral(this.player_id, Math.min(9, currentMoral + 4));
+            }
+            
             // Check if we're in pending actions mode (during confrontation)
             var inPendingActionsMode = WW_PendingActions.isEnabled && WW_PendingActions.isEnabled();
             
@@ -5522,6 +5646,14 @@ function (dojo, declare) {
         notif_playerRests: function(notif) {
             var diceCount = notif.args.dice_count - notif.args.surpass_count;
             WW_Player.updateDiceCount(notif.args.player_id, diceCount);
+            
+            // Update rest counter if provided
+            if (notif.args.rest_count !== undefined) {
+                var restCountEl = dojo.query('#rest_counter_' + notif.args.player_id + ' .ww_rest_count')[0];
+                if (restCountEl) {
+                    restCountEl.textContent = notif.args.rest_count;
+                }
+            }
         },
         
         notif_playerMoves: function(notif) {
@@ -5679,11 +5811,14 @@ function (dojo, declare) {
                 WW_DOM.connect(tileEl, 'onclick', this, 'onTileClick');
             }
             
-            // Update player positions
+            // Update player positions and reset dice (surpass is reset at chapter start)
             var players = notif.args.players;
             for (var player_id in players) {
                 var player = players[player_id];
                 WW_Hex.movePlayerToken(this, player_id, player.pos_q, player.pos_r);
+                // Reset dice count to max (surpass is 0 at chapter start)
+                var diceCount = (player.dice_count || 6) - (player.surpass || 0);
+                WW_Player.updateDiceCount(player_id, diceCount);
             }
             
             // Center map on current player

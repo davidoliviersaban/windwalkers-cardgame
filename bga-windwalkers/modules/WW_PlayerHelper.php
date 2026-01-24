@@ -8,7 +8,7 @@ trait WW_PlayerHelper
     //////////////////////////////////////////////////////////////////////////////
     // Player Data Access
     //////////////////////////////////////////////////////////////////////////////
-    
+
     /**
      * Get full player data from database
      */
@@ -20,7 +20,7 @@ trait WW_PlayerHelper
         }
         return $player;
     }
-    
+
     /**
      * Get player position as array [q, r]
      */
@@ -28,11 +28,11 @@ trait WW_PlayerHelper
     {
         $player = $this->getPlayerData($player_id);
         return [
-            'q' => (int)$player['player_position_q'],
-            'r' => (int)$player['player_position_r']
+            'q' => (int) $player['player_position_q'],
+            'r' => (int) $player['player_position_r']
         ];
     }
-    
+
     /**
      * Update player position
      */
@@ -42,17 +42,17 @@ trait WW_PlayerHelper
             "UPDATE player SET player_position_q = $q, player_position_r = $r WHERE player_id = $player_id"
         );
     }
-    
+
     /**
      * Get player moral
      */
     function getPlayerMoral(int $player_id): int
     {
-        return (int)$this->getUniqueValueFromDB(
+        return (int) $this->getUniqueValueFromDB(
             "SELECT player_moral FROM player WHERE player_id = $player_id"
         );
     }
-    
+
     /**
      * Modify player moral (clamped to 0-9)
      * If Lihn's power is active and delta is positive, double the gain
@@ -61,18 +61,18 @@ trait WW_PlayerHelper
     {
         // Check if Lihn's double points is active (only for positive gains)
         if ($delta > 0) {
-            $lihn_active = (int)($this->getGlobalVariable('lihn_double_points') ?? 0);
+            $lihn_active = (int) ($this->getGlobalVariable('lihn_double_points') ?? 0);
             if ($lihn_active) {
                 $delta *= 2;
             }
         }
-        
+
         $this->DbQuery(
             "UPDATE player SET player_moral = GREATEST(0, LEAST(9, player_moral + $delta)) WHERE player_id = $player_id"
         );
         return $this->getPlayerMoral($player_id);
     }
-    
+
     /**
      * Get player movement state
      */
@@ -80,12 +80,12 @@ trait WW_PlayerHelper
     {
         $player = $this->getPlayerData($player_id);
         return [
-            'has_moved' => (int)$player['player_has_moved'],
-            'surpass_count' => (int)$player['player_surpass_count'],
-            'dice_count' => (int)$player['player_dice_count']
+            'has_moved' => (int) $player['player_has_moved'],
+            'surpass_count' => (int) $player['player_surpass_count'],
+            'dice_count' => (int) $player['player_dice_count']
         ];
     }
-    
+
     /**
      * Increment player movement counter
      */
@@ -95,7 +95,7 @@ trait WW_PlayerHelper
             "UPDATE player SET player_has_moved = player_has_moved + 1 WHERE player_id = $player_id"
         );
     }
-    
+
     /**
      * Increment both movement and surpass counters
      */
@@ -106,7 +106,7 @@ trait WW_PlayerHelper
              player_surpass_count = player_surpass_count + 1 WHERE player_id = $player_id"
         );
     }
-    
+
     /**
      * Reset movement and surpass counters (for rest)
      */
@@ -120,7 +120,7 @@ trait WW_PlayerHelper
     //////////////////////////////////////////////////////////////////////////////
     // Player Extended Info (for getAllDatas)
     //////////////////////////////////////////////////////////////////////////////
-    
+
     /**
      * Enrich player info with game-specific data
      */
@@ -134,19 +134,36 @@ trait WW_PlayerHelper
                  FROM player WHERE player_id = $player_id"
             );
             if ($p) {
+                // Get traceur (leader) name
+                $traceur_name = '';
+                $traceur_card = $this->getObjectFromDB(
+                    "SELECT card_type_arg FROM card WHERE card_location = 'horde_$player_id' AND card_is_leader = 1 LIMIT 1"
+                );
+                if ($traceur_card) {
+                    $char_id = (int) $traceur_card['card_type_arg'];
+                    if (isset($this->characters[$char_id])) {
+                        $traceur_name = $this->characters[$char_id]['name'];
+                    }
+                }
+
+                // Get rest count stat
+                $rest_count = (int) $this->getStat('rest_count', $player_id);
+
                 $enriched[$player_id] = [
                     'moral' => $p['moral'],
                     'pos_q' => $p['pos_q'],
                     'pos_r' => $p['pos_r'],
                     'has_moved' => $p['has_moved'],
                     'surpass' => $p['surpass_count'],
-                    'dice_count' => $p['dice_count']
+                    'dice_count' => $p['dice_count'],
+                    'traceur_name' => $traceur_name,
+                    'rest_count' => $rest_count
                 ];
             }
         }
         return $enriched;
     }
-    
+
     /**
      * Check if player has a specific character (by power_code) active in their horde
      * @param int $player_id Player ID
@@ -164,20 +181,20 @@ trait WW_PlayerHelper
                 break;
             }
         }
-        
+
         if ($char_id === null) {
             return false;
         }
-        
+
         // Check if player has this character in their horde
         $exhausted_condition = $mustBeAvailable ? " AND card_power_used = 0" : "";
-        $count = (int)$this->getUniqueValueFromDB(
+        $count = (int) $this->getUniqueValueFromDB(
             "SELECT COUNT(*) FROM card WHERE card_location = 'horde_$player_id' AND card_type_arg = $char_id" . $exhausted_condition
         );
-        
+
         return $count > 0;
     }
-    
+
     /**
      * Check if player has Lyara l'Inspirante in their horde (villages = cities)
      */
@@ -185,7 +202,7 @@ trait WW_PlayerHelper
     {
         return $this->hasCharacterWithPower($player_id, 'lyara_power', false);
     }
-    
+
     /**
      * Check if a tile should be treated as a city (actual city OR village with Lyara)
      */

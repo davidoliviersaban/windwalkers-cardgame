@@ -8,7 +8,7 @@ trait WW_Movement
     //////////////////////////////////////////////////////////////////////////////
     // Movement Actions
     //////////////////////////////////////////////////////////////////////////////
-    
+
     /**
      * Select a tile to move to
      * Automatically detects if this is a surpass (has_moved > 0)
@@ -17,19 +17,19 @@ trait WW_Movement
     {
         $this->checkAction('actSelectTile');
         $player_id = $this->getActivePlayerId();
-        
+
         $this->validateTileAdjacent($player_id, $tile_id);
-        
+
         // Check if this is a surpass (player has already moved this turn)
-        $has_moved = (int)$this->getUniqueValueFromDB("SELECT player_has_moved FROM player WHERE player_id = $player_id");
-        
+        $has_moved = (int) $this->getUniqueValueFromDB("SELECT player_has_moved FROM player WHERE player_id = $player_id");
+
         $this->setGameStateValue('selected_tile', $tile_id);
-        
+
         if ($has_moved > 0) {
             // This is a surpass - increment both counters
             $this->DbQuery("UPDATE player SET player_has_moved = player_has_moved + 1, player_surpass_count = player_surpass_count + 1 WHERE player_id = $player_id");
             $this->incStat(1, 'surpass_count', $player_id);
-            
+
             $this->notifyAllPlayers('playerSurpasses', clienttranslate('${player_name} surpasses! (-1 die)'), [
                 'player_id' => $player_id,
                 'player_name' => $this->getActivePlayerName()
@@ -38,7 +38,7 @@ trait WW_Movement
             // First movement - just increment has_moved
             $this->DbQuery("UPDATE player SET player_has_moved = player_has_moved + 1 WHERE player_id = $player_id");
         }
-        
+
         $this->gamestate->nextState('moveToTile');
     }
 
@@ -59,20 +59,22 @@ trait WW_Movement
     {
         $this->checkAction('actRest');
         $player_id = $this->getActivePlayerId();
-        
+
         $this->DbQuery("UPDATE player SET player_has_moved = 0, player_surpass_count = 0 WHERE player_id = $player_id");
-        
+
         // Get updated player data
         $player = $this->getObjectFromDB("SELECT * FROM player WHERE player_id = $player_id");
-        
+
+        $this->incStat(1, 'rest_count', $player_id);
+        $rest_count = (int) $this->getStat('rest_count', $player_id);
+
         $this->notifyAllPlayers('playerRests', clienttranslate('${player_name} rests and resets surpass counter'), [
             'player_id' => $player_id,
             'player_name' => $this->getActivePlayerName(),
-            'dice_count' => (int)$player['player_dice_count'],
-            'surpass_count' => 0
+            'dice_count' => (int) $player['player_dice_count'],
+            'surpass_count' => 0,
+            'rest_count' => $rest_count
         ]);
-        
-        $this->incStat(1, 'rest_count', $player_id);
         $this->gamestate->nextState('rest');
     }
 
@@ -83,29 +85,29 @@ trait WW_Movement
     {
         $this->checkAction('actEndTurn');
         $player_id = $this->getActivePlayerId();
-        
+
         $this->gamestate->nextState('nextTurn');
     }
 
     //////////////////////////////////////////////////////////////////////////////
     // Tile Validation
     //////////////////////////////////////////////////////////////////////////////
-    
+
     /**
      * Validate tile is adjacent to player
      */
     private function validateTileAdjacent(int $player_id, int $tile_id): void
     {
         $player = $this->getObjectFromDB("SELECT * FROM player WHERE player_id = $player_id");
-        
+
         // Use game state chapter, not player record
-        $chapter = (int)$this->getGameStateValue('current_chapter');
+        $chapter = (int) $this->getGameStateValue('current_chapter');
         if ($chapter < 1) {
             $chapter = 1;
         }
-        
+
         $adjacent = $this->getAdjacentTiles($player['player_position_q'], $player['player_position_r'], $chapter);
-        
+
         $valid = false;
         foreach ($adjacent as $tile) {
             if ($tile['tile_id'] == $tile_id) {
@@ -113,7 +115,7 @@ trait WW_Movement
                 break;
             }
         }
-        
+
         if (!$valid) {
             throw new BgaUserException($this->_("This tile is not adjacent to your position"));
         }
@@ -122,7 +124,7 @@ trait WW_Movement
     //////////////////////////////////////////////////////////////////////////////
     // Movement State Arguments
     //////////////////////////////////////////////////////////////////////////////
-    
+
     /**
      * Get player turn state arguments
      */
@@ -130,29 +132,29 @@ trait WW_Movement
     {
         $player_id = $this->getActivePlayerId();
         $player = $this->getObjectFromDB("SELECT * FROM player WHERE player_id = $player_id");
-        
+
         // Use game state chapter, not player record
-        $chapter = (int)$this->getGameStateValue('current_chapter');
+        $chapter = (int) $this->getGameStateValue('current_chapter');
         if ($chapter < 1) {
             $chapter = 1;  // Default fallback
         }
-        
+
         // Ensure tiles exist
-        $tile_count = (int)$this->getUniqueValueFromDB("SELECT COUNT(*) FROM tile WHERE tile_chapter = $chapter");
+        $tile_count = (int) $this->getUniqueValueFromDB("SELECT COUNT(*) FROM tile WHERE tile_chapter = $chapter");
         if ($tile_count == 0) {
             $this->setupChapterTiles($chapter);
         }
-        
-        $q = (int)$player['player_position_q'];
-        $r = (int)$player['player_position_r'];
+
+        $q = (int) $player['player_position_q'];
+        $r = (int) $player['player_position_r'];
         $adjacent = $this->getAdjacentTiles($q, $r, $chapter);
-        
+
         // Get horde with power status so UI knows which cards can be clicked
         $horde = $this->getHordeWithPowerStatus($player_id);
-        
+
         // Debug logging
         $this->trace("argPlayerTurn - player at ($q, $r), chapter $chapter, found " . count($adjacent) . " adjacent tiles");
-        
+
         return [
             'position' => ['q' => $q, 'r' => $r],
             'adjacent' => $adjacent,
@@ -172,7 +174,7 @@ trait WW_Movement
         if (!$tile) {
             throw new BgaVisibleSystemException("Tile $tile_id not found");
         }
-        
+
         $this->DbQuery("UPDATE player SET player_position_q = {$tile['tile_q']}, player_position_r = {$tile['tile_r']} WHERE player_id = $player_id");
     }
 }

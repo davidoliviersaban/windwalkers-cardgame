@@ -182,8 +182,8 @@ class Windwalkers extends Table
             $this->initStat('player', 'most_benched_character_picks', 0, $player_id);
             $this->initStat('player', 'unique_characters_picked', 0, $player_id);
             $this->initStat('player', 'unique_powers_used', 0, $player_id);
-            $this->initStat('player', 'traceur_name', '', $player_id);
-            $this->initStat('player', 'final_team', '', $player_id);
+            $this->initStat('player', 'traceur_id', 0, $player_id);
+            $this->initStat('player', 'final_team_size', 0, $player_id);
         }
     }
 
@@ -1004,25 +1004,22 @@ class Windwalkers extends Table
             // Get player's horde
             $horde = $this->getObjectListFromDB("SELECT * FROM card WHERE card_location = 'horde_$player_id'");
 
-            $traceur_name = '';
-            $team_names = [];
+            $traceur_id = 0;
+            $team_size = 0;
 
             foreach ($horde as $card) {
                 $type_arg = (int) $card['card_type_arg'];
-                $char = $this->characters[$type_arg] ?? null;
-                $name = $char['name'] ?? 'Unknown';
-
-                $team_names[] = $name;
+                $team_size++;
 
                 // Check if this is the traceur (leader)
                 if (!empty($card['card_is_leader'])) {
-                    $traceur_name = $name;
+                    $traceur_id = $type_arg;
                 }
             }
 
-            // Set stats
-            $this->setStat($traceur_name, 'traceur_name', $player_id);
-            $this->setStat(implode(', ', $team_names), 'final_team', $player_id);
+            // Set stats (BGA only supports numeric stats)
+            $this->setStat($traceur_id, 'traceur_id', $player_id);
+            $this->setStat($team_size, 'final_team_size', $player_id);
         }
 
         // Force eliminated players (if any) to score 0

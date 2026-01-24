@@ -227,15 +227,15 @@
       "name": "Unique powers used",
       "type": "int"
     },
-    "traceur_name": {
+    "traceur_id": {
       "id": 50,
-      "name": "Traceur (leader)",
-      "type": "str"
+      "name": "Traceur ID (leader)",
+      "type": "int"
     },
-    "final_team": {
+    "final_team_size": {
       "id": 51,
-      "name": "Final team",
-      "type": "str"
+      "name": "Final team size",
+      "type": "int"
     }
   }
 }
