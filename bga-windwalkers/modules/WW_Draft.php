@@ -62,8 +62,9 @@ trait WW_Draft
 
         // First, recruit 1 traceur (is_leader = 1)
         $traceurs = $this->getCollectionFromDb(
-            "SELECT * FROM card WHERE card_type = 'traceur' AND card_location = 'deck' ORDER BY RAND() LIMIT " . $requirements['traceur']
+            "SELECT * FROM card WHERE card_type = 'traceur' AND card_location = 'deck'"
         );
+        $traceurs = array_slice($this->bgaShuffle($traceurs), 0, $requirements['traceur']);
         foreach ($traceurs as $card) {
             $card_id = $card['card_id'] ?? $card['id'];
             $this->cards->moveCard($card_id, 'horde_' . $player_id);
@@ -72,8 +73,9 @@ trait WW_Draft
 
         // Then recruit fer
         $fers = $this->getCollectionFromDb(
-            "SELECT * FROM card WHERE card_type = 'fer' AND card_location = 'deck' ORDER BY RAND() LIMIT " . $requirements['fer']
+            "SELECT * FROM card WHERE card_type = 'fer' AND card_location = 'deck'"
         );
+        $fers = array_slice($this->bgaShuffle($fers), 0, $requirements['fer']);
         foreach ($fers as $card) {
             $card_id = $card['card_id'] ?? $card['id'];
             $this->cards->moveCard($card_id, 'horde_' . $player_id);
@@ -82,8 +84,9 @@ trait WW_Draft
 
         // Recruit pack
         $packs = $this->getCollectionFromDb(
-            "SELECT * FROM card WHERE card_type = 'pack' AND card_location = 'deck' ORDER BY RAND() LIMIT " . $requirements['pack']
+            "SELECT * FROM card WHERE card_type = 'pack' AND card_location = 'deck'"
         );
+        $packs = array_slice($this->bgaShuffle($packs), 0, $requirements['pack']);
         foreach ($packs as $card) {
             $card_id = $card['card_id'] ?? $card['id'];
             $this->cards->moveCard($card_id, 'horde_' . $player_id);
@@ -92,8 +95,9 @@ trait WW_Draft
 
         // Recruit traine
         $traines = $this->getCollectionFromDb(
-            "SELECT * FROM card WHERE card_type = 'traine' AND card_location = 'deck' ORDER BY RAND() LIMIT " . $requirements['traine']
+            "SELECT * FROM card WHERE card_type = 'traine' AND card_location = 'deck'"
         );
+        $traines = array_slice($this->bgaShuffle($traines), 0, $requirements['traine']);
         foreach ($traines as $card) {
             $card_id = $card['card_id'] ?? $card['id'];
             $this->cards->moveCard($card_id, 'horde_' . $player_id);
@@ -724,14 +728,15 @@ trait WW_Draft
     {
         // All types use their actual card_type value
         $cards = $this->getCollectionFromDb(
-            "SELECT * FROM card WHERE card_type = '$type' AND card_location = 'deck' ORDER BY RAND() LIMIT 1"
+            "SELECT * FROM card WHERE card_type = '$type' AND card_location = 'deck'"
         );
 
         if (empty($cards)) {
             return false;
         }
 
-        $card = array_shift($cards);
+        $cards = $this->bgaShuffle($cards);
+        $card = $cards[0];
         $this->cards->moveCard($card['card_id'] ?? $card['id'], 'horde_' . $player_id);
         $this->trackHordierSelection($card['card_id'] ?? $card['id']);
         $counts[$type]++;
@@ -891,6 +896,18 @@ trait WW_Draft
         $this->gamestate->nextState('done');
     }
 
+    // Powers that roll dice server-side (prevent undo after activation)
+    private function buildDiceRollingPowersSet(): array
+    {
+        $set = [];
+        foreach ($this->characters as $character) {
+            if ($character['has_dice_roll_power'] ?? false) {
+                $set[$character['power_code']] = true;
+            }
+        }
+        return $set;
+    }
+
     /**
      * Use a character power
      */
@@ -925,6 +942,11 @@ trait WW_Draft
         $char_info = $this->characters[$type_arg] ?? ['name' => 'Hordier', 'power' => '', 'power_code' => ''];
         $power_code = $char_info['power_code'] ?? '';
 
+        // Powers that roll dice need to commit before rolling (no undo after server-side randomness)
+        if (in_array($power_code, $this->buildDiceRollingPowersSet() ?? [])) {
+            $this->undoSavePoint();
+        }
+
         // Mark power as used (exhaust the card)
         $this->DbQuery("UPDATE card SET card_power_used = 1 WHERE card_id = $card_id");
 
@@ -933,13 +955,17 @@ trait WW_Draft
             $this->incCharacterStat((int) $type_arg, 'power_used', $player_id);
         }
 
-        $this->notifyAllPlayers('powerUsed', clienttranslate('${player_name} uses ${character_name}\'s power'), [
-            'player_id' => $player_id,
-            'player_name' => $this->getActivePlayerName(),
-            'card_id' => $card_id,
-            'character_name' => $char_info['name'],
-            'power' => $char_info['power'] ?? ''
-        ]);
+        // Notify power used (skip for powers that send their own detailed notification)
+        $powers_with_own_notification = ['lyara_power'];
+        if (!in_array($power_code, $powers_with_own_notification)) {
+            $this->notifyAllPlayers('powerUsed', clienttranslate('${player_name} uses ${character_name}\'s power'), [
+                'player_id' => $player_id,
+                'player_name' => $this->getActivePlayerName(),
+                'card_id' => $card_id,
+                'character_name' => $char_info['name'],
+                'power' => $char_info['power'] ?? ''
+            ]);
+        }
 
         // Apply the power effect (defined in WW_Confrontation trait)
         if ($power_code) {

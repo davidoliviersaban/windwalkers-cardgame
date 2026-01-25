@@ -329,7 +329,10 @@ trait WW_Setup
 
         // Reset power_used status only for cards in player hordes (not recruit pools or discard)
         // Released/abandoned cards stay exhausted even if recruited again
-        $this->DbQuery("UPDATE card SET card_power_used = 0 WHERE card_location LIKE 'horde_%'");
+        // EXCEPT protected cards (like Régitha after using her power)
+        $protected_cards = json_decode($this->getGlobalVariable('protected_cards') ?? '[]', true);
+        $protected_sql = !empty($protected_cards) ? " AND card_id NOT IN (" . implode(',', array_map('intval', $protected_cards)) . ")" : "";
+        $this->DbQuery("UPDATE card SET card_power_used = 0 WHERE card_location LIKE 'horde_%'" . $protected_sql);
 
         // Move all players to the start city of the new chapter
         $start_city = $this->chapters[$chapter]['start_city'];

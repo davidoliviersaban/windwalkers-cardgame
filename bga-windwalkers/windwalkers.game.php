@@ -638,7 +638,24 @@ class Windwalkers extends Table
     }
 
     /**
+     * Shuffle an array using bga_rand (works in BGA Studio unlike MySQL RAND())
+     */
+    private function bgaShuffle(array $array): array
+    {
+        $array = array_values($array);
+        $count = count($array);
+        for ($i = $count - 1; $i > 0; $i--) {
+            $j = bga_rand(0, $i);
+            $temp = $array[$i];
+            $array[$i] = $array[$j];
+            $array[$j] = $temp;
+        }
+        return $array;
+    }
+
+    /**
      * Draw cards for recruitment based on specified counts
+     * Uses bga_rand for shuffling instead of MySQL RAND() (which can be deterministic in BGA Studio)
      * 
      * @param int $ferCount Number of Fer (red) cards
      * @param int $packCount Number of Pack (blue) cards
@@ -651,23 +668,26 @@ class Windwalkers extends Table
 
         if ($ferCount > 0) {
             $fer = $this->getCollectionFromDb(
-                "SELECT * FROM card WHERE card_type = 'fer' AND card_is_leader = 0 AND card_location = 'deck' ORDER BY RAND() LIMIT $ferCount"
+                "SELECT * FROM card WHERE card_type = 'fer' AND card_is_leader = 0 AND card_location = 'deck'"
             );
-            $cards = array_merge($cards, $fer);
+            $fer = $this->bgaShuffle($fer);
+            $cards = array_merge($cards, array_slice($fer, 0, $ferCount));
         }
 
         if ($packCount > 0) {
             $pack = $this->getCollectionFromDb(
-                "SELECT * FROM card WHERE card_type = 'pack' AND card_location = 'deck' ORDER BY RAND() LIMIT $packCount"
+                "SELECT * FROM card WHERE card_type = 'pack' AND card_location = 'deck'"
             );
-            $cards = array_merge($cards, $pack);
+            $pack = $this->bgaShuffle($pack);
+            $cards = array_merge($cards, array_slice($pack, 0, $packCount));
         }
 
         if ($traineCount > 0) {
             $traine = $this->getCollectionFromDb(
-                "SELECT * FROM card WHERE card_type = 'traine' AND card_location = 'deck' ORDER BY RAND() LIMIT $traineCount"
+                "SELECT * FROM card WHERE card_type = 'traine' AND card_location = 'deck'"
             );
-            $cards = array_merge($cards, $traine);
+            $traine = $this->bgaShuffle($traine);
+            $cards = array_merge($cards, array_slice($traine, 0, $traineCount));
         }
 
         return $cards;
@@ -791,14 +811,6 @@ class Windwalkers extends Table
                 ]);
             }
 
-            $this->notifyAllPlayers('playerRests', clienttranslate('${player_name} rests and resets surpass counter'), [
-                'player_id' => $player_id,
-                'player_name' => $this->getActivePlayerName(),
-                'dice_count' => (int) $player['player_dice_count'],
-                'surpass_count' => 0
-            ]);
-
-            $this->incStat(1, 'rest_count', $player_id);
             $this->gamestate->nextState('restComplete');
         } else {
             // On regular tiles: check how many hordiers can be rested
@@ -818,25 +830,9 @@ class Windwalkers extends Table
                     ]);
                 }
 
-                $this->notifyAllPlayers('playerRests', clienttranslate('${player_name} rests and resets surpass counter'), [
-                    'player_id' => $player_id,
-                    'player_name' => $this->getActivePlayerName(),
-                    'dice_count' => (int) $player['player_dice_count'],
-                    'surpass_count' => 0
-                ]);
-
-                $this->incStat(1, 'rest_count', $player_id);
                 $this->gamestate->nextState('restComplete');
             } else {
                 // Multiple exhausted hordiers: let player choose
-                $this->notifyAllPlayers('playerRests', clienttranslate('${player_name} rests and resets surpass counter'), [
-                    'player_id' => $player_id,
-                    'player_name' => $this->getActivePlayerName(),
-                    'dice_count' => (int) $player['player_dice_count'],
-                    'surpass_count' => 0
-                ]);
-
-                $this->incStat(1, 'rest_count', $player_id);
                 $this->gamestate->nextState('chooseHordier');
             }
         }
@@ -847,6 +843,9 @@ class Windwalkers extends Table
         $player_id = $this->getActivePlayerId();
         $tile_id = $this->getGameStateValue('selected_tile');
         $tile = $this->getTileById($tile_id);
+
+        // DEBUG: Log tile info to diagnose recruitment bug
+        $this->debug("stApplyTileEffect: tile_id=$tile_id, type={$tile['tile_type']}, subtype={$tile['tile_subtype']}, q={$tile['tile_q']}, r={$tile['tile_r']}");
 
         // IMPORTANT: Update player position to this tile
         // This is needed for tiles without wind (villages/cities) where

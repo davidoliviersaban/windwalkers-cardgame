@@ -29,6 +29,15 @@ trait WW_Confrontation
         return max(0, self::MAX_HORDE_SIZE - $horde_count);
     }
 
+    function getCardDefinition(int $card_id, int $player_id): array
+    {
+        $card = $this->getObjectFromDB("SELECT * FROM card WHERE card_id = $card_id AND card_location = 'horde_$player_id'");
+        if (!$card) {
+            throw new BgaUserException($this->_("Invalid card ID"));
+        }
+        return $card;
+    }
+
     /**
      * Common function to discard a traine card (self-discard powers)
      * Handles: moving to discard, incrementing stat, sending notification
@@ -38,8 +47,8 @@ trait WW_Confrontation
      */
     private function discardCard(int $player_id, int $card_id, bool $to_use_its_power = true): void
     {
+        $card = $this->getCardDefinition($card_id, $player_id);
         // Get card info before moving
-        $card = $this->getObjectFromDB("SELECT card_type_arg FROM card WHERE card_id = $card_id");
         $type_arg = (int) $card['card_type_arg'];
         $char_info = $this->characters[$type_arg] ?? ['name' => 'Hordier'];
         $character_name = $char_info['name'];
@@ -60,6 +69,57 @@ trait WW_Confrontation
         ]);
     }
 
+    /**
+     * Common function to rest a card (untap)
+     * Handles: validation of protected cards, updating DB, sending notification
+     * @param int $player_id Player ID
+     * @param int $card_id Card ID to rest
+     * @param string $power_name Name of the power causing the rest (for notification)
+     * @throws BgaUserException if card is protected
+     */
+    private function restCard(int $player_id, int $card_id, string $power_name = ''): void
+    {
+        // Check if card is protected (like Régitha after using her power)
+        $protected_cards = json_decode($this->getGlobalVariable('protected_cards') ?? '[]', true);
+        $protected_cards_int = array_map('intval', $protected_cards);
+        if (in_array((int) $card_id, $protected_cards_int, true)) {
+            throw new BgaUserException($this->_("This card cannot be rested"));
+        }
+
+        // Rest the card
+        $this->DbQuery("UPDATE card SET card_power_used = 0 WHERE card_id = $card_id");
+
+        // Get character info for notification
+        $card = $this->getObjectFromDB("SELECT card_type_arg FROM card WHERE card_id = $card_id");
+        $type_arg = (int) ($card['card_type_arg'] ?? 0);
+        $char_info = $this->characters[$type_arg] ?? ['name' => 'Hordier'];
+        $character_name = $char_info['name'];
+
+        // Notify
+        $message = $power_name
+            ? clienttranslate('${character_name} is rested (${power_name})')
+            : clienttranslate('${character_name} is rested');
+
+        $this->notifyAllPlayers('hordierRested', $message, [
+            'player_id' => $player_id,
+            'card_id' => $card_id,
+            'character_name' => $character_name,
+            'power_name' => $power_name
+        ]);
+    }
+
+    /**
+     * Check if a card is protected (cannot be rested/discarded)
+     * @param int $card_id Card ID to check
+     * @return bool True if card is protected
+     */
+    private function isCardProtected(int $card_id): bool
+    {
+        $protected_cards = json_decode($this->getGlobalVariable('protected_cards') ?? '[]', true);
+        $protected_cards_int = array_map('intval', $protected_cards);
+        return in_array((int) $card_id, $protected_cards_int, true);
+    }
+
     //////////////////////////////////////////////////////////////////////////////
     // Dice Actions
     //////////////////////////////////////////////////////////////////////////////
@@ -71,6 +131,9 @@ trait WW_Confrontation
     {
         $this->checkAction('actRollDice');
         $player_id = $this->getActivePlayerId();
+
+        // Clear any pending multi-step power state
+        $this->setGlobalVariable('card_pending', null);
 
         $player = $this->getObjectFromDB("SELECT * FROM player WHERE player_id = $player_id");
         $surpass_count = (int) $player['player_surpass_count'];
@@ -243,7 +306,7 @@ trait WW_Confrontation
                 case 'usePower':
                     // Check card exists and belongs to player
                     $card_id = (int) ($params['card_id'] ?? 0);
-                    $card = $this->getObjectFromDB("SELECT * FROM card WHERE card_id = $card_id AND card_location = 'horde_$player_id'");
+                    $card = $this->getCardDefinition($card_id, $player_id);
                     if (!$card) {
                         throw new BgaUserException($this->_("Invalid card"));
                     }
@@ -325,6 +388,28 @@ trait WW_Confrontation
         $this->incStat(1, 'moral_spent', $player_id);
     }
 
+    public function checkMultistepPower($char_info): void
+    {
+        $card_power_used = $char_info['card_power_used'] ?? 0;
+
+        // This card was used and is single playable
+        if ($card_power_used == 1 && !$char_info['has_multistep_power']) {
+            throw new BgaUserException($this->_("Power already used"));
+        }
+        // This card was used and is single playable
+        else if ($card_power_used == 2 && $char_info['has_multistep_power']) {
+            throw new BgaUserException($this->_("Power already used"));
+        }
+    }
+
+    public function useCardPower($card, int $times = 1): void
+    {
+        $card_power_used = $card['card_power_used'] ?? 0;
+        $card_id = $card['card_id'];
+
+        $this->DbQuery("UPDATE card SET card_power_used = " . ($card_power_used + $times) . " WHERE card_id = $card_id");
+    }
+
     /**
      * Execute a single usePower action from batch
      */
@@ -342,22 +427,49 @@ trait WW_Confrontation
             }
         }
 
-        $card = $this->getObjectFromDB("SELECT * FROM card WHERE card_id = $card_id AND card_location = 'horde_$player_id'");
-        if (!$card) {
-            throw new BgaUserException($this->_("Invalid card"));
-        }
+        // Check if this is step 2 of a multi-step Torantor power (Kyo, Xavio, Zaffa)
+        // For Zaffa: card was discarded in step 1, need to retrieve from discard
+        // For Kyo/Xavio: card is still in horde
+        $card_pending = json_decode($this->getGlobalVariable('card_pending') ?? '{}', true);
+        // Only treat as step 2 if card_id matches the pending card
+        $is_card_step2 = !empty($card_pending) && isset($card_pending['card_id']) && $card_id == $card_pending['card_id'];
 
-        if ($card['card_power_used']) {
-            throw new BgaUserException($this->_("Power already used"));
+        if ($is_card_step2) {
+            // Step 2 of multi-step power
+            // Try to get card from horde first (Kyo, Xavio), then from discard (Zaffa)
+            $card = $this->getObjectFromDB("SELECT * FROM card WHERE card_id = $card_id AND card_location = 'horde_$player_id'");
+            if (!$card) {
+                // Card not in horde - try discard (Zaffa discards in step 1)
+                $card = $this->getObjectFromDB("SELECT * FROM card WHERE card_id = $card_id AND card_location = 'discard'");
+            }
+            if (!$card) {
+                throw new BgaUserException($this->_("Card not found"));
+            }
+        } else {
+            // Normal case - card should be in horde
+            // If card_pending was set for a different card, ignore it
+            $card = $this->getCardDefinition($card_id, $player_id);
         }
 
         // Get character info
         $type_arg = (int) $card['card_type_arg'];
         $char_info = $this->characters[$type_arg] ?? null;
         $power_code = $char_info['power_code'] ?? '';
+        $card_power_used = $card['card_power_used'] ?? 0;
 
-        // Mark power as used (tap)
-        $this->DbQuery("UPDATE card SET card_power_used = 1 WHERE card_id = $card_id");
+        // For step 2 of discard powers, skip validation and tap (already done in step 1)
+        if (!$is_card_step2) {
+            // Check if power can be used (merge card and char_info for multistep check)
+            $this->checkMultistepPower(array_merge($card, $char_info ?? []));
+
+            // Powers that roll dice need to commit before rolling (no undo after server-side randomness)
+            if ($char_info['has_dice_roll_power'] ?? false) {
+                $this->undoSavePoint();
+            }
+
+            // Mark power as used (tap)
+            $this->useCardPower($card);
+        }
 
         // Apply power effect based on power_code
         $this->applyPowerEffect($player_id, $card_id, $power_code, $target_card_id, $power_params);
@@ -897,6 +1009,7 @@ trait WW_Confrontation
     /**
      * Lethune de Prals's power: Roll +1 blue die per moral on tile
      * :tap:: Lancez +1 :d6-blue: / :moral: sur :tuile:
+     * Only works on tiles with POSITIVE moral effect (not deserts with negative moral)
      */
     private function applyLethunePower(int $player_id): void
     {
@@ -911,8 +1024,15 @@ trait WW_Confrontation
             throw new BgaUserException($this->_("Tile not found"));
         }
 
-        // Get tile's moral effect directly from the tile table
-        $moral_effect = (int) ($tile['tile_moral_effect'] ?? 0);
+        // Get tile's moral effect from terrain_types (authoritative source)
+        // DO NOT use abs() - power only works on tiles with POSITIVE moral
+        $subtype = $tile['tile_subtype'];
+        $moral_effect = 0;
+        if (isset($this->terrain_types[$subtype])) {
+            $moral_effect = (int) ($this->terrain_types[$subtype]['moral_effect'] ?? 0);
+        } elseif (isset($this->village_types[$subtype])) {
+            $moral_effect = (int) ($this->village_types[$subtype]['moral_effect'] ?? 0);
+        }
 
         if ($moral_effect <= 0) {
             throw new BgaUserException($this->_("This tile has no moral bonus - cannot use Lethune's power"));
@@ -1176,26 +1296,6 @@ trait WW_Confrontation
     }
 
     /**
-     * Check if player has another Torantor in their horde (excluding specified card)
-     */
-    private function hasAnotherTorantor(int $player_id, int $exclude_card_id): bool
-    {
-        // Get all hordiers in player's horde except the specified card
-        $horde = $this->getObjectListFromDB(
-            "SELECT card_type_arg FROM card WHERE card_location = 'horde_$player_id' AND card_id != $exclude_card_id"
-        );
-
-        foreach ($horde as $card) {
-            $char_id = (int) $card['card_type_arg'];
-            $char = $this->characters[$char_id] ?? null;
-            if ($char && stripos($char['name'], 'Torantor') !== false) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
      * Roll an extra die and add it to the dice pool
      */
     private function rollExtraDie(int $player_id, string $type, string $power_name): array
@@ -1218,17 +1318,53 @@ trait WW_Confrontation
         return $stored_dice;
     }
 
+
+    /**
+     * Check if player has another Torantor in their horde (excluding specified card)
+     */
+    private function hasAnotherTorantor(int $player_id, int $exclude_card_id): bool
+    {
+        // Get all hordiers in player's horde except the specified card
+        $horde = $this->getObjectListFromDB(
+            "SELECT card_type_arg FROM card WHERE card_location = 'horde_$player_id' AND card_id != $exclude_card_id"
+        );
+
+        foreach ($horde as $card) {
+            $char_id = (int) $card['card_type_arg'];
+            $char = $this->characters[$char_id] ?? null;
+            if ($char && stripos($char['name'], 'Torantor') !== false) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * Xavio Torantor's power: Roll +1 die, if another Torantor ±1 on 1 die
      */
     private function applyXavioPower(int $player_id, int $card_id, array $params): void
     {
-        // Roll +1 blue die
-        $this->rollExtraDie($player_id, 'blue', 'Xavio Torantor');
+        // Roll +1 blue die when no adjustment specified
+        if (!isset($params['adjust_die_id'])) {
+            $this->rollExtraDie($player_id, 'blue', 'Xavio Torantor');
+
+            // Store pending state for step 2 if there are other Torantors
+            if ($this->hasAnotherTorantor($player_id, $card_id)) {
+                $this->setGlobalVariable('card_pending', json_encode([
+                    'player_id' => $player_id,
+                    'card_id' => $card_id
+                ]));
+            }
+            // If no other Torantor, the power is complete (die was rolled, card already tapped in executeBatchUsePower)
+            return;
+        }
+
+        // Step 2: Apply ±1 to a die (adjust_die_id provided)
+        // Clear pending state
+        $this->setGlobalVariable('card_pending', null);
 
         // Check for another Torantor
         if ($this->hasAnotherTorantor($player_id, $card_id)) {
-            // Apply ±1 to specified die (client must pass dice_id and modifier in params)
             $dice_id = $params['dice_id'] ?? null;
             $modifier = $params['modifier'] ?? 0;
 
@@ -1255,7 +1391,7 @@ trait WW_Confrontation
      */
     private function applyYavoPower(int $player_id, int $card_id): void
     {
-        // Roll +1 blue die
+        // Roll +1 blue die when no target specified
         $this->rollExtraDie($player_id, 'blue', 'Yavo Torantor');
 
         // Check for another Torantor
@@ -1280,8 +1416,24 @@ trait WW_Confrontation
      */
     private function applyKyoPower(int $player_id, int $card_id, ?int $target_card_id): void
     {
-        // Roll +1 blue die
-        $this->rollExtraDie($player_id, 'blue', 'Kyo Torantor');
+        // Roll +1 blue die when no target specified
+        if (!$target_card_id) {
+            $this->rollExtraDie($player_id, 'blue', 'Kyo Torantor');
+
+            // Store pending state for step 2 if there are other Torantors
+            if ($this->hasAnotherTorantor($player_id, $card_id)) {
+                $this->setGlobalVariable('card_pending', json_encode([
+                    'player_id' => $player_id,
+                    'card_id' => $card_id
+                ]));
+            }
+            // If no other Torantor, the power is complete (die was rolled, card already tapped in executeBatchUsePower)
+            return;
+        }
+
+        // Step 2: Rest another Torantor (target_card_id provided)
+        // Clear pending state
+        $this->setGlobalVariable('card_pending', null);
 
         // Check for another Torantor and if target was provided
         if ($this->hasAnotherTorantor($player_id, $card_id) && $target_card_id) {
@@ -1303,58 +1455,58 @@ trait WW_Confrontation
                 throw new BgaUserException($this->_("Target must be a Torantor"));
             }
 
-            // Check if target is protected (like Régitha)
-            $protected_cards = json_decode($this->getGlobalVariable('protected_cards') ?? '[]', true);
-            if (in_array($target_card_id, $protected_cards)) {
-                throw new BgaUserException($this->_("This card cannot be rested"));
-            }
-
-            // Rest the target Torantor
-            $this->DbQuery("UPDATE card SET card_power_used = 0 WHERE card_id = $target_card_id");
-
-            $this->notifyAllPlayers('hordierRested', clienttranslate('${character_name} is rested (Kyo Torantor)'), [
-                'player_id' => $player_id,
-                'card_id' => $target_card_id,
-                'character_name' => $char['name']
-            ]);
+            // Rest the target Torantor (will throw if protected)
+            $this->restCard($player_id, $target_card_id, 'Kyo Torantor');
         }
     }
 
     /**
      * Zaffa Torantor's power: Roll +1 violet die, rest another Torantor
-     * Note: This is a discard power, so the card is already being discarded
+     * This is a 2-step DISCARD power:
+     * Step 1: Roll the violet die AND discard Zaffa, store pending state
+     * Step 2: Select another Torantor to rest (card already discarded)
      */
     private function applyZaffaPower(int $player_id, int $card_id, ?int $target_card_id): void
     {
-        // Roll +1 violet die
-        $this->rollExtraDie($player_id, 'violet', 'Zaffa Torantor');
+        // Step 1: Roll violet die and discard (no target selected yet)
+        if (!$target_card_id) {
+            $this->rollExtraDie($player_id, 'violet', 'Zaffa Torantor');
 
-        // Rest another Torantor (target_card_id)
-        if ($target_card_id) {
-            $target = $this->getObjectFromDB("SELECT * FROM card WHERE card_id = $target_card_id AND card_location = 'horde_$player_id'");
-            if ($target) {
-                $char_id = (int) $target['card_type_arg'];
-                $char = $this->characters[$char_id] ?? null;
+            // Discard Card
+            $this->discardCard($player_id, $card_id, true);
 
-                // Check target is a Torantor
-                if ($char && stripos($char['name'], 'Torantor') !== false) {
-                    // Check if target is protected (like Régitha)
-                    $protected_cards = json_decode($this->getGlobalVariable('protected_cards') ?? '[]', true);
-                    if (in_array($target_card_id, $protected_cards)) {
-                        throw new BgaUserException($this->_("This card cannot be rested"));
-                    }
+            // Store pending state for step 2 if there are other Torantors to rest
+            if ($this->hasAnotherTorantor($player_id, $card_id)) {
+                // Store pending state for step 2
+                $this->setGlobalVariable('card_pending', json_encode([
+                    'player_id' => $player_id,
+                    'card_id' => $card_id
+                ]));
+            }
+            // There are no other Torantors to rest so complete the power immediately
+            else {
+                $card = $this->getCardDefinition($card_id, $player_id);
+                $this->useCardPower($card);
+            }
+            // If no other Torantor, the power is complete (violet die was rolled, Zaffa discarded)
+            return;
+        }
 
-                    // Rest the target
-                    $this->DbQuery("UPDATE card SET card_power_used = 0 WHERE card_id = $target_card_id");
+        // Step 2: Rest another Torantor (target_card_id)
+        // Clear pending state
+        $this->setGlobalVariable('card_pending', null);
 
-                    $this->notifyAllPlayers('hordierRested', clienttranslate('${character_name} is rested (Zaffa Torantor)'), [
-                        'player_id' => $player_id,
-                        'card_id' => $target_card_id,
-                        'character_name' => $char['name']
-                    ]);
-                } else {
-                    throw new BgaUserException($this->_("You must select another Torantor to rest"));
-                }
+        $target = $this->getObjectFromDB("SELECT * FROM card WHERE card_id = $target_card_id AND card_location = 'horde_$player_id'");
+        if ($target) {
+            $char_id = (int) $target['card_type_arg'];
+            $char = $this->characters[$char_id] ?? null;
+
+            // Check target is a Torantor
+            if ($char && stripos($char['name'], 'Torantor') !== false) {
+                // Rest the target (will throw if protected)
+                $this->restCard($player_id, $target_card_id, 'Zaffa Torantor');
+            } else {
+                throw new BgaUserException($this->_("You must select another Torantor to rest"));
             }
         }
     }
@@ -1502,6 +1654,7 @@ trait WW_Confrontation
         $protected_cards = json_decode($this->getGlobalVariable('protected_cards') ?? '[]', true);
         $protected_cards[] = $card_id;
         $this->setGlobalVariable('protected_cards', json_encode($protected_cards));
+        $this->trace("applyRegithaPower - card_id: $card_id, protected_cards after: " . json_encode($protected_cards));
 
         $this->notifyAllPlayers('diceIgnored', clienttranslate('${player_name} uses Régitha to ignore ALL challenge dice! Régitha cannot be discarded or rested anymore.'), [
             'player_id' => $player_id,
@@ -1572,6 +1725,7 @@ trait WW_Confrontation
         $this->notifyAllPlayers('lyaraPowerUsed', clienttranslate('${player_name} uses Lyara\'s power: ${village_name} is treated as a city! All challenge dice ignored, any card type can be recruited.'), [
             'player_id' => $player_id,
             'player_name' => $this->getActivePlayerName(),
+            'card_id' => $card_id,
             'village_name' => $village_name,
             'ignored_dice' => $ignored_dice,
             'count' => count($ignored_dice)
@@ -2153,24 +2307,8 @@ trait WW_Confrontation
             throw new BgaUserException($this->_("This Hordier is not exhausted"));
         }
 
-        // Check if target is protected (like Régitha)
-        $protected_cards = json_decode($this->getGlobalVariable('protected_cards') ?? '[]', true);
-        if (in_array($target_card_id, $protected_cards)) {
-            throw new BgaUserException($this->_("This card cannot be rested"));
-        }
-
-        // Rest the target
-        $this->DbQuery("UPDATE card SET card_power_used = 0 WHERE card_id = $target_card_id");
-
-        // Notify
-        $target_type_arg = (int) $target['card_type_arg'];
-        $target_char = $this->characters[$target_type_arg] ?? ['name' => 'Hordier'];
-
-        $this->notifyAllPlayers('hordierRested', clienttranslate('${character_name} is rested'), [
-            'player_id' => $player_id,
-            'card_id' => $target_card_id,
-            'character_name' => $target_char['name']
-        ]);
+        // Rest the target (will throw if protected)
+        $this->restCard($player_id, $target_card_id, 'Vera');
     }
 
     /**
@@ -2251,6 +2389,9 @@ trait WW_Confrontation
 
         // Clear previous dice rolls
         $this->clearDiceRolls();
+
+        // Clear any pending multi-step power state from previous confrontation
+        $this->setGlobalVariable('card_pending', null);
 
         // Check if this tile has challenge dice even without wind (like Porte d'Hurle)
         $hasChallengeWithoutWind = $this->tileHasChallengeWithoutWind($tile);
@@ -2737,6 +2878,10 @@ trait WW_Confrontation
         $ignored_dice_json = $this->getGlobalVariable('uther_ignored_dice');
         $ignored_dice = $ignored_dice_json ? json_decode($ignored_dice_json, true) : [];
 
+        // Get protected cards (like Regitha after using her power - can't be rested/discarded)
+        $protected_cards_json = $this->getGlobalVariable('protected_cards');
+        $protected_cards = $protected_cards_json ? json_decode($protected_cards_json, true) : [];
+
         return [
             'tile' => $tile,
             'wind_force' => $wind_force,
@@ -2744,7 +2889,8 @@ trait WW_Confrontation
             'horde_dice' => array_values($horde_dice),
             'challenge_dice' => array_values($challenge_dice),
             'horde' => $this->getHordeWithPowerStatus($player_id),
-            'ignored_dice' => $ignored_dice
+            'ignored_dice' => $ignored_dice,
+            'protected_cards' => $protected_cards
         ];
     }
 
@@ -2776,12 +2922,8 @@ trait WW_Confrontation
         $this->checkAction('actAbandonHordier');
         $player_id = $this->getActivePlayerId();
 
-        // Verify the card belongs to the player's horde
-        $card = $this->cards->getCard($card_id);
-        $location = $card['card_location'] ?? $card['location'] ?? '';
-        if (!$card || $location != 'horde_' . $player_id) {
-            throw new BgaUserException($this->_("This card is not in your horde"));
-        }
+        // Verify the card belongs to the player's horde using our trait method
+        $card = $this->getCardDefinition($card_id, $player_id);
 
         // Move card to discard
         $this->cards->moveCard($card_id, 'discard');
@@ -2792,7 +2934,7 @@ trait WW_Confrontation
         $this->incStat(1, 'hordiers_lost', $player_id);
 
         // Get character info for notification
-        $type_arg = $card['card_type_arg'] ?? $card['type_arg'] ?? null;
+        $type_arg = (int) $card['card_type_arg'];
         $char_info = $this->characters[$type_arg] ?? ['name' => 'Hordier'];
 
         $this->notifyAllPlayers('hordierLost', clienttranslate('${player_name} loses ${character_name}'), [

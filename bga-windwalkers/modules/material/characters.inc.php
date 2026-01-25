@@ -174,6 +174,8 @@ $this->characters = [
         'power_code' => 'anika_power',
         'is_available' => false,
         'is_multiplayer_only' => false,
+        'has_multistep_power' => false,
+        'has_dice_roll_power' => true,
     ],
     16 => [
         'name' => clienttranslate('Kon'),
@@ -185,6 +187,8 @@ $this->characters = [
         'power_code' => 'kon_power',
         'is_available' => true,
         'is_multiplayer_only' => false,
+        'has_multistep_power' => false,
+        'has_dice_roll_power' => true,
     ],
     17 => [
         'name' => clienttranslate('Waldo Waldmann'),
@@ -273,6 +277,8 @@ $this->characters = [
         'power_code' => 'xavio_power',
         'is_available' => true,
         'is_multiplayer_only' => false,
+        'has_multistep_power' => true,
+        'has_dice_roll_power' => true,
     ],
     25 => [
         'name' => clienttranslate('Yavo Torantor'),
@@ -284,6 +290,8 @@ $this->characters = [
         'power_code' => 'yavo_power',
         'is_available' => true,
         'is_multiplayer_only' => false,
+        'has_multistep_power' => false,
+        'has_dice_roll_power' => true,
     ],
     26 => [
         'name' => clienttranslate('Ernest Waltman'),
@@ -295,6 +303,8 @@ $this->characters = [
         'power_code' => 'ernest_power',
         'is_available' => false,
         'is_multiplayer_only' => false,
+        'has_multistep_power' => false,
+        'has_dice_roll_power' => false,
     ],
     27 => [
         'name' => clienttranslate('Galas Thunderflayer'),
@@ -328,6 +338,8 @@ $this->characters = [
         'power_code' => 'ivan_power',
         'is_available' => false,
         'is_multiplayer_only' => false,
+        'has_multistep_power' => false,
+        'has_dice_roll_power' => true,
     ],
     30 => [
         'name' => clienttranslate('Lethune de Prals'),
@@ -339,6 +351,8 @@ $this->characters = [
         'power_code' => 'lethune_power',
         'is_available' => true,
         'is_multiplayer_only' => false,
+        'has_multistep_power' => false,
+        'has_dice_roll_power' => true,
     ],
     31 => [
         'name' => clienttranslate('Osvaldo Hawksson'),
@@ -466,11 +480,13 @@ $this->characters = [
         'type' => CHAR_TRAINE,
         'position' => 'traine',
         'tier' => 3,
-        'power' => clienttranslate(':discard:: Lancez +1 :d6-blue-violet: / :card: <b>PACK</b>.'),
+        'power' => clienttranslate(':discard:: Lancez +1 :d6-blue: / :card: <b>PACK</b>.'),
         'power_type' => 'discard',
         'power_code' => 'benelim_power',
         'is_available' => true,
         'is_multiplayer_only' => false,
+        'has_multistep_power' => false,
+        'has_dice_roll_power' => true,
     ],
     43 => [
         'name' => clienttranslate('Duke Arnaud N.'),
@@ -722,6 +738,8 @@ $this->characters = [
         'power_code' => 'thutmus_power',
         'is_available' => true,
         'is_multiplayer_only' => false,
+        'has_multistep_power' => false,
+        'has_dice_roll_power' => true,
     ],
     65 => [
         'name' => clienttranslate('Dunseth Calsan'),
@@ -879,6 +897,8 @@ $this->characters = [
         'power_code' => 'kyo_power',
         'is_available' => true,
         'is_multiplayer_only' => false,
+        'has_multistep_power' => false,
+        'has_dice_roll_power' => true,
     ],
     79 => [
         'name' => clienttranslate('Bert Haring'),
@@ -1106,6 +1126,8 @@ $this->characters = [
         'power_code' => 'zaffa_power',
         'is_available' => true,
         'is_multiplayer_only' => false,
+        'has_multistep_power' => true,
+        'has_dice_roll_power' => true,
     ],
     99 => [
         'name' => clienttranslate('Eolia Luthan'),
