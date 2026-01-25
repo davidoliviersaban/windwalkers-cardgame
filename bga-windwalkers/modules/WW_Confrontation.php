@@ -1033,6 +1033,7 @@ trait WW_Confrontation
         } elseif (isset($this->village_types[$subtype])) {
             $moral_effect = (int) ($this->village_types[$subtype]['moral_effect'] ?? 0);
         }
+        $moral_effect = abs($moral_effect);
 
         if ($moral_effect <= 0) {
             throw new BgaUserException($this->_("This tile has no moral bonus - cannot use Lethune's power"));

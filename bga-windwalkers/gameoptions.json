@@ -39,16 +39,20 @@
     "name": "Difficulty level",
     "values": {
       "1": {
-        "name": "Easy (start with 7 dice)",
+        "name": "Easy (play with 7 dice)",
         "tmdisplay": "Easy"
       },
       "2": {
-        "name": "Normal (start with 6 dice)",
+        "name": "Normal (play with 6 dice)",
         "tmdisplay": "Normal"
       },
       "3": {
-        "name": "Hard (start with 5 dice)",
+        "name": "Hard (play with 6 dice and start with 3 moral)",
         "tmdisplay": "Hard"
+      },
+      "4": {
+        "name": "Extreme (play with 5 dice and start with 5 moral)",
+        "tmdisplay": "Extreme"
       }
     },
     "default": 2

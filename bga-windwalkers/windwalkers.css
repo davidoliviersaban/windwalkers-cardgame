@@ -1321,6 +1321,8 @@
     background: #e8f5e9;
     border-radius: 8px;
     padding: 15px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 #ww_draft_panel h3 {
@@ -1348,6 +1350,39 @@
 .ww_requirement.ww_incomplete {
     background: #ffcdd2;
     color: #c62828;
+}
+
+/* Filter button styles */
+.ww_requirement {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+    border: 2px solid #ffffff;
+}
+
+.ww_requirement:not(#req_total)::before {
+    content: "▼ ";
+    font-size: 10px;
+    opacity: 0.6;
+}
+
+.ww_requirement:hover {
+    filter: brightness(0.9);
+}
+
+.ww_requirement.ww_filter_active::before {
+    content: "▲ ";
+    opacity: 1;
+}
+
+.ww_requirement.ww_filter_active {
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+    transform: translateY(1px);
+    border: 2px solid #333;
+}
+
+.ww_draft_card.ww_filtered_out {
+    display: none !important;
 }
 
 #ww_available_characters {

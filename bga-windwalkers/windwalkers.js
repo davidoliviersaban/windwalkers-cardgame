@@ -2061,6 +2061,76 @@ function (dojo, declare) {
         // Utility: sort cards by type (traceur > fer > pack > traine)
         TYPE_ORDER: { 'traceur': 1, 'fer': 2, 'pack': 3, 'traine': 4 },
         
+        // Active filters for draft panel
+        _activeFilters: [],
+        
+        // Clear all filters
+        clearFilters: function() {
+            this._activeFilters = [];
+            WW_DOM.forEach('.ww_requirement', function(el) {
+                WW_DOM.removeClass(el, 'ww_filter_active');
+            });
+            this.applyFilters();
+        },
+        
+        // Toggle a filter type (radio button mode: max 1 active at a time)
+        toggleFilter: function(type) {
+            var wasActive = this._activeFilters.indexOf(type) >= 0;
+            
+            // Clear all filters first
+            this._activeFilters = [];
+            WW_DOM.forEach('.ww_requirement', function(el) {
+                WW_DOM.removeClass(el, 'ww_filter_active');
+            });
+            
+            // If wasn't active, activate it
+            if (!wasActive) {
+                this._activeFilters.push(type);
+                var reqEl = $('req_' + type);
+                if (reqEl) {
+                    WW_DOM.addClass(reqEl, 'ww_filter_active');
+                }
+            }
+            
+            this.applyFilters();
+        },
+        
+        // Apply current filters to visible cards
+        applyFilters: function() {
+            var activeFilters = this._activeFilters;
+            
+            // If no filters active, show all cards
+            if (activeFilters.length === 0) {
+                WW_DOM.forEach('#ww_available_characters .ww_draft_card', function(cardEl) {
+                    WW_DOM.removeClass(cardEl, 'ww_filtered_out');
+                });
+                return;
+            }
+            
+            // Filter cards based on active types
+            WW_DOM.forEach('#ww_available_characters .ww_draft_card', function(cardEl) {
+                var cardType = WW_DOM.getAttr(cardEl, 'data-type');
+                var shouldShow = activeFilters.indexOf(cardType) >= 0;
+                WW_DOM.toggleClass(cardEl, 'ww_filtered_out', !shouldShow);
+            });
+        },
+        
+        // Setup filter click handlers
+        setupFilterHandlers: function() {
+            var self = this;
+            var types = ['traceur', 'fer', 'pack', 'traine'];
+            
+            types.forEach(function(type) {
+                var reqEl = $('req_' + type);
+                if (reqEl) {
+                    WW_DOM.connect(reqEl, 'onclick', null, function(evt) {
+                        WW_DOM.stopEvent(evt);
+                        self.toggleFilter(type);
+                    });
+                }
+            });
+        },
+        
         sortCardsByType: function(cards) {
             var self = this;
             var arr = Array.isArray(cards) ? cards : Object.values(cards);
@@ -2346,6 +2416,9 @@ function (dojo, declare) {
         showDraftInterface: function(args, onCardClick) {
             if (!args) return;
             
+            // Clear filters when opening draft panel
+            this.clearFilters();
+            
             WW_DOM.show('ww_draft_panel');
             WW_DOM.clear('ww_available_characters');
             WW_DOM.clear('ww_draft_selected');
@@ -2379,6 +2452,9 @@ function (dojo, declare) {
             }
             
             this.updateDraftCounts(args.counts, args.requirements);
+            
+            // Setup filter click handlers
+            this.setupFilterHandlers();
         },
         
         toggleDraftCardSelection: function(cardId, selected) {
@@ -2392,6 +2468,10 @@ function (dojo, declare) {
             var target = $(targetContainer);
             if (target && cardEl.parentNode !== target) {
                 target.appendChild(cardEl);
+                // Reapply filters when card moves back to available
+                if (!selected) {
+                    this.applyFilters();
+                }
             }
         },
         
@@ -2421,6 +2501,9 @@ function (dojo, declare) {
         // Chapter Draft Interface (like village recruitment)
         showChapterDraftInterface: function(args, onRecruitClick, onReleaseClick) {
             if (!args) return;
+            
+            // Clear filters when opening draft panel
+            this.clearFilters();
             
             WW_DOM.show('ww_draft_panel');
             WW_DOM.clear('ww_available_characters');
@@ -2473,6 +2556,9 @@ function (dojo, declare) {
             
             // Update counts display
             this.updateChapterDraftCounts(hordeCounts, hordeRequirements, hordeTotal, hordeMax);
+            
+            // Setup filter click handlers
+            this.setupFilterHandlers();
         },
         
         hideChapterDraftInterface: function() {
@@ -3472,8 +3558,13 @@ function (dojo, declare) {
          */
         buildPendingActionsState: function() {
             var self = this;
+            // Get moral from WW_State (updated by notifications) or fallback to gamedatas
+            var playerMoral = WW_State.getPlayerMoral(this.player_id);
+            if (playerMoral === undefined) {
+                playerMoral = this.gamedatas.players[this.player_id] ? (this.gamedatas.players[this.player_id].moral || 0) : 0;
+            }
             var state = {
-                moral: this.gamedatas.players[this.player_id] ? (this.gamedatas.players[this.player_id].moral || 0) : 0,
+                moral: playerMoral,
                 dice: {},
                 horde: {}
             };
@@ -3794,11 +3885,13 @@ function (dojo, declare) {
                 case 'osuros_power':
                 case 'tula_power':
                     // Tolilzin, Osuros, Tula: Wind force changers - discard powers
-                case 'charlize_power':
-                    // Charlize: discard to gain +2 moral per black die
                 case 'lihn_power':
                     // Lihn: double points this turn - simple discard
                     this.executeSimplePower(cardId);
+                    break;
+                case 'charlize_power':
+                    // Charlize: commit pending changes first, then gain moral per black die
+                    this.executeCharlizePower(cardId);
                     break;
             }
         },
@@ -3910,6 +4003,55 @@ function (dojo, declare) {
                     }
                 }
             );
+        },
+        
+        /**
+         * Execute Charlize's power: commit pending changes first, then gain +2 moral per black die
+         */
+        executeCharlizePower: function(cardId) {
+            var self = this;
+            
+            // Count black dice
+            var blackDiceCount = dojo.query('#ww_wind_dice .ww_dice_black').length;
+            
+            if (blackDiceCount === 0) {
+                this.showMessage(_('No black dice present'), 'error');
+                return;
+            }
+            
+            var moralGain = blackDiceCount * 2;
+            
+            // Commit pending actions first, then apply power
+            if (WW_PendingActions.isActive() && WW_PendingActions.hasPending()) {
+                var actions = WW_PendingActions.getActions();
+                
+                var result = this.bgaPerformAction('actBatchActions', {
+                    actions: JSON.stringify(actions),
+                    andConfirm: 0
+                });
+                if (result && result.then) {
+                    result.then(function() {
+                        WW_PendingActions.clear();
+                        self.performAction('actUsePower', {
+                            card_id: parseInt(cardId),
+                            params: JSON.stringify({})
+                        });
+                    }).catch(function() {
+                        WW_PendingActions.undoAll();
+                    });
+                } else {
+                    WW_PendingActions.clear();
+                    self.performAction('actUsePower', {
+                        card_id: parseInt(cardId),
+                        params: JSON.stringify({})
+                    });
+                }
+            } else {
+                self.performAction('actUsePower', {
+                    card_id: parseInt(cardId),
+                    params: JSON.stringify({})
+                });
+            }
         },
         
         /**
@@ -6006,6 +6148,13 @@ function (dojo, declare) {
             // Handle both 'moral' and 'new_moral' for compatibility
             var newMoral = notif.args.new_moral || notif.args.moral;
             WW_Player.updateMoral(notif.args.player_id, newMoral);
+            
+            // Update WW_PendingActions.originalState.moral so computed state is accurate
+            if (notif.args.player_id == this.player_id && 
+                WW_PendingActions.isActive() && 
+                WW_PendingActions.originalState) {
+                WW_PendingActions.originalState.moral = newMoral;
+            }
         },
         
         notif_hordierRested: function(notif) {

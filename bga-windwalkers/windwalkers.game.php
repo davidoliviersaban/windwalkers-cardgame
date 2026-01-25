@@ -69,21 +69,22 @@ class Windwalkers extends Table
         $gameinfos = $this->getGameinfos();
         $default_colors = $gameinfos['player_colors'];
 
-        // Create players
+        // Determine starting values from options first (needed for player creation)
+        $startingChapter = $this->determineStartingChapter($options);
+        $startingDice = $this->determineStartingDice($options);
+        $startingMoral = $this->determineStartingMoral($options);
+
+        // Create players with starting moral based on difficulty
         $sql = "INSERT INTO player (player_id, player_color, player_canal, player_name, player_avatar, player_moral, player_score) VALUES ";
         $values = [];
         foreach ($players as $player_id => $player) {
             $color = array_shift($default_colors);
-            $values[] = "('" . $player_id . "','" . $color . "','" . $player['player_canal'] . "','" . addslashes($player['player_name']) . "','" . addslashes($player['player_avatar']) . "', 9, 0)";
+            $values[] = "('" . $player_id . "','" . $color . "','" . $player['player_canal'] . "','" . addslashes($player['player_name']) . "','" . addslashes($player['player_avatar']) . "', $startingMoral, 0)";
         }
         $sql .= implode(',', $values);
         $this->DbQuery($sql);
 
         $this->reloadPlayersBasicInfos();
-
-        // Determine starting chapter and difficulty from options
-        $startingChapter = $this->determineStartingChapter($options);
-        $startingDice = $this->determineStartingDice($options);
 
         // Apply starting dice count to all players
         $this->DbQuery("UPDATE player SET player_dice_count = $startingDice");
@@ -129,8 +130,40 @@ class Windwalkers extends Table
     {
         $value = $options[102] ?? $options['102'] ?? 2;
         $difficulty = (int) $value;
-        $difficulty = ($difficulty >= 1 && $difficulty <= 3) ? $difficulty : 2;
-        return 8 - $difficulty;
+
+        // Easy=7, Normal=6, Hard=6, Extreme=5
+        switch ($difficulty) {
+            case 1:
+                return 7;  // Easy
+            case 2:
+                return 6;  // Normal
+            case 3:
+                return 6;  // Hard (same dice as Normal, but less moral)
+            case 4:
+                return 5;  // Extreme
+            default:
+                return 6; // Normal by default
+        }
+    }
+
+    private function determineStartingMoral(array $options = []): int
+    {
+        $value = $options[102] ?? $options['102'] ?? 2;
+        $difficulty = (int) $value;
+
+        // Easy=9, Normal=9, Hard=3, Extreme=5
+        switch ($difficulty) {
+            case 1:
+                return 9;  // Easy
+            case 2:
+                return 9;  // Normal
+            case 3:
+                return 3;  // Hard
+            case 4:
+                return 5;  // Extreme
+            default:
+                return 9; // Normal by default
+        }
     }
 
     /**
