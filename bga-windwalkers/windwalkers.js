@@ -368,8 +368,24 @@ function (dojo, declare) {
     // ============================================================
     // Constants
     var WW_CONST = {
-        MAX_HORDE_SIZE: 8
+        // Game limits
+        MAX_HORDE_SIZE: 8,
+        MAX_MORAL: 9,
+        
+        // Dice constraints
+        MIN_DICE_VALUE: 1,
+        MAX_DICE_VALUE: 6,
+        DEFAULT_DICE_COUNT: 6,
+        
+        // Moral bonuses (card powers)
+        DRAGON_MORAL_BONUS: 3
     };
+    // Convenience aliases
+    var MAX_MORAL = WW_CONST.MAX_MORAL;
+    var DRAGON_MORAL_INCREASE = WW_CONST.DRAGON_MORAL_BONUS;
+    var MIN_DICE = WW_CONST.MIN_DICE_VALUE;
+    var MAX_DICE = WW_CONST.MAX_DICE_VALUE;
+    var DEFAULT_DICE_COUNT = WW_CONST.DEFAULT_DICE_COUNT;
     
     // Phase labels (state name -> display text)
     var WW_PHASES = {
@@ -531,7 +547,7 @@ function (dojo, declare) {
         },
         
         getPlayerMaxDice: function(playerId) {
-            return this._data.playerMaxDice[playerId] || 6;
+            return this._data.playerMaxDice[playerId] || DEFAULT_DICE_COUNT;
         },
         
         // Selection
@@ -964,6 +980,11 @@ function (dojo, declare) {
                 this.applyActionToState(state, action);
             }
             
+            // Include pending moral gains from powers (Dragon, Saskia, etc.)
+            if (state.moral !== undefined) {
+                state.moral = Math.min(MAX_MORAL, state.moral + this.pendingMoralGain);
+            }
+            
             return state;
         },
         
@@ -975,7 +996,7 @@ function (dojo, declare) {
                 case 'modifyDice':
                     if (state.dice && state.dice[action.params.dice_id]) {
                         state.dice[action.params.dice_id].value += action.params.modifier;
-                        state.dice[action.params.dice_id].value = Math.max(1, Math.min(6, state.dice[action.params.dice_id].value));
+                        state.dice[action.params.dice_id].value = Math.max(MIN_DICE, Math.min(MAX_DICE, state.dice[action.params.dice_id].value));
                     }
                     if (state.moral !== undefined) {
                         state.moral -= 1;
@@ -1013,7 +1034,7 @@ function (dojo, declare) {
                     if (diceEl) {
                         if (apply) {
                             var currentValue = parseInt(WW_DOM.getAttr(diceEl, 'data-value')) || parseInt(WW_DOM.getHtml(diceEl)) || 0;
-                            var newValue = Math.max(1, Math.min(6, currentValue + action.params.modifier));
+                            var newValue = Math.max(MIN_DICE, Math.min(MAX_DICE, currentValue + action.params.modifier));
                             WW_DOM.setHtml(diceEl, newValue);
                             WW_DOM.setAttr(diceEl, 'data-value', newValue);
                             WW_DOM.addClass(diceEl, 'ww_pending_modified');
@@ -1072,7 +1093,7 @@ function (dojo, declare) {
                             if (diceEl) {
                                 if (apply) {
                                     var currentValue = parseInt(WW_DOM.getAttr(diceEl, 'data-value')) || parseInt(WW_DOM.getHtml(diceEl)) || 0;
-                                    var newValue = Math.max(1, Math.min(6, currentValue + mod.modifier));
+                                    var newValue = Math.max(MIN_DICE, Math.min(MAX_DICE, currentValue + mod.modifier));
                                     WW_DOM.setHtml(diceEl, newValue);
                                     WW_DOM.setAttr(diceEl, 'data-value', newValue);
                                     WW_DOM.addClass(diceEl, 'ww_pending_modified');
@@ -1121,14 +1142,12 @@ function (dojo, declare) {
                                     WW_DOM.removeClass(targetEl, 'ww_pending_discarded');
                                 }
                             } else if (powerCode === 'dragon_power') {
-                                // Dragon exhausts target - mark as pending exhausted
-                                // Dragon also gives +4 moral
                                 if (apply) {
                                     WW_DOM.addClass(targetEl, 'ww_pending_exhausted');
-                                    this.pendingMoralGain += 4;
+                                    this.pendingMoralGain += DRAGON_MORAL_INCREASE;
                                 } else {
                                     WW_DOM.removeClass(targetEl, 'ww_pending_exhausted');
-                                    this.pendingMoralGain -= 4;
+                                    this.pendingMoralGain -= DRAGON_MORAL_INCREASE;
                                 }
                                 this.updateMoralFlames();
                             } else {
@@ -2692,14 +2711,14 @@ function (dojo, declare) {
             
             // Generate moral flames (filled/empty)
             var moralFlamesHtml = '';
-            for (var i = 1; i <= 9; i++) {
+            for (var i = 1; i <= MAX_MORAL; i++) {
                 var filled = i <= moral ? 'filled' : 'empty';
                 moralFlamesHtml += '<span class="ww_moral_flame ww_moral_flame_' + filled + '"></span>';
             }
             
             // Generate dice icons (mini blue dice) - show up to max, filled for actual, empty for missing
             var diceIconsHtml = '';
-            var maxDice = player.dice_count || 6; // Based on game difficulty
+            var maxDice = player.dice_count || DEFAULT_DICE_COUNT; // Based on game difficulty
             for (var d = 1; d <= maxDice; d++) {
                 var diceClass = d <= diceCount ? 'ww_panel_die_blue' : 'ww_panel_die_empty';
                 diceIconsHtml += '<span class="ww_panel_die ' + diceClass + '"></span>';
@@ -2802,7 +2821,7 @@ function (dojo, declare) {
             tempLoss = tempLoss || 0;
             var tempMoralVar = tempGain - tempLoss;
             var lowerMoral = Math.max(0, Math.min(newMoral, newMoral + tempMoralVar)); // What remains after loss
-            var upperMoral = Math.min(9, Math.max(newMoral, newMoral + tempMoralVar)); // What remains after loss
+            var upperMoral = Math.min(MAX_MORAL, Math.max(newMoral, newMoral + tempMoralVar)); // What remains after loss
 
             // Update moral counter if exists (legacy)
             var counter = $('moral_counter_' + playerId);
@@ -2813,7 +2832,7 @@ function (dojo, declare) {
             var flamesContainer = $('moral_flames_' + playerId);
             if (flamesContainer) {
                 var flamesHtml = '';
-                for (var i = 1; i <= 9; i++) {
+                for (var i = 1; i <= MAX_MORAL; i++) {
                     var flameClass;
                     if (i <= lowerMoral) {
                         // Safe moral (what remains after loss)
@@ -5293,14 +5312,14 @@ function (dojo, declare) {
                 return;
             }
             
-            // Update local moral immediately for Dragon (+4 capped at 9)
+            // Update local moral immediately for Dragon (+DRAGON_MORAL_INCREASE capped at 9)
             // This makes the moral available for subsequent powers like Ukkiba
             if (powerCode === 'dragon_power') {
                 var currentMoral = WW_State.getPlayerMoral(this.player_id);
                 if (currentMoral === undefined) {
                     currentMoral = parseInt((this.gamedatas.players[this.player_id] || {}).moral) || 0;
                 }
-                WW_State.setPlayerMoral(this.player_id, Math.min(9, currentMoral + 4));
+                WW_State.setPlayerMoral(this.player_id, Math.min(MAX_MORAL, currentMoral + DRAGON_MORAL_INCREASE));
             }
             
             // Check if we're in pending actions mode (during confrontation)
@@ -5824,8 +5843,8 @@ function (dojo, declare) {
                 notif.args.dice_modifiers.forEach(function(mod) {
                     var diceEl = WW_DOM.get('ww_dice_' + mod.dice_id);
                     if (diceEl) {
-                        var currentValue = parseInt(diceEl.getAttribute('data-value') || 1);
-                        var newValue = Math.max(1, Math.min(6, currentValue + mod.modifier));
+                        var currentValue = parseInt(diceEl.getAttribute('data-value') || MIN_DICE);
+                        var newValue = Math.max(MIN_DICE, Math.min(MAX_DICE, currentValue + mod.modifier));
                         WW_Dice.updateDiceValue(mod.dice_id, newValue);
                     }
                 });
@@ -6120,7 +6139,7 @@ function (dojo, declare) {
                 var player = players[player_id];
                 WW_Hex.movePlayerToken(this, player_id, player.pos_q, player.pos_r);
                 // Reset dice count to max (surpass is 0 at chapter start)
-                var diceCount = (player.dice_count || 6) - (player.surpass || 0);
+                var diceCount = (player.dice_count || DEFAULT_DICE_COUNT) - (player.surpass || 0);
                 WW_Player.updateDiceCount(player_id, diceCount);
             }
             

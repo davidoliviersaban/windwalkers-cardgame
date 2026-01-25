@@ -68,7 +68,7 @@ trait WW_PlayerHelper
         }
 
         $this->DbQuery(
-            "UPDATE player SET player_moral = GREATEST(0, LEAST(9, player_moral + $delta)) WHERE player_id = $player_id"
+            "UPDATE player SET player_moral = GREATEST(0, LEAST(" . self::MAX_MORAL . ", player_moral + $delta)) WHERE player_id = $player_id"
         );
         return $this->getPlayerMoral($player_id);
     }

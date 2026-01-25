@@ -36,6 +36,10 @@ class Windwalkers extends Table
     use WW_Movement;
     use WW_Confrontation;
 
+    const FUREVENT_SCORE_MULTIPLIER = 3;
+    const PORTEDHURLE_SCORE_MULTIPLIER = 6;
+    const HORDE_SCORE_MULTIPLIER = 2;
+
     function __construct()
     {
         parent::__construct();
@@ -123,7 +127,7 @@ class Windwalkers extends Table
     {
         $value = $options[101] ?? $options['101'] ?? 1;
         $startingChapter = (int) $value;
-        return ($startingChapter >= 1 && $startingChapter <= 4) ? $startingChapter : 1;
+        return ($startingChapter >= 1 && $startingChapter <= self::LAST_CHAPTER) ? $startingChapter : 1;
     }
 
     private function determineStartingDice(array $options = []): int
@@ -154,15 +158,15 @@ class Windwalkers extends Table
         // Easy=9, Normal=9, Hard=3, Extreme=5
         switch ($difficulty) {
             case 1:
-                return 9;  // Easy
+                return self::MAX_MORAL;  // Easy
             case 2:
-                return 9;  // Normal
+                return self::MAX_MORAL;  // Normal
             case 3:
                 return 3;  // Hard
             case 4:
                 return 5;  // Extreme
             default:
-                return 9; // Normal by default
+                return self::MAX_MORAL; // Normal by default
         }
     }
 
@@ -545,13 +549,32 @@ class Windwalkers extends Table
         return $this->getRecruitableCharacters($tile);
     }
 
+    private function formatTileLocationString(int $q, int $r, int $chapter): string
+    {
+        return 'tile_' . $q . '_' . $r . '_ch' . $chapter;
+    }
+
     /**
      * Get the location string for a village/city recruit pool
      */
     private function getRecruitLocation(array $tile): string
     {
         $chapter = $this->getGameStateValue('current_chapter');
-        return 'recruit_' . $tile['tile_q'] . '_' . $tile['tile_r'] . '_ch' . $chapter;
+        return $this->formatTileLocationString($tile['tile_q'], $tile['tile_r'], $chapter);
+    }
+
+    /**
+     * Get the tile location string for a player's current position
+     * Format: tile_Q_R_chC (e.g., tile_2_3_ch1)
+     * Used for placing abandoned/discarded cards on the player's current tile
+     */
+    function getPlayerTileLocation(int $player_id): string
+    {
+        $chapter = $this->getGameStateValue('current_chapter');
+        $player = $this->getObjectFromDB(
+            "SELECT player_position_q, player_position_r FROM player WHERE player_id = $player_id"
+        );
+        return $this->formatTileLocationString($player['player_position_q'], $player['player_position_r'], $chapter);
     }
 
     /**
@@ -681,6 +704,7 @@ class Windwalkers extends Table
     {
         $cards = [];
 
+        // Only draw from deck (not discard, not already in recruit pools, not in hordes)
         if ($ferCount > 0) {
             $fer = $this->getCollectionFromDb(
                 "SELECT * FROM card WHERE card_type = 'fer' AND card_is_leader = 0 AND card_location = 'deck'"
@@ -709,32 +733,36 @@ class Windwalkers extends Table
     }
 
     /**
-     * Add a card to a location's recruit pool (when released in that village/city)
+     * Add a card to a tile's location (when released/abandoned on that tile)
+     * All cards go to tile-based locations: tile_Q_R_chC
+     * Village/city tiles also use 'location_' prefix for recruit pool compatibility
      */
     function addCardToRecruitPool(int $card_id, array $tile): void
     {
-        if ($tile['tile_type'] != 'village' && $tile['tile_type'] != 'city') {
-            // Not a village or city, just discard
-            $this->DbQuery("UPDATE card SET card_location = 'discard' WHERE card_id = $card_id");
-            return;
+        $chapter = $this->getGameStateValue('current_chapter');
+
+        if ($tile['tile_type'] == 'village' || $tile['tile_type'] == 'city') {
+            // Village/city: use location_ prefix (for recruit pool queries)
+            $location = $this->getRecruitLocation($tile);
+        } else {
+            // Other tiles: use tile_ prefix
+            $location = 'tile_' . $tile['tile_q'] . '_' . $tile['tile_r'] . '_ch' . $chapter;
         }
 
-        $location = $this->getRecruitLocation($tile);
         $this->DbQuery("UPDATE card SET card_location = '$location' WHERE card_id = $card_id");
     }
 
     /**
-     * Clear all recruit pools (villages and cities) for a chapter
-     * Called at chapter end - cards go back to deck
+     * Clear recruit pool flags for a chapter
+     * Called at chapter end - cards stay on their tiles (become inaccessible)
+     * No more 'discard' pile - cards just remain on old chapter tiles
      */
     function clearRecruitPoolsForChapter(int $chapter): void
     {
-        // Clear cards from recruit pools
-        $this->DbQuery(
-            "UPDATE card SET card_location = 'deck' WHERE card_location LIKE 'recruit_%_ch$chapter'"
-        );
+        // Cards stay on their tiles (location_X_Y_chC or tile_X_Y_chC)
+        // They become inaccessible when chapter changes - no need to move them
 
-        // Clear pool initialization flags for this chapter
+        // Clear pool initialization flags for this chapter (cleanup)
         $this->DbQuery(
             "DELETE FROM global_var WHERE var_name LIKE 'pool_init_recruit_%_ch$chapter'"
         );
@@ -1071,7 +1099,7 @@ class Windwalkers extends Table
             'bonus_text' => $bonusText
         ]);
 
-        if ($chapter >= 4) {
+        if ($chapter >= self::LAST_CHAPTER) {
             // Game over - route to final scoring state before framework gameEnd (99)
             $this->gamestate->nextState('finalScoring');
             return;
@@ -1263,7 +1291,7 @@ class Windwalkers extends Table
         $tiles = $this->getStat('tiles_traversed', $player_id);
         $surpass = $this->getStat('surpass_points', $player_id) ?? 0;
         $furevents = $this->getStat('furevents_defeated', $player_id);
-        return $tiles + $surpass + ($furevents * 3);
+        return $tiles + $surpass + ($furevents * self::FUREVENT_SCORE_MULTIPLIER);
     }
 
     /**
@@ -1279,7 +1307,7 @@ class Windwalkers extends Table
             'tiles' => $tiles,
             'surpass' => $surpass,
             'furevents' => $furevents,
-            'furevents_points' => $furevents * 3
+            'furevents_points' => $furevents * self::FUREVENT_SCORE_MULTIPLIER
         ];
     }
 
@@ -1326,7 +1354,7 @@ class Windwalkers extends Table
 
             // Sum moral bonuses from all chapters
             $chapter_moral_bonus = 0;
-            for ($i = 1; $i <= 4; $i++) {
+            for ($i = 1; $i <= self::LAST_CHAPTER; $i++) {
                 $chapter_moral_bonus += $this->getStat('chapter_' . $i . '_moral_bonus', $player_id) ?? 0;
             }
 
@@ -1340,13 +1368,13 @@ class Windwalkers extends Table
             $total_par_diff = $this->getStat('total_par_difference', $player_id) ?? 0;
             $total_days = 0;
             $total_par = 0;
-            for ($i = 1; $i <= 4; $i++) {
+            for ($i = 1; $i <= self::LAST_CHAPTER; $i++) {
                 $total_days += $this->getStat('chapter_' . $i . '_days', $player_id) ?? 0;
                 $total_par += $this->chapters[$i]['par'] ?? 10;
             }
 
             // Final score = tiles + surpass + furevents×3 + lihn_bonus + portedhurle + chapter_moral_bonuses + hordiers×2 + PAR_bonus
-            $score = $tiles + $surpass + ($furevents * 3) + $lihn_bonus + $portedhurle_bonus + $chapter_moral_bonus + ($hordiers * 2) + $total_par_bonus;
+            $score = $tiles + $surpass + ($furevents * self::FUREVENT_SCORE_MULTIPLIER) + $lihn_bonus + $portedhurle_bonus + $chapter_moral_bonus + ($hordiers * 2) + $total_par_bonus;
 
             $this->DbQuery("UPDATE player SET player_score = $score WHERE player_id = $player_id");
             $this->setStat($score, 'total_score', $player_id);
@@ -1382,7 +1410,7 @@ class Windwalkers extends Table
                     'tiles' => $tiles,
                     'surpass' => $surpass,
                     'furevents' => $furevents,
-                    'furevents_points' => $furevents * 3,
+                    'furevents_points' => $furevents * self::FUREVENT_SCORE_MULTIPLIER,
                     'lihn_bonus' => $lihn_bonus,
                     'portedhurle_bonus' => $portedhurle_bonus,
                     'chapter_moral_bonus' => $chapter_moral_bonus,
@@ -1439,7 +1467,7 @@ class Windwalkers extends Table
             'hordiers' => $hordiers,
             'hordiers_points' => $hordiers * 2,
             'furevents' => $furevents,
-            'furevents_points' => $furevents * 3
+            'furevents_points' => $furevents * self::FUREVENT_SCORE_MULTIPLIER
         ];
     }
 

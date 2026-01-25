@@ -9,7 +9,25 @@ trait WW_Confrontation
     // Constants
     //////////////////////////////////////////////////////////////////////////////
 
+    // Game limits
     const MAX_HORDE_SIZE = 8;
+    const MAX_MORAL = 9;
+
+    // Dice constraints
+    const MIN_DICE_VALUE = 1;
+    const MAX_DICE_VALUE = 6;
+    const DEFAULT_DICE_COUNT = 6;
+
+    // Moral bonuses (card powers)
+    const DRAGON_MORAL_BONUS = 3;
+    const SASKIA_MORAL_BONUS = 2;
+    const OSVALDO_MORAL_BONUS = 3;
+    const BARAMAS_MORAL_BONUS = 3;
+
+    // Scoring multipliers
+    const FUREVENT_SCORE_MULTIPLIER = 3;
+    const PORTEDHURLE_SCORE_MULTIPLIER = 6;
+    const HORDE_SCORE_MULTIPLIER = 2;
 
     //////////////////////////////////////////////////////////////////////////////
     // Helper Functions
@@ -40,7 +58,7 @@ trait WW_Confrontation
 
     /**
      * Common function to discard a traine card (self-discard powers)
-     * Handles: moving to discard, incrementing stat, sending notification
+     * Handles: moving to current tile, incrementing stat, sending notification
      * @param int $player_id Player ID
      * @param int $card_id Card ID to discard
      * @param bool $to_use_its_power Whether the card is discarded to use its power (default: true)
@@ -53,8 +71,9 @@ trait WW_Confrontation
         $char_info = $this->characters[$type_arg] ?? ['name' => 'Hordier'];
         $character_name = $char_info['name'];
 
-        // Move card to discard
-        $this->cards->moveCard($card_id, 'discard');
+        // Move card to player's current tile (no more 'discard' pile)
+        $tile_location = $this->getPlayerTileLocation($player_id);
+        $this->cards->moveCard($card_id, $tile_location);
 
         // Increment hordiers lost stat
         $this->incStat(1, 'hordiers_lost', $player_id);
@@ -200,7 +219,7 @@ trait WW_Confrontation
             throw new BgaUserException($this->_("Invalid dice"));
         }
 
-        $new_value = max(1, min(6, $dice['dice_value'] + $modifier));
+        $new_value = max(self::MIN_DICE_VALUE, min(self::MAX_DICE_VALUE, $dice['dice_value'] + $modifier));
         $this->DbQuery("UPDATE dice_roll SET dice_value = $new_value WHERE dice_id = $dice_id");
 
         $this->DbQuery("UPDATE player SET player_moral = GREATEST(0, player_moral - 1) WHERE player_id = $player_id");
@@ -293,8 +312,9 @@ trait WW_Confrontation
         // Get current state for validation
         $moral = (int) $this->getUniqueValueFromDB("SELECT player_moral FROM player WHERE player_id = $player_id");
         $total_moral_cost = 0;
+        $total_moral_gain = 0;  // Track potential moral gains from powers
 
-        // First pass: validate all actions can be executed
+        // First pass: validate all actions and calculate moral balance
         foreach ($actions_array as $action) {
             $type = $action['type'] ?? '';
             $params = $action['params'] ?? [];
@@ -310,6 +330,8 @@ trait WW_Confrontation
                     if (!$card) {
                         throw new BgaUserException($this->_("Invalid card"));
                     }
+                    // Calculate potential moral gain from this power
+                    $total_moral_gain += $this->getPowerMoralGain($card_id, $player_id, $params);
                     break;
                 case 'rerollAll':
                     $total_moral_cost += 1;
@@ -317,12 +339,34 @@ trait WW_Confrontation
             }
         }
 
-        // Check total moral cost (need more moral than cost, keep at least 1)
-        if ($total_moral_cost > 0 && $moral <= $total_moral_cost) {
+        // Check total moral cost (moral + gains must exceed cost to keep at least 1)
+        $effective_moral = $moral + $total_moral_gain;
+        if ($total_moral_cost > 0 && $effective_moral <= $total_moral_cost) {
             throw new BgaUserException($this->_("Not enough moral for all actions"));
         }
 
-        // Second pass: execute all actions
+        // Reorder actions: powers that give moral should be executed first
+        usort($actions_array, function ($a, $b) use ($player_id) {
+            $a_is_power = ($a['type'] ?? '') === 'usePower';
+            $b_is_power = ($b['type'] ?? '') === 'usePower';
+
+            // Powers before dice modifications
+            if ($a_is_power && !$b_is_power)
+                return -1;
+            if (!$a_is_power && $b_is_power)
+                return 1;
+
+            // Among powers, moral-giving powers first
+            if ($a_is_power && $b_is_power) {
+                $a_gain = $this->getPowerMoralGain($a['params']['card_id'] ?? 0, $player_id, $a['params'] ?? []);
+                $b_gain = $this->getPowerMoralGain($b['params']['card_id'] ?? 0, $player_id, $b['params'] ?? []);
+                return $b_gain - $a_gain;  // Higher gain first
+            }
+
+            return 0;
+        });
+
+        // Second pass: execute all actions (powers first, then dice modifications)
         foreach ($actions_array as $action) {
             $type = $action['type'] ?? '';
             $params = $action['params'] ?? [];
@@ -342,7 +386,7 @@ trait WW_Confrontation
         $updated_dice = $this->getCollectionFromDb("SELECT * FROM dice_roll WHERE dice_owner = 'player'");
 
         // Get ignored dice IDs to send to client
-        $ignored_dice_json = $this->getGlobalVariable('uther_ignored_dice');
+        $ignored_dice_json = $this->getGlobalVariable('card_ignored_dice');
         $ignored_dice = $ignored_dice_json ? json_decode($ignored_dice_json, true) : [];
 
         if (count($actions_array) > 0) {
@@ -366,6 +410,60 @@ trait WW_Confrontation
     }
 
     /**
+     * Calculate potential moral gain from a power
+     * Used during batch validation to allow spending moral gained from powers
+     * @param int $card_id Card ID
+     * @param int $player_id Player ID  
+     * @param array $params Power parameters
+     * @return int Potential moral gain (0 if power doesn't give moral)
+     */
+    private function getPowerMoralGain(int $card_id, int $player_id, array $params): int
+    {
+        if ($card_id <= 0)
+            return 0;
+
+        $card = $this->getObjectFromDB("SELECT * FROM card WHERE card_id = $card_id");
+        if (!$card)
+            return 0;
+
+        $type_arg = (int) $card['card_type_arg'];
+        $char_info = $this->characters[$type_arg] ?? null;
+        if (!$char_info)
+            return 0;
+
+        $power_code = $char_info['power_code'] ?? '';
+
+        switch ($power_code) {
+            case 'dragon_power':
+                // Dragon: +4 moral (requires target, so check if target provided)
+                $target = $params['target_card_id'] ?? null;
+                return $target ? self::DRAGON_MORAL_BONUS : 0;
+
+            case 'saskia_power':
+                // Saskia: +2 moral (if tile has exactly 2 green dice)
+                return self::SASKIA_MORAL_BONUS;  // Assume conditions met; actual validation happens during execution
+
+            case 'osvaldo_power':
+                // Osvaldo: +3 moral (if tile has exactly 3 green dice)
+                return self::OSVALDO_MORAL_BONUS;
+
+            case 'baramas_power':
+                // Baramas: +3 moral (if wind force = 3)
+                return self::BARAMAS_MORAL_BONUS;
+
+            case 'yavo_power':
+                // Yavo: +1 moral if another Torantor exists
+                if ($this->hasAnotherTorantor($player_id, $card_id)) {
+                    return self::YAVO_MORAL_BONUS;
+                }
+                return 0;
+
+            default:
+                return 0;
+        }
+    }
+
+    /**
      * Execute a single modifyDice action from batch
      */
     private function executeBatchModifyDice(int $player_id, array $params): void
@@ -382,7 +480,7 @@ trait WW_Confrontation
             throw new BgaUserException($this->_("Invalid dice"));
         }
 
-        $new_value = max(1, min(6, $dice['dice_value'] + $modifier));
+        $new_value = max(self::MIN_DICE_VALUE, min(self::MAX_DICE_VALUE, $dice['dice_value'] + $modifier));
         $this->DbQuery("UPDATE dice_roll SET dice_value = $new_value WHERE dice_id = $dice_id");
         $this->DbQuery("UPDATE player SET player_moral = GREATEST(0, player_moral - 1) WHERE player_id = $player_id");
         $this->incStat(1, 'moral_spent', $player_id);
@@ -428,7 +526,7 @@ trait WW_Confrontation
         }
 
         // Check if this is step 2 of a multi-step Torantor power (Kyo, Xavio, Zaffa)
-        // For Zaffa: card was discarded in step 1, need to retrieve from discard
+        // For Zaffa: card was discarded in step 1 (on player's tile), need to retrieve it
         // For Kyo/Xavio: card is still in horde
         $card_pending = json_decode($this->getGlobalVariable('card_pending') ?? '{}', true);
         // Only treat as step 2 if card_id matches the pending card
@@ -436,11 +534,12 @@ trait WW_Confrontation
 
         if ($is_card_step2) {
             // Step 2 of multi-step power
-            // Try to get card from horde first (Kyo, Xavio), then from discard (Zaffa)
+            // Try to get card from horde first (Kyo, Xavio), then from player's tile (Zaffa)
             $card = $this->getObjectFromDB("SELECT * FROM card WHERE card_id = $card_id AND card_location = 'horde_$player_id'");
             if (!$card) {
-                // Card not in horde - try discard (Zaffa discards in step 1)
-                $card = $this->getObjectFromDB("SELECT * FROM card WHERE card_id = $card_id AND card_location = 'discard'");
+                // Card not in horde - try player's current tile (Zaffa discards to tile in step 1)
+                $tile_location = $this->getPlayerTileLocation($player_id);
+                $card = $this->getObjectFromDB("SELECT * FROM card WHERE card_id = $card_id AND card_location = '$tile_location'");
             }
             if (!$card) {
                 throw new BgaUserException($this->_("Card not found"));
@@ -788,14 +887,14 @@ trait WW_Confrontation
         }
 
         // Max 3 dice can be ignored
-        if (count($ignored_dice) > 3) {
-            throw new BgaUserException($this->_("You can only ignore up to 3 dice"));
+        if (count($ignored_dice) > self::ORANNE_MAX_IGNORE_DICE) {
+            throw new BgaUserException($this->_("You can only ignore up to " . self::ORANNE_MAX_IGNORE_DICE . " dice"));
         }
 
         // Get current ignored dice and merge
-        $current_ignored = json_decode($this->getGlobalVariable('uther_ignored_dice') ?? '[]', true);
+        $current_ignored = json_decode($this->getGlobalVariable('card_ignored_dice') ?? '[]', true);
         $current_ignored = array_merge($current_ignored, $ignored_dice);
-        $this->setGlobalVariable('uther_ignored_dice', json_encode($current_ignored));
+        $this->setGlobalVariable('card_ignored_dice', json_encode($current_ignored));
 
         // Notify all players
         $this->notifyAllPlayers('diceIgnored', clienttranslate('${player_name} uses Oranne\'s power: ${count} challenge dice ignored!'), [
@@ -843,9 +942,9 @@ trait WW_Confrontation
         $ignored_dice = array_keys($challenge_dice);
 
         // Add to ignored dice
-        $current_ignored = json_decode($this->getGlobalVariable('uther_ignored_dice') ?? '[]', true);
+        $current_ignored = json_decode($this->getGlobalVariable('card_ignored_dice') ?? '[]', true);
         $current_ignored = array_merge($current_ignored, $ignored_dice);
-        $this->setGlobalVariable('uther_ignored_dice', json_encode($current_ignored));
+        $this->setGlobalVariable('card_ignored_dice', json_encode($current_ignored));
 
         // Notify all players
         $this->notifyAllPlayers('diceIgnored', clienttranslate('${player_name} uses Ivana\'s power: All dice with value < ${wind_force} are ignored! (${count} dice)'), [
@@ -939,9 +1038,9 @@ trait WW_Confrontation
         }
 
         // Add to ignored dice
-        $current_ignored = json_decode($this->getGlobalVariable('uther_ignored_dice') ?? '[]', true);
+        $current_ignored = json_decode($this->getGlobalVariable('card_ignored_dice') ?? '[]', true);
         $current_ignored = array_merge($current_ignored, $dice_ids);
-        $this->setGlobalVariable('uther_ignored_dice', json_encode($current_ignored));
+        $this->setGlobalVariable('card_ignored_dice', json_encode($current_ignored));
 
         // Notify all players
         $this->notifyAllPlayers('diceIgnored', clienttranslate('${player_name} uses Amon Amon\'s power: ${count} white dice ignored'), [
@@ -974,7 +1073,7 @@ trait WW_Confrontation
                 throw new BgaUserException($this->_("Invalid dice selection"));
             }
 
-            if ($dice_value < 1 || $dice_value > 6) {
+            if ($dice_value < self::MIN_DICE_VALUE || $dice_value > self::MAX_DICE_VALUE) {
                 throw new BgaUserException($this->_("Dice value must be between 1 and 6"));
             }
 
@@ -1088,7 +1187,7 @@ trait WW_Confrontation
         if (!empty($ignored_dice)) {
             // Uther: can ignore 3 dice per missing hordier
             $missing_count = $this->getMissingHordiersCount($player_id);
-            $max_ignore = 3 * $missing_count;
+            $max_ignore = self::UTHER_IGNORE_DICE * $missing_count;
 
             // Validate not ignoring more than allowed
             if (count($ignored_dice) > $max_ignore) {
@@ -1096,11 +1195,11 @@ trait WW_Confrontation
             }
 
             // Get current ignored dice and merge with new ones (to support multiple ignore powers)
-            $current_ignored = json_decode($this->getGlobalVariable('uther_ignored_dice') ?? '[]', true);
+            $current_ignored = json_decode($this->getGlobalVariable('card_ignored_dice') ?? '[]', true);
             $current_ignored = array_merge($current_ignored, $ignored_dice);
 
             // Store ignored dice IDs for confrontation calculation
-            $this->setGlobalVariable('uther_ignored_dice', json_encode($current_ignored));
+            $this->setGlobalVariable('card_ignored_dice', json_encode($current_ignored));
 
             $this->notifyAllPlayers('diceIgnored', clienttranslate('${count} challenge dice ignored!'), [
                 'player_id' => $player_id,
@@ -1164,17 +1263,17 @@ trait WW_Confrontation
         }
 
         // Add +2 moral (max 9)
-        $this->DbQuery("UPDATE player SET player_moral = LEAST(9, player_moral + 2) WHERE player_id = $player_id");
+        $this->DbQuery("UPDATE player SET player_moral = LEAST(" . self::MAX_MORAL . ", player_moral + " . self::SASKIA_MORAL_BONUS . ") WHERE player_id = $player_id");
 
         // Get new moral value
         $newMoral = (int) $this->getUniqueValueFromDB("SELECT player_moral FROM player WHERE player_id = $player_id");
 
         // Notify
-        $this->notifyAllPlayers('moralChanged', clienttranslate('${player_name} gains +2 moral (Saskia\'s power)'), [
+        $this->notifyAllPlayers('moralChanged', clienttranslate('${player_name} gains +${change} moral (Saskia\'s power)'), [
             'player_id' => $player_id,
             'player_name' => $this->getActivePlayerName(),
             'moral' => $newMoral,
-            'change' => 2
+            'change' => self::SASKIA_MORAL_BONUS
         ]);
     }
 
@@ -1223,17 +1322,17 @@ trait WW_Confrontation
         }
 
         // Add +3 moral (max 9)
-        $this->DbQuery("UPDATE player SET player_moral = LEAST(9, player_moral + 3) WHERE player_id = $player_id");
+        $this->DbQuery("UPDATE player SET player_moral = LEAST(" . self::MAX_MORAL . ", player_moral + " . self::OSVALDO_MORAL_BONUS . ") WHERE player_id = $player_id");
 
         // Get new moral value
         $newMoral = (int) $this->getUniqueValueFromDB("SELECT player_moral FROM player WHERE player_id = $player_id");
 
         // Notify
-        $this->notifyAllPlayers('moralChanged', clienttranslate('${player_name} gains +3 moral (Osvaldo\'s power)'), [
+        $this->notifyAllPlayers('moralChanged', clienttranslate('${player_name} gains +${change} moral (Osvaldo\'s power)'), [
             'player_id' => $player_id,
             'player_name' => $this->getActivePlayerName(),
             'moral' => $newMoral,
-            'change' => 3
+            'change' => self::OSVALDO_MORAL_BONUS
         ]);
     }
 
@@ -1282,17 +1381,17 @@ trait WW_Confrontation
         }
 
         // Add +3 moral (max 9)
-        $this->DbQuery("UPDATE player SET player_moral = LEAST(9, player_moral + 3) WHERE player_id = $player_id");
+        $this->DbQuery("UPDATE player SET player_moral = LEAST(" . self::MAX_MORAL . ", player_moral + " . self::BARAMAS_MORAL_BONUS . ") WHERE player_id = $player_id");
 
         // Get new moral value
         $newMoral = (int) $this->getUniqueValueFromDB("SELECT player_moral FROM player WHERE player_id = $player_id");
 
         // Notify
-        $this->notifyAllPlayers('moralChanged', clienttranslate('${player_name} gains +3 moral (Baramas\'s power)'), [
+        $this->notifyAllPlayers('moralChanged', clienttranslate('${player_name} gains +${change} moral (Baramas\'s power)'), [
             'player_id' => $player_id,
             'player_name' => $this->getActivePlayerName(),
             'moral' => $newMoral,
-            'change' => 3
+            'change' => self::BARAMAS_MORAL_BONUS
         ]);
     }
 
@@ -1372,7 +1471,7 @@ trait WW_Confrontation
             if ($dice_id && ($modifier === 1 || $modifier === -1)) {
                 $dice = $this->getObjectFromDB("SELECT * FROM dice_roll WHERE dice_id = $dice_id AND dice_owner = 'player'");
                 if ($dice) {
-                    $new_value = max(1, min(6, $dice['dice_value'] + $modifier));
+                    $new_value = max(self::MIN_DICE_VALUE, min(self::MAX_DICE_VALUE, $dice['dice_value'] + $modifier));
                     $this->DbQuery("UPDATE dice_roll SET dice_value = $new_value WHERE dice_id = $dice_id");
 
                     $this->notifyAllPlayers('diceModified', clienttranslate('${player_name} modifies a die by ${modifier} (Xavio Torantor bonus)'), [
@@ -1398,7 +1497,7 @@ trait WW_Confrontation
         // Check for another Torantor
         if ($this->hasAnotherTorantor($player_id, $card_id)) {
             // Add +1 moral (max 9)
-            $this->DbQuery("UPDATE player SET player_moral = LEAST(9, player_moral + 1) WHERE player_id = $player_id");
+            $this->DbQuery("UPDATE player SET player_moral = LEAST(" . self::MAX_MORAL . ", player_moral + 1) WHERE player_id = $player_id");
 
             // Get new moral value
             $newMoral = (int) $this->getUniqueValueFromDB("SELECT player_moral FROM player WHERE player_id = $player_id");
@@ -1524,7 +1623,7 @@ trait WW_Confrontation
             throw new BgaUserException($this->_("You must select a die to modify"));
         }
 
-        if ($dice_value === null || $dice_value < 1 || $dice_value > 6) {
+        if ($dice_value === null || $dice_value < self::MIN_DICE_VALUE || $dice_value > self::MAX_DICE_VALUE) {
             throw new BgaUserException($this->_("You must choose a die value between 1 and 6"));
         }
 
@@ -1558,9 +1657,9 @@ trait WW_Confrontation
         }
 
         // Get current ignored dice and add this one
-        $current_ignored = json_decode($this->getGlobalVariable('uther_ignored_dice') ?? '[]', true);
+        $current_ignored = json_decode($this->getGlobalVariable('card_ignored_dice') ?? '[]', true);
         $current_ignored = array_merge($current_ignored, $ignored_dice);
-        $this->setGlobalVariable('uther_ignored_dice', json_encode($current_ignored));
+        $this->setGlobalVariable('card_ignored_dice', json_encode($current_ignored));
 
         $this->notifyAllPlayers('diceIgnored', clienttranslate('${player_name} ignores 1 challenge die (Wanda Pfeffer)'), [
             'player_id' => $player_id,
@@ -1576,7 +1675,7 @@ trait WW_Confrontation
     private function applyKunigundePower(int $player_id): void
     {
         // Get already ignored dice
-        $current_ignored = json_decode($this->getGlobalVariable('uther_ignored_dice') ?? '[]', true);
+        $current_ignored = json_decode($this->getGlobalVariable('card_ignored_dice') ?? '[]', true);
         $ignored_ids_str = empty($current_ignored) ? '0' : implode(',', $current_ignored);
 
         // Get all player dice (blue)
@@ -1616,7 +1715,7 @@ trait WW_Confrontation
 
         // Add to ignored dice
         $current_ignored = array_merge($current_ignored, $ignored_dice);
-        $this->setGlobalVariable('uther_ignored_dice', json_encode($current_ignored));
+        $this->setGlobalVariable('card_ignored_dice', json_encode($current_ignored));
 
         $this->notifyAllPlayers('diceIgnored', clienttranslate('${player_name} ignores all white dice (Kunigunde Nosske)'), [
             'player_id' => $player_id,
@@ -1646,9 +1745,9 @@ trait WW_Confrontation
         }
 
         // Add to ignored dice
-        $current_ignored = json_decode($this->getGlobalVariable('uther_ignored_dice') ?? '[]', true);
+        $current_ignored = json_decode($this->getGlobalVariable('card_ignored_dice') ?? '[]', true);
         $current_ignored = array_merge($current_ignored, $ignored_dice);
-        $this->setGlobalVariable('uther_ignored_dice', json_encode($current_ignored));
+        $this->setGlobalVariable('card_ignored_dice', json_encode($current_ignored));
 
         // Mark Régitha as "protected" using global variable
         // She cannot be discarded, replaced, or rested after using her power
@@ -1709,9 +1808,9 @@ trait WW_Confrontation
 
         if (!empty($ignored_dice)) {
             // Add to ignored dice
-            $current_ignored = json_decode($this->getGlobalVariable('uther_ignored_dice') ?? '[]', true);
+            $current_ignored = json_decode($this->getGlobalVariable('card_ignored_dice') ?? '[]', true);
             $current_ignored = array_merge($current_ignored, $ignored_dice);
-            $this->setGlobalVariable('uther_ignored_dice', json_encode($current_ignored));
+            $this->setGlobalVariable('card_ignored_dice', json_encode($current_ignored));
         }
 
         // Set flag to treat this village as a city for recruitment
@@ -2010,7 +2109,7 @@ trait WW_Confrontation
 
             $dice = $this->getObjectFromDB("SELECT * FROM dice_roll WHERE dice_id = $dice_id");
             if ($dice) {
-                $new_value = max(1, min(6, $dice['dice_value'] + $modifier));
+                $new_value = max(self::MIN_DICE_VALUE, min(self::MAX_DICE_VALUE, $dice['dice_value'] + $modifier));
                 $this->DbQuery("UPDATE dice_roll SET dice_value = $new_value WHERE dice_id = $dice_id");
             }
         }
@@ -2072,7 +2171,7 @@ trait WW_Confrontation
 
             $dice = $this->getObjectFromDB("SELECT * FROM dice_roll WHERE dice_id = $dice_id");
             if ($dice) {
-                $new_value = max(1, min(6, $dice['dice_value'] + $modifier));
+                $new_value = max(self::MIN_DICE_VALUE, min(self::MAX_DICE_VALUE, $dice['dice_value'] + $modifier));
                 $this->DbQuery("UPDATE dice_roll SET dice_value = $new_value WHERE dice_id = $dice_id");
             }
         }
@@ -2146,7 +2245,7 @@ trait WW_Confrontation
 
             $dice = $this->getObjectFromDB("SELECT * FROM dice_roll WHERE dice_id = $dice_id");
             if ($dice) {
-                $new_value = max(1, min(6, $dice['dice_value'] + $modifier));
+                $new_value = max(self::MIN_DICE_VALUE, min(self::MAX_DICE_VALUE, $dice['dice_value'] + $modifier));
                 $this->DbQuery("UPDATE dice_roll SET dice_value = $new_value WHERE dice_id = $dice_id");
             }
         }
@@ -2192,9 +2291,9 @@ trait WW_Confrontation
         }
 
         // Get current ignored dice and add these
-        $current_ignored = json_decode($this->getGlobalVariable('uther_ignored_dice') ?? '[]', true);
+        $current_ignored = json_decode($this->getGlobalVariable('card_ignored_dice') ?? '[]', true);
         $current_ignored = array_merge($current_ignored, $ignored_dice);
-        $this->setGlobalVariable('uther_ignored_dice', json_encode($current_ignored));
+        $this->setGlobalVariable('card_ignored_dice', json_encode($current_ignored));
 
         $this->notifyAllPlayers('diceIgnored', clienttranslate('${player_name} ignores ${count} challenge dice (Waldo Waldmann)'), [
             'player_id' => $player_id,
@@ -2217,7 +2316,7 @@ trait WW_Confrontation
             throw new BgaUserException($this->_("You must select a green die"));
         }
 
-        if ($dice_value === null || $dice_value < 1 || $dice_value > 6) {
+        if ($dice_value === null || $dice_value < self::MIN_DICE_VALUE || $dice_value > self::MAX_DICE_VALUE) {
             throw new BgaUserException($this->_("You must choose a die value between 1 and 6"));
         }
 
@@ -2355,14 +2454,14 @@ trait WW_Confrontation
         ]);
 
         // Gain +4 moral
-        $this->DbQuery("UPDATE player SET player_moral = LEAST(9, player_moral + 4) WHERE player_id = $player_id");
+        $this->DbQuery("UPDATE player SET player_moral = LEAST(" . self::MAX_MORAL . ", player_moral + " . self::DRAGON_MORAL_BONUS . ") WHERE player_id = $player_id");
         $newMoral = $this->getUniqueValueFromDB("SELECT player_moral FROM player WHERE player_id = $player_id");
 
         $this->notifyAllPlayers('moralChanged', clienttranslate('${player_name} gains ${points} moral from Dragon\'s power'), [
             'player_id' => $player_id,
             'player_name' => $this->getPlayerNameById($player_id),
             'moral' => (int) $newMoral,
-            'points' => 4,
+            'points' => self::DRAGON_MORAL_BONUS,
             'reason' => 'dragon_power'
         ]);
     }
@@ -2660,7 +2759,7 @@ trait WW_Confrontation
         // $this->trace("stResolveConfrontation - wind_dice keys: " . json_encode(array_keys($wind_dice)));
 
         // Filter out ignored dice (from Uther's power)
-        $ignored_dice_json = $this->getGlobalVariable('uther_ignored_dice');
+        $ignored_dice_json = $this->getGlobalVariable('card_ignored_dice');
         // $this->trace("stResolveConfrontation - ignored_dice_json: " . ($ignored_dice_json ?? 'null'));
 
         if ($ignored_dice_json) {
@@ -2678,7 +2777,7 @@ trait WW_Confrontation
                     return $keep;
                 });
                 // Clear the variable for next confrontation
-                $this->setGlobalVariable('uther_ignored_dice', null);
+                $this->setGlobalVariable('card_ignored_dice', null);
             }
         }
 
@@ -2779,13 +2878,13 @@ trait WW_Confrontation
             $this->incStat(1, 'furevents_defeated', $player_id);
             $this->incStat(1, 'furevents_defeated');
             // 3 points for furevent
-            $points_earned += 3;
+            $points_earned += self::FUREVENT_SCORE_MULTIPLIER;
         }
 
         // Porte d'Hurle bonus: +6 points for passing through
         if (isset($tile['tile_subtype']) && $tile['tile_subtype'] === 'portedhurle') {
-            $this->incStat(6, 'portedhurle_bonus', $player_id);
-            $points_earned += 6;
+            $this->incStat(self::PORTEDHURLE_SCORE_MULTIPLIER, 'portedhurle_bonus', $player_id);
+            $points_earned += self::PORTEDHURLE_SCORE_MULTIPLIER;
         }
 
         // Award surpass points (cumulative: 0, 1, 2, 3, 4, 5...)
@@ -2800,7 +2899,7 @@ trait WW_Confrontation
         if ($lihn_active) {
             // Track the bonus points from Lihn (the extra points are equal to original amount)
             $this->incStat($points_earned, 'lihn_bonus_points', $player_id);
-            $points_earned *= 2;
+            $points_earned *= self::MORAL_SCORE_MULTIPLIER;
         }
 
         // Increment score directly in player table
@@ -2876,7 +2975,7 @@ trait WW_Confrontation
         $challenge_dice = $this->getCollectionFromDb("SELECT * FROM dice_roll WHERE dice_owner = 'challenge'");
 
         // Get ignored dice IDs (from powers like Lyara, Uther, Wanda, etc.)
-        $ignored_dice_json = $this->getGlobalVariable('uther_ignored_dice');
+        $ignored_dice_json = $this->getGlobalVariable('card_ignored_dice');
         $ignored_dice = $ignored_dice_json ? json_decode($ignored_dice_json, true) : [];
 
         // Get protected cards (like Regitha after using her power - can't be rested/discarded)
@@ -2917,6 +3016,8 @@ trait WW_Confrontation
 
     /**
      * Player abandons a hordier after losing a confrontation
+     * In a village/city: card goes to local recruit pool
+     * Elsewhere: card goes to discard
      */
     function actAbandonHordier(int $card_id): void
     {
@@ -2926,10 +3027,15 @@ trait WW_Confrontation
         // Verify the card belongs to the player's horde using our trait method
         $card = $this->getCardDefinition($card_id, $player_id);
 
-        // Move card to discard
-        $this->cards->moveCard($card_id, 'discard');
+        // Get current tile to check if in village/city
+        $player = $this->getObjectFromDB("SELECT * FROM player WHERE player_id = $player_id");
+        $chapter = $this->getGameStateValue('current_chapter');
+        $tile = $this->getTileAt((int) $player['player_position_q'], (int) $player['player_position_r'], $chapter);
 
-        // Mark as exhausted - abandoned cards can't use power if somehow recruited again
+        // Add card to recruit pool (village/city) or discard (elsewhere)
+        $this->addCardToRecruitPool($card_id, $tile);
+
+        // Mark as exhausted - abandoned cards can't use power if recruited again
         $this->DbQuery("UPDATE card SET card_power_used = 1 WHERE card_id = $card_id");
 
         $this->incStat(1, 'hordiers_lost', $player_id);
@@ -2938,11 +3044,23 @@ trait WW_Confrontation
         $type_arg = (int) $card['card_type_arg'];
         $char_info = $this->characters[$type_arg] ?? ['name' => 'Hordier'];
 
-        $this->notifyAllPlayers('hordierLost', clienttranslate('${player_name} loses ${character_name}'), [
+        // Determine destination for notification
+        $isRecruitLocation = $tile && ($tile['tile_type'] == 'village' || $tile['tile_type'] == 'city');
+        $destination = $isRecruitLocation ? 'recruit pool' : 'current tile';
+
+        $this->notifyAllPlayers('hordierLost', clienttranslate('${player_name} loses ${character_name} (to ${destination})'), [
             'player_id' => $player_id,
             'player_name' => $this->getActivePlayerName(),
             'card_id' => $card_id,
-            'character_name' => $char_info['name']
+            'character_name' => $char_info['name'],
+            'destination' => $destination,
+            'tile_type' => $tile ? $tile['tile_type'] : null,
+            'card' => $isRecruitLocation ? [
+                'card_id' => $card_id,
+                'card_type' => $card['card_type'] ?? $card['type'],
+                'card_type_arg' => $type_arg,
+                'card_power_used' => 1  // Abandoned cards are always exhausted
+            ] : null
         ]);
 
         // Check if player has any hordiers left

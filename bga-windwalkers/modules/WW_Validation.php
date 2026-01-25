@@ -11,37 +11,37 @@ trait WW_Validation
      */
     function getValidatedChapter(): int
     {
-        $chapter = (int)$this->getGameStateValue('current_chapter');
-        
+        $chapter = (int) $this->getGameStateValue('current_chapter');
+
         if ($chapter < 1) {
             $chapter = 1;  // Default fallback
         }
-        
-        if ($chapter > 4) {
+
+        if ($chapter > $this->maxChapter) {
             throw new BgaVisibleSystemException(
                 "Invalid chapter value ($chapter) - database may be corrupted"
             );
         }
-        
+
         return $chapter;
     }
-    
+
     /**
      * Ensure tiles exist for a chapter, creating them if needed
      */
     function ensureTilesExist(int $chapter): int
     {
-        $tile_count = (int)$this->getUniqueValueFromDB(
+        $tile_count = (int) $this->getUniqueValueFromDB(
             "SELECT COUNT(*) FROM tile WHERE tile_chapter = $chapter"
         );
-        
+
         if ($tile_count == 0) {
             $this->setupChapterTiles($chapter);
-            $tile_count = (int)$this->getUniqueValueFromDB(
+            $tile_count = (int) $this->getUniqueValueFromDB(
                 "SELECT COUNT(*) FROM tile WHERE tile_chapter = $chapter"
             );
         }
-        
+
         return $tile_count;
     }
 }

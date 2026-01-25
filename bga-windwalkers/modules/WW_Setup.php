@@ -73,7 +73,7 @@ trait WW_Setup
      */
     function setupChapterTiles(int $chapter): void
     {
-        if ($chapter < 1 || $chapter > 4) {
+        if ($chapter < 1 || $chapter > $this->chapters->count()) {
             throw new BgaVisibleSystemException("setupChapterTiles called with invalid chapter: $chapter");
         }
 
