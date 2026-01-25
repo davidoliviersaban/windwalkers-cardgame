@@ -150,7 +150,8 @@ $machinestates = [
             "continue" => 70,   // After success: go to continueOrRest (surpass or rest)
             "recruit" => 55,    // Village/City: recruit first, then continueOrRest
             "chooseHordier" => 31,  // Let player choose which hordier to rest
-            "endChapter" => 60
+            "endChapter" => 60,
+            "eliminate" => 46   // Player lost all moral
         ]
     ],
 

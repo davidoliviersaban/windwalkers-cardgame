@@ -404,6 +404,7 @@ function (dojo, declare) {
             characters: {},
             playerMoral: {},
             playerDice: {},
+            playerMaxDice: {},
             selectedTile: null,
             selectedDice: [],
             hordeCards: {},
@@ -523,6 +524,14 @@ function (dojo, declare) {
         
         getPlayerDice: function(playerId) {
             return this._data.playerDice[playerId] || 0;
+        },
+        
+        setPlayerMaxDice: function(playerId, count) {
+            this._data.playerMaxDice[playerId] = count;
+        },
+        
+        getPlayerMaxDice: function(playerId) {
+            return this._data.playerMaxDice[playerId] || 6;
         },
         
         // Selection
@@ -1173,7 +1182,7 @@ function (dojo, declare) {
         
         /**
          * Update moral flames display with temporary gain/loss indicators
-         * Order: moral + temp_gain + temp_loss + empty
+         * Shows original moral with temp_loss markers on flames that will be lost
          */
         updateMoralFlames: function() {
             if (!this.originalState || !this.gameInstance) {
@@ -1182,21 +1191,28 @@ function (dojo, declare) {
             }
             
             var originalMoral = this.originalState.moral || 0;
-            var currentMoral = originalMoral - this.pendingMoralSpent;
             var tileMoralEffect = WW_State.getSelectedTileMoralEffect();
             
-            // Calculate raw gains and losses
-            var rawGain = (tileMoralEffect > 0 ? tileMoralEffect : 0) + this.pendingMoralGain;
-            var rawLoss = (tileMoralEffect < 0 ? Math.abs(tileMoralEffect) : 0) + this.pendingMoralSpent;
+            // Calculate pending loss (moral spent on dice + tile penalty)
+            var tempLoss = this.pendingMoralSpent + (tileMoralEffect < 0 ? Math.abs(tileMoralEffect) : 0);
+            
+            // Calculate pending gain (moral from powers + tile bonus)
+            var tempGain = this.pendingMoralGain + (tileMoralEffect > 0 ? tileMoralEffect : 0);
             
             // Net them out - only show the difference
-            var net = rawGain - rawLoss;
-            var tempGain = net > 0 ? net : 0;
-            var tempLoss = net < 0 ? Math.abs(net) : 0;
+            var net = tempGain - tempLoss;
+            if (net > 0) {
+                tempGain = net;
+                tempLoss = 0;
+            } else {
+                tempGain = 0;
+                tempLoss = Math.abs(net);
+            }
             
-            console.log('updateMoralFlames: moral:', currentMoral, 'rawGain:', rawGain, 'rawLoss:', rawLoss, 'net:', net, 'tempGain:', tempGain, 'tempLoss:', tempLoss);
+            console.log('updateMoralFlames: originalMoral:', originalMoral, 'pendingMoralSpent:', this.pendingMoralSpent, 'tileMoralEffect:', tileMoralEffect, 'tempGain:', tempGain, 'tempLoss:', tempLoss);
             
-            WW_Player.updateMoral(this.gameInstance.player_id, currentMoral, tempGain, tempLoss);
+            // Pass original moral - updateMoral will show tempLoss flames at the top of current moral
+            WW_Player.updateMoral(this.gameInstance.player_id, originalMoral, tempGain, tempLoss);
         },
         
         /**
@@ -2582,6 +2598,8 @@ function (dojo, declare) {
             var panel = $('player_board_' + playerId);
             if (!panel) return;
             
+            console.log('[WW] setupPlayerPanel - player.dice_count:', player.dice_count, 'player:', player);
+            
             var traceurName = player.traceur_name || '';
             var moral = player.moral || 0;
             var diceCount = (player.dice_count || 0) - (player.surpass || 0);
@@ -2595,7 +2613,7 @@ function (dojo, declare) {
             
             // Generate dice icons (mini blue dice) - show up to max, filled for actual, empty for missing
             var diceIconsHtml = '';
-            var maxDice = 6; // Based on game difficulty
+            var maxDice = player.dice_count || 6; // Based on game difficulty
             for (var d = 1; d <= maxDice; d++) {
                 var diceClass = d <= diceCount ? 'ww_panel_die_blue' : 'ww_panel_die_empty';
                 diceIconsHtml += '<span class="ww_panel_die ' + diceClass + '"></span>';
@@ -2625,6 +2643,7 @@ function (dojo, declare) {
             
             WW_State.setPlayerMoral(playerId, player.moral);
             WW_State.setPlayerDice(playerId, diceCount);  // Store effective dice count (after surpass)
+            WW_State.setPlayerMaxDice(playerId, maxDice);  // Store base dice count (from difficulty)
         },
         
         setupGameInfoPanel: function(gamedatas) {
@@ -2695,26 +2714,30 @@ function (dojo, declare) {
             WW_State.setPlayerMoral(playerId, newMoral);
             tempGain = tempGain || 0;
             tempLoss = tempLoss || 0;
-            
+            var tempMoralVar = tempGain - tempLoss;
+            var lowerMoral = Math.max(0, Math.min(newMoral, newMoral + tempMoralVar)); // What remains after loss
+            var upperMoral = Math.min(9, Math.max(newMoral, newMoral + tempMoralVar)); // What remains after loss
+
             // Update moral counter if exists (legacy)
             var counter = $('moral_counter_' + playerId);
             if (counter) {
                 WW_DOM.setHtml(counter, newMoral);
                 WW_DOM.animateClass(counter, 'ww_value_changed', 500);
             }
-            // Update moral flames (new style)
-            // Order: filled (moral) + temp_gain + temp_loss + empty
             var flamesContainer = $('moral_flames_' + playerId);
             if (flamesContainer) {
                 var flamesHtml = '';
                 for (var i = 1; i <= 9; i++) {
                     var flameClass;
-                    if (i <= newMoral) {
+                    if (i <= lowerMoral) {
+                        // Safe moral (what remains after loss)
                         flameClass = 'filled';
-                    } else if (i <= newMoral + tempGain) {
-                        flameClass = 'temp_gain';
-                    } else if (i <= newMoral + tempGain + tempLoss) {
+                    } else if (tempMoralVar < 0 && i <= upperMoral) {
+                        // Current moral that will be lost (marked as temp_loss)
                         flameClass = 'temp_loss';
+                    } else if (tempMoralVar > 0 && i <= upperMoral) {
+                        // Potential gain
+                        flameClass = 'temp_gain';
                     } else {
                         flameClass = 'empty';
                     }
@@ -2736,7 +2759,7 @@ function (dojo, declare) {
             var diceContainer = $('dice_icons_' + playerId);
             if (diceContainer) {
                 var diceHtml = '';
-                var maxDice = 6; // Based on game difficulty
+                var maxDice = WW_State.getPlayerMaxDice(playerId); // Based on game difficulty
                 for (var d = 1; d <= maxDice; d++) {
                     var diceClass = d <= newCount ? 'ww_panel_die_blue' : 'ww_panel_die_empty';
                     diceHtml += '<span class="ww_panel_die ' + diceClass + '"></span>';
@@ -5098,11 +5121,15 @@ function (dojo, declare) {
                     
                 case 'zaffa_power':
                 case 'kyo_power':
-                    // Zaffa/Kyo can rest another Torantor (except protected)
-                    var otherTorantor = this.otherTorantor(sourceCardId);
-                    for (var card in otherTorantor) {
-                        var cardId = otherTorantor[card].$id;
+                    // Zaffa/Kyo can rest another Torantor (except protected, must be exhausted)
+                    var otherTorantors = this.otherTorantor(sourceCardId);
+                    var hordeCards = WW_State.getHordeCards();
+                    for (var i = 0; i < otherTorantors.length; i++) {
+                        var cardId = otherTorantors[i];
                         if (protectedCards.indexOf(parseInt(cardId)) !== -1) continue;  // Skip protected cards
+                        // Only allow targeting exhausted Torantors (the power is to rest them)
+                        var card = hordeCards[cardId];
+                        if (!WW_Utils.isCardExhausted(cardId, card)) continue;
                         WW_DOM.addClass('ww_horde_item_' + cardId, 'ww_power_target');
                     }
                     break;
@@ -5368,6 +5395,18 @@ function (dojo, declare) {
                     }
                     if (!WW_Utils.isCardExhausted(targetCardId, WW_State.getHordeCard(targetCardId))) {
                         this.showMessage(_("This Hordier is not exhausted"), "error");
+                        return false;
+                    }
+                    return true;
+                    
+                case 'kyo_power':
+                case 'zaffa_power':
+                    if (targetCardId == sourceCardId) {
+                        this.showMessage(_("Cannot target self"), "error");
+                        return false;
+                    }
+                    if (!WW_Utils.isCardExhausted(targetCardId, WW_State.getHordeCard(targetCardId))) {
+                        this.showMessage(_("This Torantor is not exhausted"), "error");
                         return false;
                     }
                     return true;

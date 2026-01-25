@@ -81,8 +81,12 @@ class Windwalkers extends Table
 
         $this->reloadPlayersBasicInfos();
 
-        // Determine starting chapter
-        $startingChapter = $this->determineStartingChapter();
+        // Determine starting chapter and difficulty from options
+        $startingChapter = $this->determineStartingChapter($options);
+        $startingDice = $this->determineStartingDice($options);
+
+        // Apply starting dice count to all players
+        $this->DbQuery("UPDATE player SET player_dice_count = $startingDice");
 
         // Init global values
         $this->setGameStateInitialValue('current_chapter', $startingChapter);
@@ -114,23 +118,19 @@ class Windwalkers extends Table
         return 2;
     }
 
-    /**
-     * Determine starting chapter from options
-     */
-    private function determineStartingChapter(): int
+    private function determineStartingChapter(array $options = []): int
     {
-        $startingChapter = 1;
-        if (method_exists($this, 'getGameOption')) {
-            try {
-                $optChapter = (int) $this->getGameOption(101);
-                if ($optChapter >= 1 && $optChapter <= 4) {
-                    $startingChapter = $optChapter;
-                }
-            } catch (Exception $e) {
-                // Fallback to default
-            }
-        }
-        return $startingChapter;
+        $value = $options[101] ?? $options['101'] ?? 1;
+        $startingChapter = (int) $value;
+        return ($startingChapter >= 1 && $startingChapter <= 4) ? $startingChapter : 1;
+    }
+
+    private function determineStartingDice(array $options = []): int
+    {
+        $value = $options[102] ?? $options['102'] ?? 2;
+        $difficulty = (int) $value;
+        $difficulty = ($difficulty >= 1 && $difficulty <= 3) ? $difficulty : 2;
+        return 8 - $difficulty;
     }
 
     /**
@@ -193,9 +193,6 @@ class Windwalkers extends Table
     //////////// Global Variables Helper
     //////////////////////////////////////////////////////////////////////////////
 
-    /**
-     * Set a global variable (stored in global_var table)
-     */
     protected function setGlobalVariable(string $name, $value): void
     {
         $name = $this->escapeStringForDB($name);
@@ -208,9 +205,6 @@ class Windwalkers extends Table
         }
     }
 
-    /**
-     * Get a global variable (from global_var table)
-     */
     protected function getGlobalVariable(string $name)
     {
         $name = $this->escapeStringForDB($name);
@@ -407,16 +401,9 @@ class Windwalkers extends Table
         $result = [];
         $current_player_id = $this->getCurrentPlayerId();
 
-        // DEBUG: Log current state
-        $stateId = $this->gamestate->state_id();
-        $stateName = $this->gamestate->state()['name'] ?? 'unknown';
-        // $this->trace("getAllDatas - Current state: $stateId ($stateName)");
-
         // Get chapter from game state
         $chapter = $this->getValidatedChapter();
         $result['current_chapter'] = $chapter;
-
-        // $this->trace("getAllDatas - Chapter: $chapter");
 
         // Ensure tiles exist
         $this->ensureTilesExist($chapter);
@@ -446,12 +433,10 @@ class Windwalkers extends Table
              FROM tile WHERE tile_chapter = $chapter"
         );
 
-        // Player's horde (with power_used status for UI)
         $result['myHorde'] = [];
         try {
             $result['myHorde'] = $this->getHordeWithPowerStatus($current_player_id);
         } catch (Exception $e) {
-            // Cards may not be set up yet
         }
 
         $result['recruitPool'] = [];
@@ -476,13 +461,10 @@ class Windwalkers extends Table
         // Game state info - two day counters
         $totalDays = $this->getGameStateValue('current_round');
         $chapterDay = $this->getGameStateValue('chapter_round');
-        $result['current_round'] = $totalDays ?: 1;     // Total days (for scoring)
-        $result['chapter_round'] = $chapterDay ?: 1;    // Days in current chapter
+        $result['current_round'] = $totalDays ?: 1;
+        $result['chapter_round'] = $chapterDay ?: 1;
         $result['chapter_par'] = $this->chapters[$chapter]['par'] ?? 10;
 
-        // $this->trace("getAllDatas - total_days: $totalDays, chapter_day: $chapterDay, chapter: $chapter");
-
-        // Add player scores (required for game end display)
         $result['scores'] = [];
         foreach ($result['players'] as $player_id => $player) {
             $result['scores'][$player_id] = (int) ($player['player_score'] ?? 0);
@@ -764,9 +746,28 @@ class Windwalkers extends Table
 
     function stRest(): void
     {
+        // Reset rest_next_state to prevent stale values from affecting routing
+        $this->setGameStateValue('rest_next_state', 0);
+
         // Reset movement counters for the active player (after failure or manual rest)
         $player_id = $this->getActivePlayerId();
         $this->DbQuery("UPDATE player SET player_has_moved = 0, player_surpass_count = 0 WHERE player_id = $player_id");
+
+        // Increment rest count stat (counts as a rest whether voluntary or after failure)
+        $this->incStat(1, 'rest_count', $player_id);
+        $rest_count = (int) $this->getStat('rest_count', $player_id);
+
+        // Get player data for notification
+        $player = $this->getObjectFromDB("SELECT * FROM player WHERE player_id = $player_id");
+
+        // Notify UI to update rest counter
+        $this->notifyAllPlayers('playerRests', clienttranslate('${player_name} rests and resets surpass counter'), [
+            'player_id' => $player_id,
+            'player_name' => $this->getActivePlayerName(),
+            'dice_count' => (int) $player['player_dice_count'],
+            'surpass_count' => 0,
+            'rest_count' => $rest_count
+        ]);
 
         // Increment day counters when a player rests
         $totalDays = $this->getGameStateValue('current_round');
@@ -840,14 +841,14 @@ class Windwalkers extends Table
 
     function stApplyTileEffect(): void
     {
+        // Reset rest_next_state to prevent stale values from affecting routing
+        $this->setGameStateValue('rest_next_state', 0);
+
         $player_id = $this->getActivePlayerId();
         $tile_id = $this->getGameStateValue('selected_tile');
         $tile = $this->getTileById($tile_id);
 
-        // DEBUG: Log tile info to diagnose recruitment bug
-        $this->debug("stApplyTileEffect: tile_id=$tile_id, type={$tile['tile_type']}, subtype={$tile['tile_subtype']}, q={$tile['tile_q']}, r={$tile['tile_r']}");
-
-        // IMPORTANT: Update player position to this tile
+        // Update player position to this tile
         // This is needed for tiles without wind (villages/cities) where
         // handleConfrontationSuccess is not called
         $this->DbQuery("UPDATE player SET player_position_q = {$tile['tile_q']}, player_position_r = {$tile['tile_r']} WHERE player_id = $player_id");
@@ -899,6 +900,18 @@ class Windwalkers extends Table
                     'new_moral' => $new_moral,
                     'terrain_name' => $terrain_name
                 ]);
+            }
+
+            // Check if player has no more moral - game over!
+            if ($new_moral <= 0) {
+                $this->notifyAllPlayers('playerEliminated', clienttranslate('${player_name} has depleted all moral and is eliminated!'), [
+                    'player_id' => $player_id,
+                    'player_name' => $this->getActivePlayerName()
+                ]);
+
+                $this->setGameStateValue('player_to_eliminate', $player_id);
+                $this->gamestate->nextState('eliminate');
+                return;
             }
         }
 
@@ -1122,9 +1135,6 @@ class Windwalkers extends Table
 
     function stSetupNextChapter(): void
     {
-        $stateId = $this->gamestate->state_id();
-        // $this->trace("stSetupNextChapter - Starting, current state: $stateId");
-
         $this->transitionToNextChapter();
 
         // Reset chapter day counter for new chapter
@@ -1135,7 +1145,6 @@ class Windwalkers extends Table
         $this->setupChapterDraftPool();
 
         $chapter = $this->getGameStateValue('current_chapter');
-        // $this->trace("stSetupNextChapter - Chapter is now: $chapter");
 
         // Get the new tiles
         $tiles = $this->getCollectionFromDb(
@@ -1145,9 +1154,6 @@ class Windwalkers extends Table
              tile_black_dice black_dice, tile_moral_effect moral_effect
              FROM tile WHERE tile_chapter = $chapter"
         );
-
-        $tileCount = count($tiles);
-        // $this->trace("stSetupNextChapter - Found $tileCount tiles for chapter $chapter");
 
         // Get player positions (they are now at start city of new chapter)
         $players = $this->loadPlayersBasicInfos();
@@ -1171,8 +1177,6 @@ class Windwalkers extends Table
         $this->activeNextPlayer();
         $first_player = $this->getActivePlayerId();
         $this->setGameStateValue('first_player', $first_player);
-
-        // $this->trace("stSetupNextChapter - First player set to: $first_player, transitioning to chapterDraft");
 
         // Go to chapter draft phase
         $this->gamestate->nextState('chapterDraft');
@@ -1221,27 +1225,12 @@ class Windwalkers extends Table
         ]);
     }
 
-    /**
-     * Calculate in-game score (points earned during play)
-     * Does NOT include moral/hordiers as those are end-of-chapter bonuses
-     */
     private function calculateInGameScore(int $player_id): int
     {
-        $score = 0;
-
-        // Tiles traversed (1 point each)
         $tiles = $this->getStat('tiles_traversed', $player_id);
-        $score += $tiles;
-
-        // Surpass points
-        $surpass_total = $this->getStat('surpass_points', $player_id) ?? 0;
-        $score += $surpass_total;
-
-        // Furevents defeated (3 points each)
+        $surpass = $this->getStat('surpass_points', $player_id) ?? 0;
         $furevents = $this->getStat('furevents_defeated', $player_id);
-        $score += $furevents * 3;
-
-        return $score;
+        return $tiles + $surpass + ($furevents * 3);
     }
 
     /**

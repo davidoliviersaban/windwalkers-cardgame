@@ -53,28 +53,13 @@ trait WW_Movement
     }
 
     /**
-     * Rest action (reset movement counters)
+     * Rest action (voluntary rest from playerTurn state)
+     * Note: The actual rest logic (stat increment, notification) is in stRest()
      */
     function actRest(): void
     {
         $this->checkAction('actRest');
-        $player_id = $this->getActivePlayerId();
-
-        $this->DbQuery("UPDATE player SET player_has_moved = 0, player_surpass_count = 0 WHERE player_id = $player_id");
-
-        // Get updated player data
-        $player = $this->getObjectFromDB("SELECT * FROM player WHERE player_id = $player_id");
-
-        $this->incStat(1, 'rest_count', $player_id);
-        $rest_count = (int) $this->getStat('rest_count', $player_id);
-
-        $this->notifyAllPlayers('playerRests', clienttranslate('${player_name} rests and resets surpass counter'), [
-            'player_id' => $player_id,
-            'player_name' => $this->getActivePlayerName(),
-            'dice_count' => (int) $player['player_dice_count'],
-            'surpass_count' => 0,
-            'rest_count' => $rest_count
-        ]);
+        // Just transition to rest state - stRest() handles everything
         $this->gamestate->nextState('rest');
     }
 

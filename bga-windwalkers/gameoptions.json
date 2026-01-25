@@ -1,65 +1,56 @@
 {
   "100": {
     "name": "Game mode",
-    "values": [
-      {
-        "value": 1,
+    "values": {
+      "1": {
         "name": "Chapter mode (reset horde each chapter)",
-        "tmdisplay": "Chapter mode",
-        "default": true
+        "tmdisplay": "Chapter mode"
       },
-      {
-        "value": 2,
+      "2": {
         "name": "Campaign mode (keep horde across chapters)",
         "tmdisplay": "Campaign mode"
       }
-    ]
+    },
+    "default": 1
   },
   "101": {
     "name": "Starting chapter",
-    "values": [
-      {
-        "value": 1,
+    "values": {
+      "1": {
         "name": "Chapter 1 - Aberlaas to Port-Choon",
-        "tmdisplay": "Chapter 1",
-        "default": true
+        "tmdisplay": "Chapter 1"
       },
-      {
-        "value": 2,
+      "2": {
         "name": "Chapter 2 - Port-Choon to Chawondasee",
         "tmdisplay": "Chapter 2"
       },
-      {
-        "value": 3,
+      "3": {
         "name": "Chapter 3 - Chawondasee to Alticcio",
         "tmdisplay": "Chapter 3"
       },
-      {
-        "value": 4,
-        "name": "Chapter 4 - Alticcio to Camp Bòban",
+      "4": {
+        "name": "Chapter 4 - Alticcio to Camp Boban",
         "tmdisplay": "Chapter 4"
       }
-    ]
+    },
+    "default": 1
   },
   "102": {
-    "name": "Difficulty",
-    "values": [
-      {
-        "value": 1,
+    "name": "Difficulty level",
+    "values": {
+      "1": {
         "name": "Easy (start with 7 dice)",
         "tmdisplay": "Easy"
       },
-      {
-        "value": 2,
+      "2": {
         "name": "Normal (start with 6 dice)",
-        "tmdisplay": "Normal",
-        "default": true
+        "tmdisplay": "Normal"
       },
-      {
-        "value": 3,
+      "3": {
         "name": "Hard (start with 5 dice)",
         "tmdisplay": "Hard"
       }
-    ]
+    },
+    "default": 2
   }
 }
