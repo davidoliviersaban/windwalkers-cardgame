@@ -23,11 +23,18 @@ trait WW_Confrontation
     const SASKIA_MORAL_BONUS = 2;
     const OSVALDO_MORAL_BONUS = 3;
     const BARAMAS_MORAL_BONUS = 3;
+    const YAVO_MORAL_BONUS = 1;
+
+    // Power limits
+    const ERNEST_TARGET_TILES = 3;
+    const ORANNE_MAX_IGNORE_DICE = 3;
+    const UTHER_IGNORE_DICE = 3;  // Dice to ignore per missing hordier
 
     // Scoring multipliers
     const FUREVENT_SCORE_MULTIPLIER = 3;
     const PORTEDHURLE_SCORE_MULTIPLIER = 6;
     const HORDE_SCORE_MULTIPLIER = 2;
+    const MORAL_SCORE_MULTIPLIER = 2;  // Lihn's double points power
 
     //////////////////////////////////////////////////////////////////////////////
     // Helper Functions
@@ -65,6 +72,13 @@ trait WW_Confrontation
      */
     private function discardCard(int $player_id, int $card_id, bool $to_use_its_power = true): void
     {
+        // Check if card is protected (like Régitha after using her power)
+        $protected_cards = json_decode($this->getGlobalVariable('protected_cards') ?? '[]', true);
+        $protected_cards_int = array_map('intval', $protected_cards);
+        if (in_array((int) $card_id, $protected_cards_int, true)) {
+            throw new BgaUserException($this->_("This card cannot be discarded"));
+        }
+
         $card = $this->getCardDefinition($card_id, $player_id);
         // Get card info before moving
         $type_arg = (int) $card['card_type_arg'];
@@ -665,6 +679,10 @@ trait WW_Confrontation
                 // Benelim: Lancez +1 dé horde par carte PACK
                 $this->applyBenelimPower($player_id, $card_id);
                 break;
+            case 'ernest_power':
+                // Ernest Waltman: Place wind force on 3 adjacent tiles
+                $this->applyErnestPower($player_id, $params);
+                break;
             case 'galas_power':
                 // Galas Thunderflayer: Si force = 6 (FUREVENT), rest-all (except himself)
                 $this->applyGalasPower($player_id, $card_id);
@@ -789,15 +807,10 @@ trait WW_Confrontation
      */
     private function applyGalasPower(int $player_id, int $galas_card_id): void
     {
-        // Get the selected tile to check wind force
-        $tile_id = $this->getGameStateValue('selected_tile');
-        if (!$tile_id) {
-            throw new BgaUserException($this->_("No tile selected"));
-        }
-
-        $tile = $this->getObjectFromDB("SELECT * FROM tile WHERE tile_id = $tile_id");
+        // Get current tile (selected_tile or player position)
+        $tile = $this->getCurrentTileForPower($player_id);
         if (!$tile) {
-            throw new BgaUserException($this->_("Tile not found"));
+            throw new BgaUserException($this->_("No valid tile found"));
         }
 
         $wind_force = (int) ($tile['tile_wind_force'] ?? 0);
@@ -857,20 +870,119 @@ trait WW_Confrontation
     }
 
     /**
+     * Ernest Waltman's power: Place wind force on up to 3 adjacent tiles
+     * :tap:: Placez 1 :force-x: sur 3 :tuile: adjacentes.
+     */
+    private function applyErnestPower(int $player_id, array $params): void
+    {
+        // Get tile - either from confrontation (selected_tile) or player's current position
+        $tile_id = $this->getGameStateValue('selected_tile');
+        $tile = null;
+
+        if ($tile_id) {
+            $tile = $this->getObjectFromDB("SELECT * FROM tile WHERE tile_id = $tile_id");
+        }
+
+        // If no selected tile, use player's current tile
+        if (!$tile) {
+            $chapter = $this->getGameStateValue('current_chapter');
+            $player = $this->getObjectFromDB("SELECT player_position_q, player_position_r FROM player WHERE player_id = $player_id");
+            if (!$player) {
+                throw new BgaUserException($this->_("Player not found"));
+            }
+            $tile = $this->getTileAt((int) $player['player_position_q'], (int) $player['player_position_r'], $chapter);
+        }
+
+        if (!$tile) {
+            throw new BgaUserException($this->_("No valid tile found to use this power"));
+        }
+
+        // Get target tile IDs from params (allow 1 to ERNEST_TARGET_TILES)
+        $target_tile_ids = $params['tile_ids'] ?? [];
+        $num_targets = count($target_tile_ids);
+        if ($num_targets < 1 || $num_targets > self::ERNEST_TARGET_TILES) {
+            throw new BgaUserException(sprintf($this->_("You must select between 1 and %d adjacent tiles"), self::ERNEST_TARGET_TILES));
+        }
+
+        // Get chapter and position from current tile
+        $chapter = (int) $tile['tile_chapter'];
+        $q = (int) $tile['tile_q'];
+        $r = (int) $tile['tile_r'];
+
+        // Get all adjacent tiles
+        $adjacent_tiles = $this->getAdjacentTiles($q, $r, $chapter);
+        $adjacent_ids = array_column($adjacent_tiles, 'tile_id');
+
+        // Validate all target tiles are adjacent
+        foreach ($target_tile_ids as $target_id) {
+            if (!in_array($target_id, $adjacent_ids)) {
+                throw new BgaUserException($this->_("All target tiles must be adjacent to the current tile"));
+            }
+
+            // Validate target tiles don't already have wind force placed
+            $target_tile = $this->getObjectFromDB("SELECT tile_wind_force, tile_type FROM tile WHERE tile_id = " . intval($target_id));
+            if ($target_tile && (int) $target_tile['tile_wind_force'] > 0) {
+                throw new BgaUserException($this->_("Cannot place wind on a tile that already has wind"));
+            }
+
+            // Validate target tile is not a city
+            if ($target_tile && $target_tile['tile_type'] === "city") {
+                throw new BgaUserException($this->_("Cannot place wind on a city tile"));
+            }
+        }
+
+        // Get random wind tokens from the bag (any force)
+        $tokens_in_bag = $this->getCollectionFromDb(
+            "SELECT * FROM wind_token WHERE token_location = 'bag' ORDER BY RAND() LIMIT $num_targets"
+        );
+        if (count($tokens_in_bag) < $num_targets) {
+            throw new BgaUserException(sprintf(
+                $this->_("Not enough wind tokens in the bag (need %d, have %d)"),
+                $num_targets,
+                count($tokens_in_bag)
+            ));
+        }
+
+        // Place wind tokens on each target tile
+        $tokens_array = array_values($tokens_in_bag);
+        $placed_tiles = [];
+        $placed_forces = [];
+
+        for ($i = 0; $i < $num_targets; $i++) {
+            $target_id = (int) $target_tile_ids[$i];
+            $token = $tokens_array[$i];
+            $token_force = (int) $token['token_force'];
+
+            // Update tile with wind force (mark as discovered)
+            $this->DbQuery("UPDATE tile SET tile_wind_force = $token_force, tile_discovered = 1 WHERE tile_id = $target_id");
+            // Place token on tile
+            $this->DbQuery("UPDATE wind_token SET token_location = 'tile', token_tile_id = $target_id WHERE token_id = {$token['token_id']}");
+
+            $placed_tiles[] = ['tile_id' => $target_id, 'force' => $token_force];
+            $placed_forces[] = $token_force;
+        }
+
+        // Notify all players
+        $forces_str = implode(', ', $placed_forces);
+        $this->notifyAllPlayers('ernestWindPlaced', clienttranslate('${player_name} uses Ernest\'s power: Wind forces ${forces} placed on ${count} adjacent tiles!'), [
+            'player_id' => $player_id,
+            'player_name' => $this->getActivePlayerName(),
+            'forces' => $forces_str,
+            'count' => $num_targets,
+            'placed_tiles' => $placed_tiles
+        ]);
+    }
+
+    /**
      * Oranne la Voyageuse's power: If tile has moral effect, ignore up to 3 challenge dice
      * :tap:: Si :tuile: avec :moral: alors ignorez -3 :d6-black-white-green:
      */
     private function applyOrannePower(int $player_id, array $params): void
     {
-        // Get the selected tile to check moral effect
-        $tile_id = $this->getGameStateValue('selected_tile');
-        if (!$tile_id) {
-            throw new BgaUserException($this->_("No tile selected"));
-        }
-
-        $tile = $this->getObjectFromDB("SELECT * FROM tile WHERE tile_id = $tile_id");
+        // Get current tile (selected_tile or player position)
+        $tile = $this->getCurrentTileForPower($player_id);
         if (!$tile) {
-            throw new BgaUserException($this->_("Tile not found"));
+            throw new BgaUserException($this->_("No valid tile found"));
         }
 
         $moral_effect = (int) ($tile['tile_moral_effect'] ?? 0);
@@ -911,15 +1023,10 @@ trait WW_Confrontation
      */
     private function applyIvanaPower(int $player_id, int $card_id): void
     {
-        // Get wind force
-        $tile_id = $this->getGameStateValue('selected_tile');
-        if (!$tile_id) {
-            throw new BgaUserException($this->_("No tile selected"));
-        }
-
-        $tile = $this->getObjectFromDB("SELECT * FROM tile WHERE tile_id = $tile_id");
+        // Get current tile (selected_tile or player position)
+        $tile = $this->getCurrentTileForPower($player_id);
         if (!$tile) {
-            throw new BgaUserException($this->_("Tile not found"));
+            throw new BgaUserException($this->_("No valid tile found"));
         }
 
         $wind_force = (int) ($tile['tile_wind_force'] ?? 0);
@@ -963,15 +1070,10 @@ trait WW_Confrontation
      */
     private function applyThutmusPower(int $player_id): void
     {
-        // Get wind force
-        $tile_id = $this->getGameStateValue('selected_tile');
-        if (!$tile_id) {
-            throw new BgaUserException($this->_("No tile selected"));
-        }
-
-        $tile = $this->getObjectFromDB("SELECT * FROM tile WHERE tile_id = $tile_id");
+        // Get current tile (selected_tile or player position)
+        $tile = $this->getCurrentTileForPower($player_id);
         if (!$tile) {
-            throw new BgaUserException($this->_("Tile not found"));
+            throw new BgaUserException($this->_("No valid tile found"));
         }
 
         $wind_force = (int) ($tile['tile_wind_force'] ?? 0);
@@ -1112,15 +1214,10 @@ trait WW_Confrontation
      */
     private function applyLethunePower(int $player_id): void
     {
-        // Get the selected tile
-        $tile_id = $this->getGameStateValue('selected_tile');
-        if (!$tile_id) {
-            throw new BgaUserException($this->_("No tile selected"));
-        }
-
-        $tile = $this->getObjectFromDB("SELECT * FROM tile WHERE tile_id = $tile_id");
+        // Get current tile (selected_tile or player position)
+        $tile = $this->getCurrentTileForPower($player_id);
         if (!$tile) {
-            throw new BgaUserException($this->_("Tile not found"));
+            throw new BgaUserException($this->_("No valid tile found"));
         }
 
         // Get tile's moral effect from terrain_types (authoritative source)
@@ -1781,16 +1878,12 @@ trait WW_Confrontation
      */
     private function applyLyaraPower(int $player_id, int $card_id): void
     {
-        // Get the selected tile to check if it's a village
-        $tile_id = $this->getGameStateValue('selected_tile');
-        if (!$tile_id) {
-            throw new BgaUserException($this->_("No tile selected"));
-        }
-
-        $tile = $this->getObjectFromDB("SELECT * FROM tile WHERE tile_id = $tile_id");
+        // Get current tile (selected_tile or player position)
+        $tile = $this->getCurrentTileForPower($player_id);
         if (!$tile) {
-            throw new BgaUserException($this->_("Tile not found"));
+            throw new BgaUserException($this->_("No valid tile found"));
         }
+        $tile_id = (int) $tile['tile_id'];
 
         // Power only works on villages
         if ($tile['tile_type'] !== 'village') {
@@ -1838,16 +1931,12 @@ trait WW_Confrontation
      */
     private function applyTopilzinPower(int $player_id, int $card_id): void
     {
-        // Get the selected tile
-        $tile_id = $this->getGameStateValue('selected_tile');
-        if (!$tile_id) {
-            throw new BgaUserException($this->_("No tile selected"));
-        }
-
-        $tile = $this->getObjectFromDB("SELECT * FROM tile WHERE tile_id = $tile_id");
+        // Get current tile (selected_tile or player position)
+        $tile = $this->getCurrentTileForPower($player_id);
         if (!$tile) {
-            throw new BgaUserException($this->_("Tile not found"));
+            throw new BgaUserException($this->_("No valid tile found"));
         }
+        $tile_id = (int) $tile['tile_id'];
 
         $old_force = (int) ($tile['tile_wind_force'] ?? 0);
         $new_force = 3;
@@ -1882,16 +1971,12 @@ trait WW_Confrontation
      */
     private function applyOsurosPower(int $player_id, int $card_id): void
     {
-        // Get the selected tile
-        $tile_id = $this->getGameStateValue('selected_tile');
-        if (!$tile_id) {
-            throw new BgaUserException($this->_("No tile selected"));
-        }
-
-        $tile = $this->getObjectFromDB("SELECT * FROM tile WHERE tile_id = $tile_id");
+        // Get current tile (selected_tile or player position)
+        $tile = $this->getCurrentTileForPower($player_id);
         if (!$tile) {
-            throw new BgaUserException($this->_("Tile not found"));
+            throw new BgaUserException($this->_("No valid tile found"));
         }
+        $tile_id = (int) $tile['tile_id'];
 
         $old_force = (int) ($tile['tile_wind_force'] ?? 0);
         $new_force = 6;
@@ -1926,16 +2011,12 @@ trait WW_Confrontation
      */
     private function applyTulaPower(int $player_id, int $card_id): void
     {
-        // Get the selected tile
-        $tile_id = $this->getGameStateValue('selected_tile');
-        if (!$tile_id) {
-            throw new BgaUserException($this->_("No tile selected"));
-        }
-
-        $tile = $this->getObjectFromDB("SELECT * FROM tile WHERE tile_id = $tile_id");
+        // Get current tile (selected_tile or player position)
+        $tile = $this->getCurrentTileForPower($player_id);
         if (!$tile) {
-            throw new BgaUserException($this->_("Tile not found"));
+            throw new BgaUserException($this->_("No valid tile found"));
         }
+        $tile_id = (int) $tile['tile_id'];
 
         $old_force = (int) ($tile['tile_wind_force'] ?? 0);
         $new_force = 2;
@@ -2012,16 +2093,12 @@ trait WW_Confrontation
             throw new BgaUserException($this->_("Invalid wind force selected"));
         }
 
-        // Get current tile
-        $tile_id = $this->getGameStateValue('selected_tile');
-        if (!$tile_id) {
-            throw new BgaUserException($this->_("No tile selected"));
-        }
-
-        $tile = $this->getObjectFromDB("SELECT * FROM tile WHERE tile_id = $tile_id");
+        // Get current tile (selected_tile or player position)
+        $tile = $this->getCurrentTileForPower($player_id);
         if (!$tile) {
-            throw new BgaUserException($this->_("Tile not found"));
+            throw new BgaUserException($this->_("No valid tile found"));
         }
+        $tile_id = (int) $tile['tile_id'];
 
         // Get a token with that force from the bag
         $token = $this->getObjectFromDB(

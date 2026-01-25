@@ -17,7 +17,7 @@ trait WW_Validation
             $chapter = 1;  // Default fallback
         }
 
-        if ($chapter > $this->maxChapter) {
+        if ($chapter > self::LAST_CHAPTER) {
             throw new BgaVisibleSystemException(
                 "Invalid chapter value ($chapter) - database may be corrupted"
             );

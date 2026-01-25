@@ -212,6 +212,91 @@ function (dojo, declare) {
             
             // Update undo button state
             WW_PendingActions.updateUI();
+        },
+        
+        // ============================================================
+        // Action Bar Management - Wrapper to avoid BGA's button clearing
+        // ============================================================
+        
+        /**
+         * Update page title directly without triggering BGA's onUpdateActionButtons
+         * BGA's updatePageTitle() clears all action buttons before calling onUpdateActionButtons
+         * This function updates the DOM directly to avoid that side effect
+         * @param {string} title - New title text (can include HTML)
+         */
+        setPageTitle: function(title) {
+            var titleEl = $('pagemaintitletext');
+            if (titleEl) {
+                titleEl.innerHTML = title;
+            }
+        },
+        
+        /**
+         * Add an action button to the action bar
+         * Wrapper around BGA's addActionButton with safety checks
+         * @param {object} gameInstance - The game instance
+         * @param {string} id - Button ID
+         * @param {string} label - Button label
+         * @param {string|function} callback - Callback function name or function
+         * @param {string} color - Button color ('blue', 'red', 'gray', etc.)
+         * @returns {Element} The button element
+         */
+        addActionButton: function(gameInstance, id, label, callback, color) {
+            // Remove existing button with same ID to avoid duplicates
+            if ($(id)) {
+                dojo.destroy(id);
+            }
+            gameInstance.addActionButton(id, label, callback, null, false, color || 'blue');
+            return $(id);
+        },
+        
+        /**
+         * Remove an action button by ID
+         * @param {string} id - Button ID
+         */
+        removeActionButton: function(id) {
+            if ($(id)) {
+                dojo.destroy(id);
+            }
+        },
+        
+        /**
+         * Clear all action buttons
+         * @param {object} gameInstance - The game instance
+         */
+        clearActionButtons: function(gameInstance) {
+            gameInstance.removeActionButtons();
+        },
+        
+        /**
+         * Update action bar with title and buttons in one call
+         * Avoids BGA's problematic updatePageTitle behavior
+         * @param {object} gameInstance - The game instance
+         * @param {object} config - Configuration object
+         * @param {string} config.title - Page title (optional)
+         * @param {boolean} config.clearButtons - Whether to clear existing buttons first (default: false)
+         * @param {array} config.buttons - Array of button configs: [{id, label, callback, color}]
+         */
+        updateActionBar: function(gameInstance, config) {
+            config = config || {};
+            
+            // Update title if provided (directly, no BGA method)
+            if (config.title !== undefined) {
+                this.setPageTitle(config.title);
+            }
+            
+            // Clear buttons if requested
+            if (config.clearButtons) {
+                gameInstance.removeActionButtons();
+            }
+            
+            // Add buttons
+            if (config.buttons && config.buttons.length > 0) {
+                var self = this;
+                config.buttons.forEach(function(btn) {
+                    self.addActionButton(gameInstance, btn.id, btn.label, btn.callback, btn.color);
+                });
+            }
         }
     };
     
@@ -2059,9 +2144,9 @@ function (dojo, declare) {
             if (gamedatas.challenge_dice && Object.keys(gamedatas.challenge_dice).length > 0) {
                 this.createDiceSorted(gamedatas.challenge_dice, 'ww_wind_dice');
             }
-            if (gamedatas.selected_tile && gamedatas.selected_tile.tile_wind_force !== null) {
+            if (gamedatas.selected_tile && gamedatas.selected_tile.wind_force !== null) {
                 // Display "-" for tiles with no wind (wind_force = 0)
-                var force = gamedatas.selected_tile.tile_wind_force;
+                var force = gamedatas.selected_tile.wind_force;
                 WW_DOM.setHtml('ww_wind_force', force > 0 ? force : '-');
             }
             
@@ -3518,6 +3603,12 @@ function (dojo, declare) {
         onTileClick: function(evt) {
             WW_DOM.stopEvent(evt);
             
+            // If in Ernest power mode, let Ernest's handler deal with it
+            var specialMode = WW_State.getSpecialPowerMode();
+            if (specialMode && specialMode.power_code === 'ernest_power') {
+                return;
+            }
+            
             var tileId = evt.currentTarget.id.split('_')[1];
             
             if (!this.checkAction('actSelectTile', true)) return;
@@ -3786,8 +3877,10 @@ function (dojo, declare) {
             }
             
             // Check if this power requires special UI
-            if (this.powerRequiresSpecialUI(powerCode)) {
-                this.enterSpecialPowerMode(cardId, powerCode);
+            this.enterSpecialPowerMode(cardId, powerCode);
+            
+            // If we entered a special power mode, stop here - the mode will handle execution
+            if (WW_State.getSpecialPowerMode()) {
                 return;
             }
             
@@ -3812,19 +3905,11 @@ function (dojo, declare) {
         },
         
         /**
-         * Check if a power requires special UI interaction
-         */
-        powerRequiresSpecialUI: function(powerCode) {
-            var specialPowers = ['gianni_power', 'wanda_power', 'xavio_power', 'yavo_power', 'kyo_power', 'zaffa_power', 'thomassin_power', 'blanchette_power', 'ukkiba_power', 'waldo_power', 'belkacem_power', 'galas_power', 'oranne_power', 'ivana_power', 'thutmus_power', 'amon_power', 'duke_power', 'lethune_power', 'kunigunde_power', 'regitha_power', 'lyara_power', 'topilzin_power', 'osuros_power', 'tula_power', 'charlize_power', 'jonas_power', 'lihn_power', 'benelim_power', 'kon_power'];
-            return specialPowers.indexOf(powerCode) !== -1;
-        },
-        
-        /**
          * Enter special power mode (dice value selection, dice modification, etc.)
          */
-        enterSpecialPowerMode: function(cardId, powerCode) {
-            var self = this;
-            
+        enterSpecialPowerMode: function(cardId, powerCode) {            
+            // Note: Don't set mode here - each enterXXXPowerMode() sets its own state
+            // Powers that don't need special UI (execute functions) don't set any mode
             switch (powerCode) {
                 case 'gianni_power':
                     this.enterGianniPowerMode(cardId);
@@ -3835,10 +3920,6 @@ function (dojo, declare) {
                 case 'xavio_power':
                     // Xavio: +1 die, if another Torantor: ±1 on 1 die
                     this.enterXavioPowerMode(cardId);
-                    break;
-                case 'yavo_power':
-                    // Yavo: +1 die, if another Torantor: +1 moral (no UI needed)
-                    this.executeTorantorPower(cardId);
                     break;
                 case 'kyo_power':
                     // Kyo: +1 die always, and rest another Torantor if present
@@ -3875,10 +3956,6 @@ function (dojo, declare) {
                 case 'amon_power':
                     this.enterAmonPowerMode(cardId);
                     break;
-                case 'benelim_power':
-                    // Benelim: discard to roll +1 die per PACK card
-                    this.executeSimplePower(cardId);
-                    break;
                 case 'duke_power':
                     this.enterDukePowerMode(cardId);
                     break;
@@ -3890,27 +3967,29 @@ function (dojo, declare) {
                     // Kon: reroll all or some blue dice
                     this.enterKonPowerMode(cardId);
                     break;
-                case 'galas_power':
-                    // Galas: simple tap power - send directly to server
-                case 'lethune_power':
-                    // Lethune: simple tap power - rolls dice based on tile moral
-                case 'kunigunde_power':
-                    // Kunigunde: simple tap power - ignores all white dice if horde > challenge
-                case 'regitha_power':
-                    // Régitha: simple tap power - ignores ALL challenge dice
-                case 'lyara_power':
-                    // Lyara: villages = cities (ignore dice, recruit any type)
-                case 'topilzin_power':
-                case 'osuros_power':
-                case 'tula_power':
-                    // Tolilzin, Osuros, Tula: Wind force changers - discard powers
-                case 'lihn_power':
-                    // Lihn: double points this turn - simple discard
-                    this.executeSimplePower(cardId);
+                case 'ernest_power':
+                    // Ernest: place wind force on 3 adjacent tiles
+                    this.enterErnestPowerMode(cardId);
                     break;
                 case 'charlize_power':
                     // Charlize: commit pending changes first, then gain moral per black die
                     this.executeCharlizePower(cardId);
+                    break;
+                case 'benelim_power':
+                    // Benelim: discard to roll +1 die per PACK card
+                    this.executeBenelimPower(cardId);
+                    break;
+                case 'osuros_power':
+                    // Osuros: discard to set wind force to 6
+                    this.executeOsurosPower(cardId);
+                    break;
+                case 'tula_power':
+                    // Tula: discard to set wind force to 2
+                    this.executeTulaPower(cardId);
+                    break;
+                default:
+                    WW_State.clearSpecialPowerMode();
+                    // this.executeSimplePower(cardId);
                     break;
             }
         },
@@ -3921,7 +4000,6 @@ function (dojo, declare) {
          * in the batch actions so server validates with updated dice values
          */
         executeSimplePower: function(cardId) {
-            var self = this;
             
             // If there are pending actions, include this power in the batch
             if (WW_PendingActions.isActive() && WW_PendingActions.hasPending()) {
@@ -3955,18 +4033,55 @@ function (dojo, declare) {
             }
         },
         
+        resolvePendingActionsBeforePower: function(cardId, callback) {
+            // Commit pending actions first, then apply power
+            if (callback === undefined) {
+                callback = () => {
+                    this.performAction('actUsePower', {
+                        card_id: parseInt(cardId),
+                        params: JSON.stringify({})
+                    });
+                };
+            }
+            var hasPendingActions = WW_PendingActions.isActive() && WW_PendingActions.hasPending();
+            var result = null;
+            if (hasPendingActions) {
+                var actions = WW_PendingActions.getActions();
+                
+                var result = this.bgaPerformAction('actBatchActions', {
+                    actions: JSON.stringify(actions),
+                    andConfirm: 0
+                });
+            }                    
+            if (result && result.then) {
+                result.then(() => {
+                    WW_PendingActions.clear();
+                    callback();
+                }).catch(() => {
+                    WW_PendingActions.undoAll();
+                });
+            }
+            else {
+                hasPendingActions && WW_PendingActions.clear();
+                callback();
+            }
+        },
+
+        
         /**
          * Execute Ivana's discard power: ignore all dice < wind force
          * Shows confirmation dialog since it discards the card
          */
         executeIvanaPower: function(cardId) {
-            var self = this;
             var windForce = WW_State.getWindForce() || 0;
             
             if (windForce <= 1) {
                 this.showMessage(_("Wind force must be greater than 1 to use this power"), "error");
                 return;
             }
+            
+            // Set temporary mode to prevent double execution
+            WW_State.setSpecialPowerMode({ card_id: cardId, power_code: 'ivana_power', confirming: true });
             
             // Count dice that would be ignored
             var diceToIgnore = 0;
@@ -3983,43 +4098,19 @@ function (dojo, declare) {
             }
             
             // Confirm dialog since this discards the card
+            var self = this;
             this.confirmationDialog(
                 dojo.string.substitute(_("Discard Ivana to ignore ${count} dice (all dice with value < ${force})?"), {
                     count: diceToIgnore,
                     force: windForce
                 }),
-                function() {
-                    // If there are pending actions, resolve them first
-                    if (WW_PendingActions.isActive() && WW_PendingActions.hasPending()) {
-                        var actions = WW_PendingActions.getActions();
-                        
-                        var result = self.bgaPerformAction('actBatchActions', {
-                            actions: JSON.stringify(actions),
-                            andConfirm: 0
-                        });
-                        if (result && result.then) {
-                            result.then(function() {
-                                WW_PendingActions.clear();
-                                self.performAction('actUsePower', {
-                                    card_id: parseInt(cardId),
-                                    params: JSON.stringify({})
-                                });
-                            }).catch(function() {
-                                WW_PendingActions.undoAll();
-                            });
-                        } else {
-                            WW_PendingActions.clear();
-                            self.performAction('actUsePower', {
-                                card_id: parseInt(cardId),
-                                params: JSON.stringify({})
-                            });
-                        }
-                    } else {
-                        self.performAction('actUsePower', {
-                            card_id: parseInt(cardId),
-                            params: JSON.stringify({})
-                        });
-                    }
+                () => {
+                    WW_State.clearSpecialPowerMode();
+                    self.resolvePendingActionsBeforePower(cardId);
+                },
+                () => {
+                    // On cancel
+                    WW_State.clearSpecialPowerMode();
                 }
             );
         },
@@ -4028,8 +4119,6 @@ function (dojo, declare) {
          * Execute Charlize's power: commit pending changes first, then gain +2 moral per black die
          */
         executeCharlizePower: function(cardId) {
-            var self = this;
-            
             // Count black dice
             var blackDiceCount = dojo.query('#ww_wind_dice .ww_dice_black').length;
             
@@ -4038,39 +4127,71 @@ function (dojo, declare) {
                 return;
             }
             
-            var moralGain = blackDiceCount * 2;
+            // Set temporary mode to prevent double execution
+            WW_State.setSpecialPowerMode({ card_id: cardId, power_code: 'charlize_power', confirming: true });
             
-            // Commit pending actions first, then apply power
-            if (WW_PendingActions.isActive() && WW_PendingActions.hasPending()) {
-                var actions = WW_PendingActions.getActions();
-                
-                var result = this.bgaPerformAction('actBatchActions', {
-                    actions: JSON.stringify(actions),
-                    andConfirm: 0
-                });
-                if (result && result.then) {
-                    result.then(function() {
-                        WW_PendingActions.clear();
-                        self.performAction('actUsePower', {
-                            card_id: parseInt(cardId),
-                            params: JSON.stringify({})
-                        });
-                    }).catch(function() {
-                        WW_PendingActions.undoAll();
-                    });
-                } else {
-                    WW_PendingActions.clear();
-                    self.performAction('actUsePower', {
-                        card_id: parseInt(cardId),
-                        params: JSON.stringify({})
-                    });
-                }
-            } else {
+            var self = this;
+            this.resolvePendingActionsBeforePower(cardId, function() {
+                WW_State.clearSpecialPowerMode();
                 self.performAction('actUsePower', {
                     card_id: parseInt(cardId),
                     params: JSON.stringify({})
                 });
-            }
+            });
+        },
+        
+        /**
+         * Execute Benelim's power: discard to roll +1 die per PACK card in horde
+         * Requires committing pending actions first due to server-side dice roll
+         */
+        executeBenelimPower: function(cardId) {
+            // Set temporary mode to prevent double execution
+            WW_State.setSpecialPowerMode({ card_id: cardId, power_code: 'benelim_power', confirming: true });
+            
+            var self = this;
+            this.resolvePendingActionsBeforePower(cardId, function() {
+                WW_State.clearSpecialPowerMode();
+                self.performAction('actUsePower', {
+                    card_id: parseInt(cardId),
+                    params: JSON.stringify({})
+                });
+            });
+        },
+        
+        /**
+         * Execute Osuros's power: discard to set wind force to 6 (FUREVENT)
+         * Requires committing pending actions first before server-side change
+         */
+        executeOsurosPower: function(cardId) {
+            // Set temporary mode to prevent double execution
+            WW_State.setSpecialPowerMode({ card_id: cardId, power_code: 'osuros_power', confirming: true });
+            
+            var self = this;
+            this.resolvePendingActionsBeforePower(cardId, function() {
+                WW_State.clearSpecialPowerMode();
+                self.performAction('actUsePower', {
+                    card_id: parseInt(cardId),
+                    params: JSON.stringify({})
+                });
+            });
+        },
+        
+        /**
+         * Execute Tula's power: discard to set wind force to 2
+         * Requires committing pending actions first before server-side change
+         */
+        executeTulaPower: function(cardId) {
+            // Set temporary mode to prevent double execution
+            WW_State.setSpecialPowerMode({ card_id: cardId, power_code: 'tula_power', confirming: true });
+            
+            var self = this;
+            this.resolvePendingActionsBeforePower(cardId, function() {
+                WW_State.clearSpecialPowerMode();
+                self.performAction('actUsePower', {
+                    card_id: parseInt(cardId),
+                    params: JSON.stringify({})
+                });
+            });
         },
         
         /**
@@ -4078,7 +4199,6 @@ function (dojo, declare) {
          * Shows confirmation since it replaces all blue dice
          */
         executeThutmusPower: function(cardId) {
-            var self = this;
             var windForce = WW_State.getWindForce() || 0;
             
             if (windForce <= 0) {
@@ -4089,44 +4209,23 @@ function (dojo, declare) {
             // Count current blue horde dice only
             var currentBlueDiceCount = dojo.query('#ww_horde_dice .ww_dice_blue').length;
             
+            // Set temporary mode to prevent double execution
+            WW_State.setSpecialPowerMode({ card_id: cardId, power_code: 'thutmus_power', confirming: true });
+            
             // Confirm dialog since this replaces all blue dice
+            var self = this;
             this.confirmationDialog(
                 dojo.string.substitute(_("Use Thutmus to roll exactly ${force} blue dice? (Currently: ${current} blue dice)"), {
                     force: windForce,
                     current: currentBlueDiceCount
                 }),
-                function() {
-                    // If there are pending actions, resolve them first
-                    if (WW_PendingActions.isActive() && WW_PendingActions.hasPending()) {
-                        var actions = WW_PendingActions.getActions();
-                        
-                        var result = self.bgaPerformAction('actBatchActions', {
-                            actions: JSON.stringify(actions),
-                            andConfirm: 0
-                        });
-                        if (result && result.then) {
-                            result.then(function() {
-                                WW_PendingActions.clear();
-                                self.performAction('actUsePower', {
-                                    card_id: parseInt(cardId),
-                                    params: JSON.stringify({})
-                                });
-                            }).catch(function() {
-                                WW_PendingActions.undoAll();
-                            });
-                        } else {
-                            WW_PendingActions.clear();
-                            self.performAction('actUsePower', {
-                                card_id: parseInt(cardId),
-                                params: JSON.stringify({})
-                            });
-                        }
-                    } else {
-                        self.performAction('actUsePower', {
-                            card_id: parseInt(cardId),
-                            params: JSON.stringify({})
-                        });
-                    }
+                () => {
+                    WW_State.clearSpecialPowerMode();
+                    self.resolvePendingActionsBeforePower(cardId);
+                },
+                () => {
+                    // On cancel
+                    WW_State.clearSpecialPowerMode();
                 }
             );
         },
@@ -4136,8 +4235,6 @@ function (dojo, declare) {
          * :tap:: Ignorez :d6-white: / :d6-black:
          */
         enterAmonPowerMode: function(cardId) {
-            var self = this;
-            
             // Count black dice
             var blackDiceCount = dojo.query('#ww_horde_dice .ww_dice_black, #ww_wind_dice .ww_dice_black').length;
             
@@ -4861,6 +4958,8 @@ function (dojo, declare) {
             WW_DOM.forEach('#ww_wind_dice .ww_dice', function(diceEl) {
                 diceEl.onclick = null;
             });
+            // Clean up Ernest tile click handlers (BEFORE removing class so we can find them)
+            this.cleanupErnestPowerMode();
         },
         
         /**
@@ -5035,6 +5134,232 @@ function (dojo, declare) {
         },
         
         // ============================================================
+        // ERNEST POWER - Place wind force on adjacent tiles
+        // ============================================================
+        
+        /**
+         * Get adjacent tiles for a given position (hex grid adjacency)
+         * For pointy-top hexes, the 6 adjacent directions are: (1,0), (1,-1), (0,-1), (-1,0), (-1,1), (0,1)
+         */
+        getAdjacentTilesFromPosition: function(q, r) {
+            var directions = [
+                {dq: 1, dr: 0}, {dq: 1, dr: -1}, {dq: 0, dr: -1},
+                {dq: -1, dr: 0}, {dq: -1, dr: 1}, {dq: 0, dr: 1}
+            ];
+            var adjacent = [];
+            var tiles = this.gamedatas.tiles;
+            console.log('[Ernest] getAdjacentTilesFromPosition q,r:', q, r, 'tiles:', tiles);
+            
+            for (var i = 0; i < directions.length; i++) {
+                var nq = q + directions[i].dq;
+                var nr = r + directions[i].dr;
+                
+                // Find tile at this position
+                for (var tid in tiles) {
+                    var t = tiles[tid];
+                    if (parseInt(t.q) === nq && parseInt(t.r) === nr) {
+                        adjacent.push(t);
+                        break;
+                    }
+                }
+            }
+            return adjacent;
+        },
+        
+        /**
+         * Get player's current tile from gamedatas
+         */
+        getPlayerCurrentTile: function() {
+            var referenceTile = WW_State.getSelectedTile();
+            if (referenceTile) {
+                return referenceTile;
+            }
+
+            var player = this.gamedatas.players[this.player_id];
+            if (!player || player.pos_q === undefined || player.pos_r === undefined) {
+                return null;
+            }
+            var tiles = this.gamedatas.tiles;
+            for (var tid in tiles) {
+                var t = tiles[tid];
+                if (parseInt(t.q) === parseInt(player.pos_q) && parseInt(t.r) === parseInt(player.pos_r)) {
+                    return t;
+                }
+            }
+            return null;
+        },
+        
+        /**
+         * Enter Ernest power mode (select up to 3 adjacent tiles to place wind on)
+         * :tap:: Placez 1 :force-x: sur 3 :tuile: adjacentes.
+         */
+        enterErnestPowerMode: function(cardId) {
+            var self = this;
+            const MAX_TILES = 3;
+            // Use player's current tile (works before movement selection)
+            var referenceTile = this.getPlayerCurrentTile();
+            
+            // Save currently selectable movement tiles before we modify anything
+            var savedMovementTiles = [];
+            WW_DOM.forEach('.ww_selectable', function(el) {
+                if (el && el.id && el.id.startsWith('tile_')) {
+                    savedMovementTiles.push(el.id);
+                }
+            });
+
+            var adjacent = null;
+            if (!adjacent || adjacent.length === 0) {
+                // Calculate from reference tile or player position
+                // Handle both formats: tile_q/tile_r (from DB) and q/r (from gamedatas)
+                if (referenceTile) {
+                    var q = parseInt(referenceTile.tile_q !== undefined ? referenceTile.tile_q : referenceTile.q);
+                    var r = parseInt(referenceTile.tile_r !== undefined ? referenceTile.tile_r : referenceTile.r);
+                    adjacent = this.getAdjacentTilesFromPosition(q, r);
+                }
+                adjacent = adjacent.filter(function(tile) {
+                    var windForce = parseInt(tile.wind_force || 0);
+                    return windForce === 0 && tile.type !== 'city';
+                });
+            }
+            
+            if (!adjacent || adjacent.length === 0) {
+                this.showMessage(_("No adjacent tiles available"), "error");
+                return;
+            }
+            
+            WW_PowerMode.enter(this, cardId, 'ernest_power', {
+                message: dojo.string.substitute(_("Ernest: Select up to ${max} adjacent tiles to reveal wind force"), { max: MAX_TILES }),
+                extraState: { 
+                    selected_tiles: [],
+                    adjacent_tiles: adjacent,
+                    max_tiles: MAX_TILES,
+                    saved_movement_tiles: savedMovementTiles
+                },
+                showConfirm: true,
+                confirmLabel: _('Reveal Wind'),
+                onConfirm: function() {
+                    self.confirmErnestPower(cardId);
+                }
+            });
+            
+            // Highlight adjacent tiles
+            WW_Hex.highlightTiles(adjacent);
+            
+            // Make adjacent tiles clickable for Ernest power
+            adjacent.forEach(function(tile) {
+                var tileId = tile.tile_id || tile.id;
+                var tileEl = $('tile_' + tileId);
+                if (tileEl) {
+                    WW_DOM.addClass(tileEl, 'ww_ernest_selectable');
+                    tileEl.ernestClickHandler = function(evt) {
+                        WW_DOM.stopEvent(evt);
+                        self.onErnestTileClick(tileId);
+                    };
+                    tileEl.addEventListener('click', tileEl.ernestClickHandler);
+                }
+            });
+        },
+        
+        /**
+         * Handle tile click in Ernest power mode
+         */
+        onErnestTileClick: function(tileId) {
+            var mode = WW_State.getSpecialPowerMode();
+            if (!mode || mode.power_code !== 'ernest_power') return;
+            
+            var tileEl = $('tile_' + tileId);
+            if (!tileEl) return;
+            
+            var idx = mode.selected_tiles.indexOf(tileId);
+            
+            if (idx >= 0) {
+                // Deselect
+                mode.selected_tiles.splice(idx, 1);
+                WW_DOM.removeClass(tileEl, 'ww_tile_selected');
+            } else if (mode.selected_tiles.length < mode.max_tiles) {
+                // Select (max 3)
+                mode.selected_tiles.push(tileId);
+                WW_DOM.addClass(tileEl, 'ww_tile_selected');
+            }
+            
+            var selectedCount = mode.selected_tiles.length;
+            if (selectedCount === 0) {
+                WW_Utils.setPageTitle(dojo.string.substitute(
+                    _("Ernest: Select up to ${max} tiles to reveal wind force"),
+                    { max: mode.max_tiles }
+                ));
+            } else if (selectedCount < mode.max_tiles) {
+                WW_Utils.setPageTitle(dojo.string.substitute(
+                    _("Ernest: ${count} tile(s) selected. Select more or confirm to reveal wind force"),
+                    { count: selectedCount }
+                ));
+            } else {
+                WW_Utils.setPageTitle(dojo.string.substitute(
+                    _("Ernest: Ready to reveal wind force on ${max} tiles"),
+                    { max: mode.max_tiles }
+                ));
+            }
+        },
+        
+        /**
+         * Confirm Ernest power - place wind on selected tiles
+         */
+        confirmErnestPower: function(cardId) {
+            var mode = WW_State.getSpecialPowerMode();
+            console.log('[Ernest] mode:', mode);
+            if (!mode || mode.power_code !== 'ernest_power') {
+                console.log('[Ernest] ABORT: mode is null or wrong power_code');
+                return;
+            }
+            
+            if (mode.selected_tiles.length < 1 || mode.selected_tiles.length > mode.max_tiles) {
+                this.showMessage(dojo.string.substitute(_("You must select 1 to ${max} tiles (selected: ${count})"), { max: mode.max_tiles, count: mode.selected_tiles.length }), "error");
+                return;
+            }
+            
+            var tileIds = mode.selected_tiles.map(function(id) { return parseInt(id); });
+            
+            // Clean up power mode
+            this.cancelSpecialPowerMode();
+            
+            // Execute the power
+            this.performAction('actUsePower', {
+                card_id: parseInt(cardId),
+                params: JSON.stringify({ tile_ids: tileIds })
+            });
+        },
+        
+        /**
+         * Clean up Ernest power mode click handlers
+         */
+        cleanupErnestPowerMode: function() {
+            // Get saved movement tiles before clearing mode
+            var mode = WW_State.getSpecialPowerMode();
+            var savedMovementTiles = (mode && mode.saved_movement_tiles) ? mode.saved_movement_tiles : [];
+            
+            // Remove click handlers from ALL ernest-selectable tiles (don't rely on mode state which might be cleared)
+            WW_DOM.forEach('.ww_ernest_selectable', function(tileEl) {
+                if (tileEl && tileEl.ernestClickHandler) {
+                    tileEl.removeEventListener('click', tileEl.ernestClickHandler);
+                    delete tileEl.ernestClickHandler;
+                }
+                // Also remove ww_selectable added by highlightTiles
+                WW_DOM.removeClass(tileEl, 'ww_selectable');
+            });
+            
+            WW_DOM.removeClassFromAll('.ww_ernest_selectable', 'ww_ernest_selectable');
+            WW_DOM.removeClassFromAll('.ww_tile_selected', 'ww_tile_selected');
+            
+            // Restore original movement-selectable tiles
+            savedMovementTiles.forEach(function(tileElId) {
+                var el = $(tileElId);
+                if (el) {
+                    WW_DOM.addClass(el, 'ww_selectable');
+                }
+            });
+        },
+        
+        // ============================================================
         // KON POWER - Reroll blue dice
         // ============================================================
         
@@ -5171,6 +5496,7 @@ function (dojo, declare) {
             if (mode && mode.power_code === 'ukkiba_power') {
                 WW_PendingActions.updatePendingMoral(1);
             }
+            this.cleanupErnestPowerMode();            
             WW_PowerMode.exit(this);
         },
         
@@ -5273,9 +5599,10 @@ function (dojo, declare) {
                     
                 case 'uther_power':
                 case 'dragon_power':
-                    // Uther/Dragon can target any other Hordier
+                    // Uther/Dragon can target any other Hordier (except protected like Regitha)
                     for (var cardId in WW_State.getHordeCards()) {
                         if (cardId == sourceCardId) continue;
+                        if (protectedCards.indexOf(parseInt(cardId)) !== -1) continue;  // Skip protected cards
                         WW_DOM.addClass('ww_horde_item_' + cardId, 'ww_power_target');
                     }
                     break;
@@ -5743,6 +6070,9 @@ function (dojo, declare) {
             
             dojo.subscribe('windForceChanged', this, "notif_windForceChanged");
             this.notifqueue.setSynchronous('windForceChanged', 500);
+            
+            dojo.subscribe('ernestWindPlaced', this, "notif_ernestWindPlaced");
+            this.notifqueue.setSynchronous('ernestWindPlaced', 500);
             
             dojo.subscribe('lihnPowerActivated', this, "notif_lihnPowerActivated");
             this.notifqueue.setSynchronous('lihnPowerActivated', 500);
@@ -6366,6 +6696,23 @@ function (dojo, declare) {
             
             // Update confrontation preview
             WW_Dice.updateConfrontationPreview();
+        },
+        
+        notif_ernestWindPlaced: function(notif) {
+            // Ernest's power: place wind force on multiple adjacent tiles
+            var placed_tiles = notif.args.placed_tiles || [];
+            
+            // Update wind tokens on each target tile
+            placed_tiles.forEach(function(tileData) {
+                var tile_id = tileData.tile_id;
+                var force = tileData.force;
+                WW_Hex.updateWindToken(tile_id, force);
+                // Mark tile as discovered
+                var tileEl = $('tile_' + tile_id);
+                if (tileEl) {
+                    WW_DOM.addClass(tileEl, 'ww_discovered');
+                }
+            });
         },
         
         notif_lihnPowerActivated: function(notif) {

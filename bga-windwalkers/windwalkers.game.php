@@ -36,6 +36,7 @@ class Windwalkers extends Table
     use WW_Movement;
     use WW_Confrontation;
 
+    const LAST_CHAPTER = 4;
     const FUREVENT_SCORE_MULTIPLIER = 3;
     const PORTEDHURLE_SCORE_MULTIPLIER = 6;
     const HORDE_SCORE_MULTIPLIER = 2;
@@ -575,6 +576,39 @@ class Windwalkers extends Table
             "SELECT player_position_q, player_position_r FROM player WHERE player_id = $player_id"
         );
         return $this->formatTileLocationString($player['player_position_q'], $player['player_position_r'], $chapter);
+    }
+
+    /**
+     * Get the current tile for power resolution:
+     * - If selected_tile is set (during confrontation), use that
+     * - Otherwise, use the player's current position
+     * @return array|null The tile data or null if not found
+     */
+    function getCurrentTileForPower(int $player_id): ?array
+    {
+        $tile_id = $this->getGameStateValue('selected_tile');
+
+        if ($tile_id) {
+            $tile = $this->getObjectFromDB("SELECT * FROM tile WHERE tile_id = $tile_id");
+            if ($tile) {
+                return $tile;
+            }
+        }
+
+        // Fallback to player's current position
+        $chapter = $this->getGameStateValue('current_chapter');
+        $player = $this->getObjectFromDB(
+            "SELECT player_position_q, player_position_r FROM player WHERE player_id = $player_id"
+        );
+        if (!$player) {
+            return null;
+        }
+
+        return $this->getTileAt(
+            (int) $player['player_position_q'],
+            (int) $player['player_position_r'],
+            $chapter
+        );
     }
 
     /**

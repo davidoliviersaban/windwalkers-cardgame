@@ -139,6 +139,30 @@
     50% { filter: brightness(1.5) drop-shadow(0 0 12px gold); }
 }
 
+/* Ernest power - tile selection */
+.ww_tile.ww_ernest_selectable {
+    filter: brightness(1.2) drop-shadow(0 0 6px cyan);
+    cursor: pointer;
+    z-index: 5;
+}
+
+.ww_tile.ww_tile_selected {
+    filter: brightness(1.5) drop-shadow(0 0 10px lime);
+    z-index: 6;
+}
+
+.ww_tile.ww_tile_selected::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 32px;
+    color: lime;
+    text-shadow: 0 0 5px black;
+    pointer-events: none;
+}
+
 /* Tile types - fallback colors if images don't load */
 .ww_tile_terrain { background-color: #7cb342; }
 .ww_tile_village { background-color: #8d6e63; }
