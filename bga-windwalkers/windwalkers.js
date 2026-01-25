@@ -183,6 +183,33 @@ function (dojo, declare) {
         MAX_HORDE_SIZE: 8
     };
     
+    // Phase labels (state name -> display text)
+    var WW_PHASES = {
+        'gameSetup': 'Setup',
+        'draftHorde': 'Horde Draft',
+        'nextDraft': 'Next Draft',
+        'chapterDraft': 'Chapter Recruitment',
+        'nextChapterDraft': 'Next Recruitment',
+        'playerTurn': 'Player Turn',
+        'revealWind': 'Wind Reveal',
+        'confrontation': 'Confrontation',
+        'diceResult': 'Dice Result',
+        'resolveConfrontation': 'Resolution',
+        'loseHordier': 'Lose Hordier',
+        'playerElimination': 'Elimination',
+        'recruitment': 'Recruitment',
+        'mustReleaseHordier': 'Must Release',
+        'chooseHordierToRest': 'Rest Hordier',
+        'applyTileEffect': 'Tile Effect',
+        'rest': 'Rest',
+        'nextPlayer': 'Next Player',
+        'setupNextChapter': 'New Chapter',
+        'endChapter': 'Chapter End',
+        'endRound': 'Round End',
+        'finalScoring': 'Final Scoring',
+        'gameEnd': 'Game Over'
+    };
+    
     var WW_State = {
         // Private state
         _data: {
@@ -303,6 +330,7 @@ function (dojo, declare) {
         getSelectedTileMoralEffect: function() {
             var tile = this._data.selectedTile;
             if (!tile || typeof tile !== 'object') return 0;
+            // argConfrontation uses SELECT * so raw column name is tile_moral_effect
             return parseInt(tile.tile_moral_effect) || 0;
         },
         
@@ -549,6 +577,8 @@ function (dojo, declare) {
         originalState: null,   // Snapshot of state before any action
         gameInstance: null,    // Reference to main game object
         enabled: false,        // Whether pending mode is active
+        pendingMoralSpent: 0,  // Track total moral spent on dice modifications
+        pendingMoralGain: 0,   // Track total moral gain from card powers (Dragon etc.)
         
         /**
          * Initialize pending actions system
@@ -565,6 +595,8 @@ function (dojo, declare) {
             this.enabled = true;
             this.originalState = JSON.parse(JSON.stringify(initialState));
             this.actions = [];
+            this.pendingMoralSpent = 0;
+            this.pendingMoralGain = 0;
             this.updateUI();
         },
         
@@ -639,6 +671,8 @@ function (dojo, declare) {
         clear: function() {
             this.actions = [];
             this.originalState = null;
+            this.pendingMoralSpent = 0;
+            this.pendingMoralGain = 0;
             this.updateUI();
         },
         
@@ -862,11 +896,15 @@ function (dojo, declare) {
                                 }
                             } else if (powerCode === 'dragon_power') {
                                 // Dragon exhausts target - mark as pending exhausted
+                                // Dragon also gives +4 moral
                                 if (apply) {
                                     WW_DOM.addClass(targetEl, 'ww_pending_exhausted');
+                                    this.pendingMoralGain += 4;
                                 } else {
                                     WW_DOM.removeClass(targetEl, 'ww_pending_exhausted');
+                                    this.pendingMoralGain -= 4;
                                 }
+                                this.updateMoralFlames();
                             } else {
                                 // Other powers (like Vera) rest the target
                                 if (apply) {
@@ -898,6 +936,9 @@ function (dojo, declare) {
          * Update moral display with pending changes
          */
         updatePendingMoral: function(change) {
+            // Track total moral spent (negative change = spending moral)
+            this.pendingMoralSpent -= change;
+            
             var moralEl = $('ww_player_moral_value');
             if (moralEl) {
                 var currentMoral = parseInt(WW_DOM.getHtml(moralEl)) || 0;
@@ -908,6 +949,37 @@ function (dojo, declare) {
                     WW_DOM.removeClass(moralEl, 'ww_pending_changed');
                 }
             }
+            
+            // Update the flames display with temp values
+            this.updateMoralFlames();
+        },
+        
+        /**
+         * Update moral flames display with temporary gain/loss indicators
+         * Order: moral + temp_gain + temp_loss + empty
+         */
+        updateMoralFlames: function() {
+            if (!this.originalState || !this.gameInstance) {
+                console.log('updateMoralFlames: early return - originalState:', this.originalState, 'gameInstance:', this.gameInstance);
+                return;
+            }
+            
+            var originalMoral = this.originalState.moral || 0;
+            var currentMoral = originalMoral - this.pendingMoralSpent;
+            var tileMoralEffect = WW_State.getSelectedTileMoralEffect();
+            
+            // Calculate raw gains and losses
+            var rawGain = (tileMoralEffect > 0 ? tileMoralEffect : 0) + this.pendingMoralGain;
+            var rawLoss = (tileMoralEffect < 0 ? Math.abs(tileMoralEffect) : 0) + this.pendingMoralSpent;
+            
+            // Net them out - only show the difference
+            var net = rawGain - rawLoss;
+            var tempGain = net > 0 ? net : 0;
+            var tempLoss = net < 0 ? Math.abs(net) : 0;
+            
+            console.log('updateMoralFlames: moral:', currentMoral, 'rawGain:', rawGain, 'rawLoss:', rawLoss, 'net:', net, 'tempGain:', tempGain, 'tempLoss:', tempLoss);
+            
+            WW_Player.updateMoral(this.gameInstance.player_id, currentMoral, tempGain, tempLoss);
         },
         
         /**
@@ -947,6 +1019,11 @@ function (dojo, declare) {
                     }
                 }
             }
+            
+            // Reset pending moral values and update flames display
+            this.pendingMoralSpent = 0;
+            this.pendingMoralGain = 0;
+            this.updateMoralFlames();
         },
         
         /**
@@ -2090,12 +2167,13 @@ function (dojo, declare) {
             // All cards are always clickable - player can recruit any character
             for (var cardId in recruitPool) {
                 var card = recruitPool[cardId];
+                var isExhausted = parseInt(card.card_power_used || 0, 10) === 1;
                 
                 this.createCard({
                     prefix: 'recruit_card',
                     card: card,
                     containerId: 'ww_available_characters',
-                    extraClass: 'ww_recruit_card',
+                    extraClass: 'ww_recruit_card' + (isExhausted ? ' ww_card_exhausted' : ''),
                     onClick: function(cid) {
                         onRecruitClick(parseInt(cid, 10));
                     }
@@ -2183,11 +2261,14 @@ function (dojo, declare) {
             var chapterDay = gamedatas.chapter_round || 1;
             var totalDays = gamedatas.current_round || 1;
             
+            var chapterPar = gamedatas.chapter_par || 10;
+            
             var existingPanel = $('ww_game_info_panel');
             if (existingPanel) {
                 WW_DOM.setHtml('ww_chapter_value', chapter);
                 WW_DOM.setHtml('ww_chapter_day_value', chapterDay);
                 WW_DOM.setHtml('ww_total_days_value', totalDays);
+                WW_DOM.setHtml('ww_chapter_par_value', chapterPar);
                 return;
             }
             
@@ -2202,6 +2283,12 @@ function (dojo, declare) {
                         '<span class="ww_gi_icon">🌙</span>' +
                         '<span class="ww_gi_label">DAY</span>' +
                         '<span id="ww_chapter_day_value" class="ww_gi_value">' + chapterDay + '</span>' +
+                        '<span class="ww_gi_par">/ <span id="ww_chapter_par_value">' + chapterPar + '</span></span>' +
+                    '</div>' +
+                    '<div class="ww_gi_item ww_gi_phase">' +
+                        '<span class="ww_gi_icon">⚡</span>' +
+                        '<span class="ww_gi_label">PHASE</span>' +
+                        '<span id="ww_phase_value" class="ww_gi_value">-</span>' +
                     '</div>' +
                 '</div>' +
             '</div>';
@@ -2227,8 +2314,16 @@ function (dojo, declare) {
             }
         },
         
-        updateMoral: function(playerId, newMoral) {
+        updatePhase: function(stateName) {
+            var phaseLabel = WW_PHASES[stateName] || stateName;
+            WW_DOM.setHtml('ww_phase_value', phaseLabel);
+        },
+        
+        updateMoral: function(playerId, newMoral, tempGain, tempLoss) {
             WW_State.setPlayerMoral(playerId, newMoral);
+            tempGain = tempGain || 0;
+            tempLoss = tempLoss || 0;
+            
             // Update moral counter if exists (legacy)
             var counter = $('moral_counter_' + playerId);
             if (counter) {
@@ -2236,12 +2331,22 @@ function (dojo, declare) {
                 WW_DOM.animateClass(counter, 'ww_value_changed', 500);
             }
             // Update moral flames (new style)
+            // Order: filled (moral) + temp_gain + temp_loss + empty
             var flamesContainer = $('moral_flames_' + playerId);
             if (flamesContainer) {
                 var flamesHtml = '';
                 for (var i = 1; i <= 9; i++) {
-                    var filled = i <= newMoral ? 'filled' : 'empty';
-                    flamesHtml += '<span class="ww_moral_flame ww_moral_flame_' + filled + '"></span>';
+                    var flameClass;
+                    if (i <= newMoral) {
+                        flameClass = 'filled';
+                    } else if (i <= newMoral + tempGain) {
+                        flameClass = 'temp_gain';
+                    } else if (i <= newMoral + tempGain + tempLoss) {
+                        flameClass = 'temp_loss';
+                    } else {
+                        flameClass = 'empty';
+                    }
+                    flamesHtml += '<span class="ww_moral_flame ww_moral_flame_' + flameClass + '"></span>';
                 }
                 WW_DOM.setHtml(flamesContainer, flamesHtml);
                 WW_DOM.animateClass(flamesContainer, 'ww_value_changed', 500);
@@ -2514,6 +2619,7 @@ function (dojo, declare) {
         
         onEnteringState: function(stateName, args) {
             WW_State.setCurrentState(stateName);
+            WW_Player.updatePhase(stateName);
             
             if (stateName !== 'playerTurn') {
                 WW_Hex.clearHighlights();
@@ -2544,6 +2650,9 @@ function (dojo, declare) {
                 case 'mustReleaseHordier':
                     this.enterMustReleaseHordierState(args.args);
                     break;
+                case 'chooseHordierToRest':
+                    this.enterChooseHordierToRestState(args.args);
+                    break;
             }
         },
         
@@ -2569,6 +2678,9 @@ function (dojo, declare) {
                     break;
                 case 'mustReleaseHordier':
                     WW_Cards.clearHordeReleasable();
+                    break;
+                case 'chooseHordierToRest':
+                    WW_Cards.clearHordeSelectable();
                     break;
             }
         },
@@ -2683,10 +2795,6 @@ function (dojo, declare) {
                 function(cardId) { self.onChapterDraftRecruit(cardId); },
                 function(cardId) { self.onChapterDraftRelease(cardId); }
             );
-            
-            // Show message about what's available
-            var chapter = args.chapter || 1;
-            this.showMessage(_("Chapter ") + chapter + _(": Click pool cards to recruit, horde cards to release"), "info");
         },
         
         enterPlayerTurnState: function(args) {
@@ -2877,6 +2985,9 @@ function (dojo, declare) {
                 
                 WW_PendingActions.init(this);
                 WW_PendingActions.enable(initialState);
+                
+                // Initialize moral flames display with tile effect indicators
+                WW_PendingActions.updateMoralFlames();
             }
             
             // Make horde cards clickable to use powers
@@ -2902,8 +3013,26 @@ function (dojo, declare) {
                     self.onAbandonGame();
                 }, null, false, 'red');
             }
+        },
+        
+        enterChooseHordierToRestState: function(args) {
+            if (!args || !args.exhausted_hordiers) return;
             
-            this.showMessage(_("You must abandon a Hordier! Click on a card to abandon it."), "info");
+            var self = this;
+            
+            // Build an object with card IDs as keys (format expected by makeHordeSelectable)
+            var selectableHorde = {};
+            args.exhausted_hordiers.forEach(function(h) {
+                selectableHorde[h.card_id] = {
+                    id: h.card_id,
+                    type_arg: h.type_arg,
+                    power_used: h.power_used
+                };
+            });
+            
+            WW_Cards.makeHordeSelectable(selectableHorde, function(cardId) {
+                self.onSelectHordierToRest(cardId);
+            });
         },
         
         enterRecruitmentState: function(args) {
@@ -2924,15 +3053,11 @@ function (dojo, declare) {
                 });
             }
             
-            // Show appropriate message based on horde state
+            // Show error messages for constraint violations
             if (hordeCount > 8) {
                 this.showMessage(_("Too many Hordiers! Click on a Hordier to release before finishing."), "error");
             } else if (validity.excessTypes.length > 0) {
                 this.showMessage(_("Horde exceeds type limits: ") + validity.excessTypes.join(', ') + _(" - Release a Hordier to continue."), "error");
-            } else if (result && result.isEmpty) {
-                this.showMessage(_("No characters available. Click 'Finish Recruitment' to continue."), "info");
-            } else {
-                this.showMessage(_("Recruit characters or release Hordiers. Click 'Finish Recruitment' when done."), "info");
             }
         },
         
@@ -2946,8 +3071,6 @@ function (dojo, declare) {
                     self.onReleaseHordier(cardId);
                 });
             }
-            
-            this.showMessage(_("You have more than 8 Hordiers! You must release one."), "info");
         },
         
         ///////////////////////////////////////////////////
@@ -3533,7 +3656,7 @@ function (dojo, declare) {
             });
             
             this.saveOriginalPageTitle();
-            this.gamedatas.gamestate.descriptionmyturn = dojo.string.substitute(_("Amon Amon: Select up to ${count} white dice to ignore"), { count: blackDiceCount });
+            this.gamedatas.gamestate.descriptionmyturn = dojo.string.substitute(_("Amon Amon: Click on white dice to ignore (up to ${count})"), { count: blackDiceCount });
             this.updatePageTitle();
             
             // Make white dice selectable
@@ -3641,7 +3764,7 @@ function (dojo, declare) {
             });
             
             this.saveOriginalPageTitle();
-            this.gamedatas.gamestate.descriptionmyturn = _("Duke: Select the first die to set");
+            this.gamedatas.gamestate.descriptionmyturn = _("Duke: Click on a blue or violet die to set");
             this.updatePageTitle();
             
             // Make blue and violet dice selectable
@@ -3686,8 +3809,8 @@ function (dojo, declare) {
             mode.step = isSecondDice ? 'select_value_2' : 'select_value_1';
             
             this.gamedatas.gamestate.descriptionmyturn = isSecondDice 
-                ? _("Duke: Select the value for the second die")
-                : _("Duke: Select the value for the first die");
+                ? _("Duke: Click a value (1-6) for the second die")
+                : _("Duke: Click a value (1-6) for the first die");
             this.updatePageTitle();
             
             // Remove clickability from dice while selecting value
@@ -3726,7 +3849,7 @@ function (dojo, declare) {
                 mode.step = 'select_dice_2';
                 mode.current_dice_id = null;
                 
-                this.gamedatas.gamestate.descriptionmyturn = _("Duke: Select the second die to set");
+                this.gamedatas.gamestate.descriptionmyturn = _("Duke: Click on another die to set");
                 this.updatePageTitle();
                 
                 // Re-enable dice selection (except already selected)
@@ -3951,7 +4074,7 @@ function (dojo, declare) {
             });
             
             this.saveOriginalPageTitle();
-            this.gamedatas.gamestate.descriptionmyturn = _("Jonas: Choose a wind force (1-6)");
+            this.gamedatas.gamestate.descriptionmyturn = _("Jonas: Click a button to set wind force (1-6)");
             this.updatePageTitle();
             
             this.removeActionButtons();
@@ -4029,8 +4152,8 @@ function (dojo, declare) {
             this.enterDiceValuePowerMode(cardId, 'gianni_power', {
                 diceContainer: '#ww_horde_dice',
                 diceClass: 'ww_dice_blue',
-                selectMessage: _("Gianni: Select a blue die to set its value"),
-                valueMessage: _("Gianni: Select the new value for this die")
+                selectMessage: _("Gianni: Click on a blue die to set its value"),
+                valueMessage: _("Gianni: Click a value (1-6) for this die")
             });
         },
         
@@ -4041,7 +4164,7 @@ function (dojo, declare) {
             this.enterDiceIgnorePowerMode(cardId, 'wanda_power', {
                 maxIgnore: 1,
                 exactCount: true,
-                message: _("Wanda: Select 1 challenge die to ignore")
+                message: _("Wanda: Click on 1 challenge die to ignore")
             });
         },
         
@@ -4126,7 +4249,7 @@ function (dojo, declare) {
                 maxIgnore: Math.min(maxIgnore, greenDiceCount),
                 exactCount: false,
                 diceFilter: 'ww_dice_green', // Only green dice
-                message: dojo.string.substitute(_("Waldo: Select up to ${max} green terrain dice to ignore"), {max: Math.min(maxIgnore, greenDiceCount)})
+                message: dojo.string.substitute(_("Waldo: Click on green dice to ignore (up to ${max})"), {max: Math.min(maxIgnore, greenDiceCount)})
             });
         },
         
@@ -4154,7 +4277,7 @@ function (dojo, declare) {
                 maxIgnore: maxIgnore,
                 exactCount: false,
                 diceFilter: null, // All challenge dice
-                message: dojo.string.substitute(_("Oranne: Select up to ${max} challenge dice to ignore"), {max: maxIgnore})
+                message: dojo.string.substitute(_("Oranne: Click on challenge dice to ignore (up to ${max})"), {max: maxIgnore})
             });
         },
         
@@ -4165,8 +4288,8 @@ function (dojo, declare) {
             this.enterDiceValuePowerMode(cardId, 'belkacem_power', {
                 diceContainer: '#ww_wind_dice',
                 diceClass: 'ww_dice_green',
-                selectMessage: _("Belkacem: Select a green die to set its value"),
-                valueMessage: _("Belkacem: Select the new value for this die")
+                selectMessage: _("Belkacem: Click on a green die to set its value"),
+                valueMessage: _("Belkacem: Click a value (1-6) for this die")
             });
         },
         
@@ -4592,7 +4715,7 @@ function (dojo, declare) {
             });
             
             this.saveOriginalPageTitle();
-            this.gamedatas.gamestate.descriptionmyturn = _("Kon: Select blue dice to reroll");
+            this.gamedatas.gamestate.descriptionmyturn = _("Kon: Click on blue dice to reroll");
             this.updatePageTitle();
             
             // Make blue horde dice selectable
@@ -4798,11 +4921,13 @@ function (dojo, declare) {
                 self.onUsePower(targetCardId);
             });
             
-            // Show message
-            var message = this.getPowerTargetMessage(powerCode);
-            this.showMessage(message, "info");
+            // Update action bar with power-specific message
+            this.saveOriginalPageTitle();
+            this.gamedatas.gamestate.descriptionmyturn = this.getPowerTargetMessage(powerCode);
+            this.updatePageTitle();
             
-            // Add cancel button
+            // Remove existing buttons and add cancel button
+            this.removeActionButtons();
             this.addActionButton('btn_cancel_power', _('Cancel'), function() {
                 self.cancelPowerTargetMode();
             }, null, false, 'gray');
@@ -4828,17 +4953,17 @@ function (dojo, declare) {
         getPowerTargetMessage: function(powerCode) {
             switch (powerCode) {
                 case 'vera_power':
-                    return _("Select an exhausted Hordier to rest");
+                    return _("Vera: Click on an exhausted Hordier to rest");
                 case 'uther_power':
-                    return _("Select a Hordier to sacrifice (-3 per missing Hordier)");
+                    return _("Uther: Click on a Hordier to sacrifice (-3 per missing Hordier)");
                 case 'zaffa_power':
-                    return _("Select another Torantor to rest");
+                    return _("Zaffa: Click on another Torantor to rest");
                 case 'kyo_power':
-                    return _("Select another Torantor to rest (Kyo bonus)");
+                    return _("Kyo: Click on another Torantor to rest");
                 case 'dragon_power':
-                    return _("Select a Hordier to exhaust");
+                    return _("Dragon: Click on a Hordier to exhaust");
                 default:
-                    return _("Select a target");
+                    return _("Click on a target");
             }
         },
         
@@ -5021,6 +5146,13 @@ function (dojo, declare) {
                 selected_dice: []
             });
             
+            // Set special power mode to prevent updateDiceResultButtons from interfering
+            WW_State.setSpecialPowerMode({
+                type: 'uther_dice_selection',
+                source_card_id: sourceCardId,
+                target_card_id: targetCardId
+            });
+            
             // Cancel power target mode visuals
             this.cancelPowerTargetMode();
             
@@ -5034,15 +5166,17 @@ function (dojo, declare) {
                 WW_DOM.addClass(sourceEl, 'ww_pending_exhausted');
             }
             
+            // Disable horde cards during dice selection
+            WW_Cards.clearHordeUsable();
+            
             // Make challenge dice clickable
             this.makeChallengeDiceSelectable();
             
-            // Show message
-            this.showMessage(dojo.string.substitute(_("Select up to ${max} challenge dice to ignore"), {max: maxIgnore}), "info");
-            
             // Update action buttons
             this.removeActionButtons();
-            this.addActionButton('btn_confirm_uther', _('Confirm Ignored Dice'), function() {
+            this.gamedatas.gamestate.descriptionmyturn = dojo.string.substitute(_("Uther: Click on challenge dice to ignore (up to ${max})"), {max: maxIgnore});
+            this.updatePageTitle();
+            this.addActionButton('btn_confirm_uther', dojo.string.substitute(_("Confirm (${count}/${max} dice)"), {count: 0, max: maxIgnore}), function() {
                 self.confirmUtherPower();
             }, null, false, 'blue');
             this.addActionButton('btn_cancel_uther', _('Cancel'), function() {
@@ -5171,6 +5305,9 @@ function (dojo, declare) {
                 diceEl.onclick = null;
             });
             
+            // Clear special power mode to allow updateDiceResultButtons to work
+            WW_State.setSpecialPowerMode(null);
+            
             // Clear state
             WW_State.clearUtherDiceMode();
         },
@@ -5180,29 +5317,14 @@ function (dojo, declare) {
          */
         restoreConfrontationButtons: function() {
             var self = this;
-            this.removeActionButtons();
             
-            // Re-add standard confrontation buttons
-            if (WW_PendingActions.hasPending()) {
-                this.addActionButton('btn_undo_action', _('Undo'), function() {
-                    WW_PendingActions.pop();
-                }, null, false, 'gray');
-            }
+            // Re-enable horde cards for power usage
+            WW_Cards.makeHordeUsable(function(cardId) {
+                self.onUsePower(cardId);
+            });
             
-            // Determine button color based on confrontation result
-            var hordeDice = WW_Dice.getHordeDice();
-            var windDice = WW_Dice.getWindDice();
-            var windForce = parseInt(WW_DOM.getHtml('ww_wind_force')) || 0;
-            var buttonColor = 'blue';
-            if (hordeDice.length > 0 && windDice.length > 0) {
-                var result = WW_Dice.calculateConfrontationResult(hordeDice, windDice, windForce);
-                buttonColor = (result && result.success) ? 'blue' : 'red';
-            }
-            
-            this.addActionButton('btn_confirm_roll', _('Confirm'), 'onConfirmRoll', null, false, buttonColor);
-            
-            // Update undo button state
-            WW_PendingActions.updateUI();
+            // Restore full dice result buttons (with moral, undo, etc.)
+            this.updateDiceResultButtons();
         },
         
         /**
@@ -5302,7 +5424,8 @@ function (dojo, declare) {
                 WW_DOM.destroy(cancelBtn);
             }
             
-            this.showMessage("", "info");  // Clear message
+            // Restore original page title and action buttons
+            this.restorePowerModeUI();
         },
         
         onConfirmDraft: function(evt) {
@@ -5312,6 +5435,10 @@ function (dojo, declare) {
         
         onAbandonHordier: function(cardId) {
             this.performAction('actAbandonHordier', { card_id: parseInt(cardId) });
+        },
+        
+        onSelectHordierToRest: function(cardId) {
+            this.performAction('actSelectHordierToRest', { card_id: parseInt(cardId) });
         },
         
         onAbandonGame: function() {
@@ -5758,11 +5885,12 @@ function (dojo, declare) {
             // If released in a village or city, add to recruitment panel
             if ((notif.args.tile_type === 'village' || notif.args.tile_type === 'city') && notif.args.card) {
                 var self = this;
+                var isExhausted = parseInt(notif.args.card.card_power_used || 0, 10) === 1;
                 WW_Cards.createCard({
                     prefix: 'recruit_card',
                     card: notif.args.card,
                     containerId: 'ww_available_characters',
-                    extraClass: 'ww_recruit_card',
+                    extraClass: 'ww_recruit_card' + (isExhausted ? ' ww_card_exhausted' : ''),
                     onClick: function(cid) {
                         self.onRecruitCard(parseInt(cid, 10));
                     }
@@ -5830,6 +5958,11 @@ function (dojo, declare) {
             WW_State.chapter = notif.args.chapter_num;
             WW_Player.updateChapter(notif.args.chapter_num);
             WW_Player.updateDay(1, null);  // Reset chapter day to 1 (keep total unchanged)
+            
+            // Update PAR for the new chapter
+            if (notif.args.chapter_par) {
+                WW_DOM.setHtml('ww_chapter_par_value', notif.args.chapter_par);
+            }
         },
         
         notif_newDay: function(notif) {

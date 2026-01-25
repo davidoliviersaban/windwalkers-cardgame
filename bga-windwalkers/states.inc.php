@@ -13,7 +13,7 @@
 $machinestates = [
 
     // ==================== DRAFT PHASE ====================
-    
+
     2 => [
         "name" => "draftHorde",
         "description" => clienttranslate('${actplayer} must compose their Horde'),
@@ -121,7 +121,21 @@ $machinestates = [
         "type" => "game",
         "action" => "stRest",
         "transitions" => [
-            "restComplete" => 70  // Skip recruitment, go directly to nextPlayer
+            "restComplete" => 70,  // Skip recruitment, go directly to nextPlayer
+            "chooseHordier" => 31  // Let player choose which hordier to rest
+        ]
+    ],
+
+    31 => [
+        "name" => "chooseHordierToRest",
+        "description" => clienttranslate('${actplayer} must choose a Hordier to rest'),
+        "descriptionmyturn" => clienttranslate('${you} must click on an exhausted Hordier to rest them'),
+        "type" => "activeplayer",
+        "possibleactions" => ["actSelectHordierToRest"],
+        "args" => "argChooseHordierToRest",
+        "transitions" => [
+            "hordierRested" => 70,  // Go to nextPlayer after resting (from rest action)
+            "recruit" => 55         // Go to recruitment after resting (from village entry)
         ]
     ],
 
@@ -135,6 +149,7 @@ $machinestates = [
         "transitions" => [
             "continue" => 70,   // After success: go to continueOrRest (surpass or rest)
             "recruit" => 55,    // Village/City: recruit first, then continueOrRest
+            "chooseHordier" => 31,  // Let player choose which hordier to rest
             "endChapter" => 60
         ]
     ],
@@ -144,7 +159,7 @@ $machinestates = [
     45 => [
         "name" => "loseHordier",
         "description" => clienttranslate('${actplayer} must abandon a Hordier'),
-        "descriptionmyturn" => clienttranslate('${you} must choose any Hordier to abandon'),
+        "descriptionmyturn" => clienttranslate('${you} must click on any Hordier card to abandon them'),
         "type" => "activeplayer",
         "possibleactions" => ["actAbandonHordier", "actAbandonGame"],
         "args" => "argLoseHordier",
@@ -170,7 +185,7 @@ $machinestates = [
     55 => [
         "name" => "recruitment",
         "description" => clienttranslate('${actplayer} may recruit new Hordiers'),
-        "descriptionmyturn" => clienttranslate('${you} may recruit new characters or skip'),
+        "descriptionmyturn" => clienttranslate('${you} may click pool cards to recruit, or horde cards to release'),
         "type" => "activeplayer",
         "possibleactions" => ["actRecruit", "actReleaseHordier", "actSkipRecruitment"],
         "args" => "argRecruitment",
@@ -184,7 +199,7 @@ $machinestates = [
     56 => [
         "name" => "mustReleaseHordier",
         "description" => clienttranslate('${actplayer} must release a Hordier (max 8)'),
-        "descriptionmyturn" => clienttranslate('${you} must release a Hordier to stay under 8'),
+        "descriptionmyturn" => clienttranslate('${you} must click on a Hordier card to release them (max 8)'),
         "type" => "activeplayer",
         "possibleactions" => ["actReleaseHordier"],
         "args" => "argMustReleaseHordier",
@@ -270,7 +285,7 @@ $machinestates = [
             "newRound" => 10
         ]
     ],
-            
+
     // ==================== FINAL SCORING BRIDGE ====================
 
     98 => [
@@ -282,7 +297,7 @@ $machinestates = [
             "gameEnd" => 99
         ]
     ],
-    
+
     // ==================== GAME END ====================
 
     99 => [

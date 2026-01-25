@@ -393,9 +393,9 @@
 
 .ww_traceur_name {
     font-weight: bold;
-    font-size: 13px;
-    color: #8b4513;
-    font-style: italic;
+    font-size: 16px;
+    color: black;
+    text-shadow: 0 -2px #fff, 0 2px #fff, 2px 0 #fff, -2px 0 #fff;
 }
 
 /* Moral flames row */
@@ -410,8 +410,8 @@
 }
 
 .ww_moral_flame {
-    width: 16px;
-    height: 16px;
+    width: 20px;
+    height: 24px;
     display: inline-block;
     background-size: contain;
     background-repeat: no-repeat;
@@ -421,12 +421,22 @@
 
 .ww_moral_flame_filled {
     background-image: url('img/helpers/moral.png');
-    filter: drop-shadow(0 1px 2px rgba(255, 107, 53, 0.5));
 }
 
 .ww_moral_flame_empty {
     background-image: url('img/helpers/moral-down.png');
     opacity: 0.6;
+}
+
+/* Temporary moral flames */
+.ww_moral_flame_temp_gain {
+    background-image: url('img/helpers/moral.png');
+    opacity: 0.6;
+}
+
+.ww_moral_flame_temp_loss {
+    background-image: url('img/helpers/moral-down.png');
+    opacity: 0.3;
 }
 
 /* Dice icons row */
@@ -437,12 +447,12 @@
 
 .ww_dice_icons {
     display: flex;
-    gap: 3px;
+    gap: 2px;
 }
 
 .ww_panel_die {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     display: inline-block;
     background-size: contain;
     background-repeat: no-repeat;
@@ -503,7 +513,8 @@
 .ww_gi_row {
     display: flex;
     justify-content: center;
-    gap: 25px;
+    /* gap: 25px; */
+    flex-direction: column;
 }
 
 .ww_gi_item {
@@ -525,9 +536,8 @@
 }
 
 .ww_gi_value {
-    font-size: 26px;
+    font-size: 20px;
     font-weight: bold;
-    min-width: 24px;
     text-align: center;
     text-shadow: 0 2px 3px rgba(0,0,0,0.5);
 }
@@ -538,6 +548,17 @@
 
 .ww_gi_day .ww_gi_value {
     color: #a29bfe;
+}
+
+.ww_gi_par {
+    font-size: 14px;
+    color: #74b9ff;
+    margin-left: 4px;
+}
+
+.ww_gi_phase .ww_gi_value {
+    color: #55efc4;
+    font-size: 14px;
 }
 
 /* Legacy game info panel styles - kept for backward compatibility */

@@ -54,7 +54,8 @@ class Windwalkers extends Table
             'selected_tile' => 12,
             'player_to_eliminate' => 13,
             'first_player' => 14,
-            'chapter_round' => 15        // Days in current chapter (resets each chapter)
+            'chapter_round' => 15,       // Days in current chapter (resets each chapter)
+            'rest_next_state' => 16      // Where to go after choosing hordier to rest (0=nextPlayer, 1=recruit)
         ]);
     }
 
@@ -89,6 +90,7 @@ class Windwalkers extends Table
         $this->setGameStateInitialValue('chapter_round', 1);     // Days in chapter
         $this->setGameStateInitialValue('selected_tile', 0);
         $this->setGameStateInitialValue('first_player', 0);
+        $this->setGameStateInitialValue('rest_next_state', 0);   // 0=nextPlayer, 1=recruit
 
         // Init game statistics
         $this->initializeStatistics($players);
@@ -476,6 +478,7 @@ class Windwalkers extends Table
         $chapterDay = $this->getGameStateValue('chapter_round');
         $result['current_round'] = $totalDays ?: 1;     // Total days (for scoring)
         $result['chapter_round'] = $chapterDay ?: 1;    // Days in current chapter
+        $result['chapter_par'] = $this->chapters[$chapter]['par'] ?? 10;
 
         // $this->trace("getAllDatas - total_days: $totalDays, chapter_day: $chapterDay, chapter: $chapter");
 
@@ -787,31 +790,56 @@ class Windwalkers extends Table
                     'terrain_name' => 'Lyara'
                 ]);
             }
+
+            $this->notifyAllPlayers('playerRests', clienttranslate('${player_name} rests and resets surpass counter'), [
+                'player_id' => $player_id,
+                'player_name' => $this->getActivePlayerName(),
+                'dice_count' => (int) $player['player_dice_count'],
+                'surpass_count' => 0
+            ]);
+
+            $this->incStat(1, 'rest_count', $player_id);
+            $this->gamestate->nextState('restComplete');
         } else {
-            // On regular tiles: rest 1 Hordier
-            $rested_card = $this->restOneHordier($player_id);
-            if ($rested_card) {
-                $char_info = $this->characters[$rested_card['card_type_arg']] ?? ['name' => 'Hordier'];
-                $this->notifyAllPlayers('hordierRested', clienttranslate('${player_name} rests ${character_name}'), [
+            // On regular tiles: check how many hordiers can be rested
+            $exhausted = $this->getRestableExhaustedHordiers($player_id);
+
+            if (count($exhausted) <= 1) {
+                // 0 or 1 exhausted hordier: rest automatically
+                $rested_card = $this->restOneHordier($player_id);
+                if ($rested_card) {
+                    $char_info = $this->characters[$rested_card['card_type_arg']] ?? ['name' => 'Hordier'];
+                    $this->notifyAllPlayers('hordierRested', clienttranslate('${player_name} rests ${character_name}'), [
+                        'player_id' => $player_id,
+                        'player_name' => $this->getActivePlayerName(),
+                        'card_id' => $rested_card['card_id'],
+                        'character_name' => $char_info['name'],
+                        'terrain_name' => $tile ? $tile['tile_subtype'] : ''
+                    ]);
+                }
+
+                $this->notifyAllPlayers('playerRests', clienttranslate('${player_name} rests and resets surpass counter'), [
                     'player_id' => $player_id,
                     'player_name' => $this->getActivePlayerName(),
-                    'card_id' => $rested_card['card_id'],
-                    'character_name' => $char_info['name'],
-                    'terrain_name' => $tile ? $tile['tile_subtype'] : ''
+                    'dice_count' => (int) $player['player_dice_count'],
+                    'surpass_count' => 0
                 ]);
+
+                $this->incStat(1, 'rest_count', $player_id);
+                $this->gamestate->nextState('restComplete');
+            } else {
+                // Multiple exhausted hordiers: let player choose
+                $this->notifyAllPlayers('playerRests', clienttranslate('${player_name} rests and resets surpass counter'), [
+                    'player_id' => $player_id,
+                    'player_name' => $this->getActivePlayerName(),
+                    'dice_count' => (int) $player['player_dice_count'],
+                    'surpass_count' => 0
+                ]);
+
+                $this->incStat(1, 'rest_count', $player_id);
+                $this->gamestate->nextState('chooseHordier');
             }
         }
-
-        $this->notifyAllPlayers('playerRests', clienttranslate('${player_name} rests and resets surpass counter'), [
-            'player_id' => $player_id,
-            'player_name' => $this->getActivePlayerName(),
-            'dice_count' => (int) $player['player_dice_count'],
-            'surpass_count' => 0
-        ]);
-
-        $this->incStat(1, 'rest_count', $player_id);
-
-        $this->gamestate->nextState('restComplete');
     }
 
     function stApplyTileEffect(): void
@@ -877,16 +905,34 @@ class Windwalkers extends Table
 
         // Cities and villages: rest 1 Hordier when passing through
         if ($tile['tile_type'] == 'village' || $tile['tile_type'] == 'city') {
-            $rested_card = $this->restOneHordier($player_id);
-            if ($rested_card) {
-                $char_info = $this->characters[$rested_card['card_type_arg']] ?? ['name' => 'Hordier'];
-                $this->notifyAllPlayers('hordierRested', clienttranslate('${player_name} rests ${character_name} at ${terrain_name}'), [
-                    'player_id' => $player_id,
-                    'player_name' => $this->getActivePlayerName(),
-                    'card_id' => $rested_card['card_id'],
-                    'character_name' => $char_info['name'],
-                    'terrain_name' => $terrain_name
-                ]);
+            // Check how many hordiers can be rested
+            $exhausted = $this->getRestableExhaustedHordiers($player_id);
+
+            if (count($exhausted) <= 1) {
+                // 0 or 1 exhausted hordier: rest automatically
+                $rested_card = $this->restOneHordier($player_id);
+                if ($rested_card) {
+                    $char_info = $this->characters[$rested_card['card_type_arg']] ?? ['name' => 'Hordier'];
+                    $this->notifyAllPlayers('hordierRested', clienttranslate('${player_name} rests ${character_name} at ${terrain_name}'), [
+                        'player_id' => $player_id,
+                        'player_name' => $this->getActivePlayerName(),
+                        'card_id' => $rested_card['card_id'],
+                        'character_name' => $char_info['name'],
+                        'terrain_name' => $terrain_name
+                    ]);
+                }
+            } else {
+                // Multiple exhausted hordiers: let player choose, then go to recruit
+                $this->setGameStateValue('rest_next_state', 1); // 1 = go to recruit after
+
+                // Check if player reached chapter destination first
+                if ($this->isChapterDestination($tile)) {
+                    $this->gamestate->nextState('endChapter');
+                    return;
+                }
+
+                $this->gamestate->nextState('chooseHordier');
+                return;
             }
         }
 
@@ -1117,6 +1163,7 @@ class Windwalkers extends Table
         // Notify all players of new chapter
         $this->notifyAllPlayers('newChapter', clienttranslate('Starting Chapter ${chapter_num}!'), [
             'chapter_num' => $chapter,
+            'chapter_par' => $this->chapters[$chapter]['par'] ?? 10,
             'tiles' => $tiles,
             'players' => $players
         ]);

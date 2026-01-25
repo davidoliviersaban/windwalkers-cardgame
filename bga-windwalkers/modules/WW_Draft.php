@@ -778,6 +778,10 @@ trait WW_Draft
         // player can then release hordiers to balance before finishing recruitment)
         $this->cards->moveCard($card_id, 'horde_' . $player_id);
 
+        // Get the card's power_used state (exhausted cards stay exhausted when recruited)
+        $cardData = $this->getObjectFromDB("SELECT card_power_used FROM card WHERE card_id = $card_id");
+        $power_used = (int) ($cardData['card_power_used'] ?? 0);
+
         $type_arg = $card['card_type_arg'] ?? $card['type_arg'] ?? null;
         $card_type = $card['card_type'] ?? $card['type'] ?? 'character';
         $char_info = $this->characters[$type_arg] ?? ['name' => 'Hordier'];
@@ -792,7 +796,8 @@ trait WW_Draft
             'card' => [
                 'card_id' => $card_id,
                 'card_type' => $card_type,
-                'card_type_arg' => $type_arg
+                'card_type_arg' => $type_arg,
+                'card_power_used' => $power_used
             ]
         ]);
 
@@ -848,7 +853,8 @@ trait WW_Draft
             'card' => $isRecruitLocation ? [
                 'card_id' => $card_id,
                 'card_type' => $card['card_type'] ?? $card['type'],
-                'card_type_arg' => $type_arg
+                'card_type_arg' => $type_arg,
+                'card_power_used' => 1  // Released cards are always exhausted
             ] : null
         ]);
 
@@ -1045,5 +1051,109 @@ trait WW_Draft
         }
 
         return $count;
+    }
+
+    /**
+     * Get exhausted Hordiers that can rest (excluding Regitha and protected cards)
+     */
+    function getRestableExhaustedHordiers(int $player_id): array
+    {
+        // Get protected cards (like Régitha after using her power)
+        $protected_cards = json_decode($this->getGlobalVariable('protected_cards') ?? '[]', true);
+        $protected_sql = '';
+        if (!empty($protected_cards)) {
+            $protected_ids = implode(',', array_map('intval', $protected_cards));
+            $protected_sql = " AND card_id NOT IN ($protected_ids)";
+        }
+
+        // Get Regitha cards that have been used - they can NEVER rest
+        $regitha_type_arg = null;
+        foreach ($this->characters as $type_arg => $char) {
+            if (($char['power_code'] ?? '') === 'regitha_power') {
+                $regitha_type_arg = $type_arg;
+                break;
+            }
+        }
+        $regitha_sql = '';
+        if ($regitha_type_arg !== null) {
+            $regitha_sql = " AND NOT (card_type_arg = $regitha_type_arg AND card_power_used = 1)";
+        }
+
+        // Get all exhausted Hordiers that can rest
+        $cards = $this->getObjectListFromDB(
+            "SELECT * FROM card WHERE card_location = 'horde_$player_id' AND card_power_used = 1$protected_sql$regitha_sql"
+        );
+
+        // Enrich with character info
+        $result = [];
+        foreach ($cards as $card) {
+            $char_id = (int) $card['card_type_arg'];
+            $char_info = $this->characters[$char_id] ?? ['name' => 'Unknown'];
+            $result[] = [
+                'card_id' => (int) $card['card_id'],
+                'type_arg' => $char_id,
+                'name' => $char_info['name'],
+                'type' => $char_info['type'] ?? 'unknown',
+                'power_used' => 1
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
+     * Get arguments for chooseHordierToRest state
+     */
+    function argChooseHordierToRest(): array
+    {
+        $player_id = $this->getActivePlayerId();
+        $exhausted_hordiers = $this->getRestableExhaustedHordiers($player_id);
+
+        return [
+            'exhausted_hordiers' => $exhausted_hordiers,
+            'count' => count($exhausted_hordiers)
+        ];
+    }
+
+    /**
+     * Player selects which hordier to rest
+     */
+    function actSelectHordierToRest(int $card_id): void
+    {
+        $this->checkAction('actSelectHordierToRest');
+        $player_id = $this->getActivePlayerId();
+
+        // Get restable exhausted hordiers
+        $exhausted = $this->getRestableExhaustedHordiers($player_id);
+        $valid_ids = array_map(function ($c) {
+            return $c['card_id'];
+        }, $exhausted);
+
+        if (!in_array($card_id, $valid_ids)) {
+            throw new BgaUserException($this->_("This Hordier cannot be rested"));
+        }
+
+        // Rest the selected hordier
+        $rested_card = $this->restOneHordier($player_id, $card_id);
+
+        if ($rested_card) {
+            $char_info = $this->characters[$rested_card['card_type_arg']] ?? ['name' => 'Hordier'];
+            $this->notifyAllPlayers('hordierRested', clienttranslate('${player_name} rests ${character_name}'), [
+                'player_id' => $player_id,
+                'player_name' => $this->getActivePlayerName(),
+                'card_id' => $rested_card['card_id'],
+                'character_name' => $char_info['name']
+            ]);
+        }
+
+        // Check where to go next: recruit (from village entry) or nextPlayer (from rest action)
+        $next_state = $this->getGameStateValue('rest_next_state');
+        $this->setGameStateValue('rest_next_state', 0); // Reset for next time
+
+        if ($next_state == 1) {
+            $this->gamestate->nextState('recruit');
+        } else {
+            $this->gamestate->nextState('hordierRested');
+        }
     }
 }
