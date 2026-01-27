@@ -654,8 +654,7 @@
    ========================================== */
 
 #ww_horde_panel {
-    width: 300px;
-    min-width: 300px;
+    width: 100%;
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     border-radius: 10px;
     padding: 12px 15px;
@@ -676,11 +675,12 @@
 }
 
 #ww_horde {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
     gap: 8px;
-    flex: 1;
-    overflow-y: auto;
+    justify-content: center;
+    align-items: flex-start;
 }
 
 /* Horde cards in main panel - same style as draft but smaller and without hover lift */
@@ -1445,20 +1445,13 @@
         flex-direction: column;
     }
     
-    #ww_dice_panel,
-    #ww_horde_panel {
+    #ww_dice_panel {
         width: 100%;
         min-width: 100%;
     }
     
     #ww_map_container {
         min-height: 400px;
-    }
-    
-    #ww_horde {
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: center;
     }
     
     .ww_dice_row {

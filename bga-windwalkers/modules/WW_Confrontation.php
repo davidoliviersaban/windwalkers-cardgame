@@ -503,13 +503,14 @@ trait WW_Confrontation
     public function checkMultistepPower($char_info): void
     {
         $card_power_used = $char_info['card_power_used'] ?? 0;
+        $has_multistep_power = $char_info['has_multistep_power'] ?? false;
 
         // This card was used and is single playable
-        if ($card_power_used == 1 && !$char_info['has_multistep_power']) {
+        if ($card_power_used == 1 && !$has_multistep_power) {
             throw new BgaUserException($this->_("Power already used"));
         }
-        // This card was used and is single playable
-        else if ($card_power_used == 2 && $char_info['has_multistep_power']) {
+        // This card was used and is multi-step
+        else if ($card_power_used == 2 && $has_multistep_power) {
             throw new BgaUserException($this->_("Power already used"));
         }
     }
@@ -2714,6 +2715,9 @@ trait WW_Confrontation
     private function revealWindOnTile(int $tile_id, array $tile): void
     {
         $token = $this->drawWindToken();
+        if ($token === null) {
+            throw new BgaUserException(self::_("No wind tokens available in bag"));
+        }
         $force = $token['token_force'];
 
         $this->DbQuery("UPDATE tile SET tile_wind_force = $force, tile_discovered = 1 WHERE tile_id = $tile_id");
@@ -3089,6 +3093,78 @@ trait WW_Confrontation
             'horde' => $horde,
             'horde_count' => count($horde)
         ];
+    }
+
+    /**
+     * Get arguments for abandonForFontaine state (Tour Fontaine)
+     */
+    function argAbandonForFontaine(): array
+    {
+        $player_id = $this->getActivePlayerId();
+
+        // Get player's horde cards with power_used status
+        $horde = $this->getHordeWithPowerStatus($player_id);
+
+        return [
+            'horde' => $horde,
+            'horde_count' => count($horde)
+        ];
+    }
+
+    /**
+     * Player abandons a hordier at Tour Fontaine (required to rest all)
+     */
+    function actAbandonForFontaine(int $card_id): void
+    {
+        $this->checkAction('actAbandonForFontaine');
+        $player_id = $this->getActivePlayerId();
+
+        // Verify the card belongs to the player's horde
+        $card = $this->getCardDefinition($card_id, $player_id);
+
+        // Get current tile (Tour Fontaine)
+        $player = $this->getObjectFromDB("SELECT * FROM player WHERE player_id = $player_id");
+        $chapter = $this->getGameStateValue('current_chapter');
+        $tile = $this->getTileAt((int) $player['player_position_q'], (int) $player['player_position_r'], $chapter);
+
+        // Add card to the tile location
+        $this->addCardToRecruitPool($card_id, $tile);
+
+        // Mark as exhausted
+        $this->DbQuery("UPDATE card SET card_power_used = 1 WHERE card_id = $card_id");
+
+        $this->incStat(1, 'hordiers_lost', $player_id);
+
+        // Get character info for notification
+        $type_arg = (int) $card['card_type_arg'];
+        $char_info = $this->characters[$type_arg] ?? ['name' => 'Hordier'];
+
+        $this->notifyAllPlayers('hordierLost', clienttranslate('${player_name} abandons ${character_name} at Tour Fontaine'), [
+            'player_id' => $player_id,
+            'player_name' => $this->getActivePlayerName(),
+            'card_id' => $card_id,
+            'character_name' => $char_info['name'],
+            'destination' => 'Tour Fontaine',
+            'tile_type' => 'tourfontaine',
+            'card' => null  // Card stays on tile, not recruitable
+        ]);
+
+        // Check if player has any hordiers left
+        $remaining_hordiers = count($this->cards->getCardsInLocation('horde_' . $player_id));
+
+        if ($remaining_hordiers == 0) {
+            // Game over for this player
+            $this->notifyAllPlayers('playerEliminated', clienttranslate('${player_name} has lost all Hordiers and is eliminated!'), [
+                'player_id' => $player_id,
+                'player_name' => $this->getActivePlayerName()
+            ]);
+
+            $this->setGameStateValue('player_to_eliminate', $player_id);
+            $this->gamestate->nextState('eliminate');
+            return;
+        }
+
+        $this->gamestate->nextState('hordierAbandoned');
     }
 
     /**

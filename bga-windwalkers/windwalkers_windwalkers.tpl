@@ -15,7 +15,6 @@
     
     <!-- Main game area: Confrontation + Map + Horde (vertical layout) -->
     <div id="ww_main_area">
-        
         <!-- Dice panel (Confrontation) -->
         <div id="ww_dice_panel">
             <h3>{CONFRONTATION}
@@ -55,7 +54,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Hex Map with Scrollmap -->
         <div id="ww_map_container">
             <div id="ww_map_scrollable">
@@ -66,7 +65,9 @@
                 <!-- Player tokens will be placed here -->
             </div>
         </div>
-        
+    </div>
+    
+    <div id="ww_bottom_area"> 
         <!-- Horde panel (player's characters) -->
         <div id="ww_horde_panel">
             <h3>{MY_HORDE}</h3>
@@ -74,9 +75,8 @@
                 <!-- Character cards will be placed here -->
             </div>
         </div>
-        
     </div>
-    
+
     <!-- Draft panel (hidden by default, shown during draft phase) -->
     <div id="ww_draft_panel" style="display: none;">
         <h3>{DRAFT_HORDE}</h3>

@@ -7,18 +7,16 @@ trait WW_WindToken
 {
     /**
      * Draw a random wind token from the bag
-     * Uses bgaShuffle instead of MySQL RAND() for reliable randomness in BGA Studio
      */
     function drawWindToken(): ?array
     {
         $tokens = $this->getCollectionFromDb(
-            "SELECT * FROM wind_token WHERE token_location = 'bag'"
+            "SELECT * FROM wind_token WHERE token_location = 'bag' ORDER BY RAND() LIMIT 1"
         );
         if (empty($tokens)) {
             return null;
         }
-        $tokens = $this->bgaShuffle($tokens);
-        return $tokens[0] ?? null;
+        return reset($tokens) ?: null;
     }
 
     /**

@@ -710,22 +710,6 @@ class Windwalkers extends Table
     }
 
     /**
-     * Shuffle an array using bga_rand (works in BGA Studio unlike MySQL RAND())
-     */
-    private function bgaShuffle(array $array): array
-    {
-        $array = array_values($array);
-        $count = count($array);
-        for ($i = $count - 1; $i > 0; $i--) {
-            $j = bga_rand(0, $i);
-            $temp = $array[$i];
-            $array[$i] = $array[$j];
-            $array[$j] = $temp;
-        }
-        return $array;
-    }
-
-    /**
      * Draw cards for recruitment based on specified counts
      * Uses bga_rand for shuffling instead of MySQL RAND() (which can be deterministic in BGA Studio)
      * 
@@ -741,29 +725,46 @@ class Windwalkers extends Table
         // Only draw from deck (not discard, not already in recruit pools, not in hordes)
         if ($ferCount > 0) {
             $fer = $this->getCollectionFromDb(
-                "SELECT * FROM card WHERE card_type = 'fer' AND card_is_leader = 0 AND card_location = 'deck'"
+                "SELECT * FROM card WHERE card_type = 'fer' AND card_is_leader = 0 AND card_location = 'deck' ORDER BY RAND() LIMIT $ferCount"
             );
-            $fer = $this->bgaShuffle($fer);
             $cards = array_merge($cards, array_slice($fer, 0, $ferCount));
         }
 
         if ($packCount > 0) {
             $pack = $this->getCollectionFromDb(
-                "SELECT * FROM card WHERE card_type = 'pack' AND card_location = 'deck'"
+                "SELECT * FROM card WHERE card_type = 'pack' AND card_location = 'deck' ORDER BY RAND() LIMIT $packCount"
             );
-            $pack = $this->bgaShuffle($pack);
             $cards = array_merge($cards, array_slice($pack, 0, $packCount));
         }
 
         if ($traineCount > 0) {
             $traine = $this->getCollectionFromDb(
-                "SELECT * FROM card WHERE card_type = 'traine' AND card_location = 'deck'"
+                "SELECT * FROM card WHERE card_type = 'traine' AND card_location = 'deck' ORDER BY RAND() LIMIT $traineCount"
             );
-            $traine = $this->bgaShuffle($traine);
             $cards = array_merge($cards, array_slice($traine, 0, $traineCount));
         }
 
         return $cards;
+    }
+
+    /**
+     * Shuffle an array using bga_rand for BGA-compatible randomness
+     * Fisher-Yates shuffle algorithm
+     * 
+     * @param array $array The array to shuffle
+     * @return array The shuffled array (re-indexed)
+     */
+    public function bgaShuffle(array $array): array
+    {
+        $array = array_values($array);
+        $count = count($array);
+        for ($i = $count - 1; $i > 0; $i--) {
+            $j = bga_rand(0, $i);
+            $temp = $array[$i];
+            $array[$i] = $array[$j];
+            $array[$j] = $temp;
+        }
+        return $array;
     }
 
     /**
@@ -881,6 +882,26 @@ class Windwalkers extends Table
         // Get current tile to check if in city
         $player = $this->getObjectFromDB("SELECT * FROM player WHERE player_id = $player_id");
         $tile = $this->getTileAt((int) $player['player_position_q'], (int) $player['player_position_r'], (int) $player['player_chapter']);
+
+        // Check for Tour Fontaine special tile
+        $terrain_info = $tile ? ($this->terrain_types[$tile['tile_subtype']] ?? null) : null;
+        $is_tourfontaine = $terrain_info && ($terrain_info['special'] ?? '') === 'tourfontaine';
+
+        // Tour Fontaine: rest ALL Hordiers but must abandon one
+        if ($is_tourfontaine) {
+            $rested_count = $this->restAllHordiers($player_id);
+            if ($rested_count > 0) {
+                $this->notifyAllPlayers('allHordiersRested', clienttranslate('\${player_name} rests at Tour Fontaine - all Hordiers recover their powers'), [
+                    'player_id' => $player_id,
+                    'player_name' => $this->getActivePlayerName(),
+                    'rested_count' => $rested_count,
+                    'location_type' => 'Tour Fontaine'
+                ]);
+            }
+            // Must abandon one hordier
+            $this->gamestate->nextState('abandonForFontaine');
+            return;
+        }
 
         // In cities or villages: rest ALL Hordiers (reactivate all powers)
         if ($tile && ($tile['tile_type'] == 'city' || $tile['tile_type'] == 'village')) {

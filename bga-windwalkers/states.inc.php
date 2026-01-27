@@ -122,7 +122,8 @@ $machinestates = [
         "action" => "stRest",
         "transitions" => [
             "restComplete" => 70,  // Skip recruitment, go directly to nextPlayer
-            "chooseHordier" => 31  // Let player choose which hordier to rest
+            "chooseHordier" => 31,  // Let player choose which hordier to rest
+            "abandonForFontaine" => 32  // Tour Fontaine: must abandon a hordier
         ]
     ],
 
@@ -136,6 +137,20 @@ $machinestates = [
         "transitions" => [
             "hordierRested" => 70,  // Go to nextPlayer after resting (from rest action)
             "recruit" => 55         // Go to recruitment after resting (from village entry)
+        ]
+    ],
+
+    // Tour Fontaine: must abandon a Hordier after resting all
+    32 => [
+        "name" => "abandonForFontaine",
+        "description" => clienttranslate('${actplayer} must abandon a Hordier at Tour Fontaine'),
+        "descriptionmyturn" => clienttranslate('${you} must abandon a Hordier to rest at Tour Fontaine'),
+        "type" => "activeplayer",
+        "possibleactions" => ["actAbandonForFontaine"],
+        "args" => "argAbandonForFontaine",
+        "transitions" => [
+            "hordierAbandoned" => 70,  // Go to nextPlayer after abandoning
+            "eliminate" => 46          // Player lost all hordiers
         ]
     ],
 

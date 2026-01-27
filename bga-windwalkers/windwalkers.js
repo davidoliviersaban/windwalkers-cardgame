@@ -485,6 +485,7 @@ function (dojo, declare) {
         'diceResult': 'Dice Result',
         'resolveConfrontation': 'Resolution',
         'loseHordier': 'Lose Hordier',
+        'abandonForFontaine': 'Tour Fontaine',
         'playerElimination': 'Elimination',
         'recruitment': 'Recruitment',
         'mustReleaseHordier': 'Must Release',
@@ -3229,6 +3230,9 @@ function (dojo, declare) {
                 case 'loseHordier':
                     this.enterLoseHordierState(args.args);
                     break;
+                case 'abandonForFontaine':
+                    this.enterAbandonForFontaineState(args.args);
+                    break;
                 case 'recruitment':
                     this.enterRecruitmentState(args.args);
                     break;
@@ -3255,6 +3259,9 @@ function (dojo, declare) {
                     WW_Cards.clearHordeUsable();
                     break;
                 case 'loseHordier':
+                    WW_Cards.clearHordeSelectable();
+                    break;
+                case 'abandonForFontaine':
                     WW_Cards.clearHordeSelectable();
                     break;
                 case 'recruitment':
@@ -3537,6 +3544,15 @@ function (dojo, declare) {
                     self.onAbandonGame();
                 }, null, false, 'red');
             }
+        },
+        
+        enterAbandonForFontaineState: function(args) {
+            if (!args || !args.horde) return;
+            
+            var self = this;
+            WW_Cards.makeHordeSelectable(args.horde, function(cardId) {
+                self.onAbandonForFontaine(cardId);
+            });
         },
         
         enterChooseHordierToRestState: function(args) {
@@ -3988,8 +4004,8 @@ function (dojo, declare) {
                     this.executeTulaPower(cardId);
                     break;
                 default:
-                    WW_State.clearSpecialPowerMode();
-                    // this.executeSimplePower(cardId);
+                    // Don't do anything here - let the code after enterSpecialPowerMode handle simple powers
+                    // (they either go into pending actions or are sent directly to server)
                     break;
             }
         },
@@ -4000,7 +4016,7 @@ function (dojo, declare) {
          * in the batch actions so server validates with updated dice values
          */
         executeSimplePower: function(cardId) {
-            
+            var self = this;
             // If there are pending actions, include this power in the batch
             if (WW_PendingActions.isActive() && WW_PendingActions.hasPending()) {
                 // Add power to pending actions
@@ -4132,11 +4148,12 @@ function (dojo, declare) {
             
             var self = this;
             this.resolvePendingActionsBeforePower(cardId, function() {
-                WW_State.clearSpecialPowerMode();
                 self.performAction('actUsePower', {
                     card_id: parseInt(cardId),
                     params: JSON.stringify({})
                 });
+                // Clear mode AFTER the current call stack completes (so onUsePower sees the mode)
+                setTimeout(function() { WW_State.clearSpecialPowerMode(); }, 0);
             });
         },
         
@@ -4150,11 +4167,12 @@ function (dojo, declare) {
             
             var self = this;
             this.resolvePendingActionsBeforePower(cardId, function() {
-                WW_State.clearSpecialPowerMode();
                 self.performAction('actUsePower', {
                     card_id: parseInt(cardId),
                     params: JSON.stringify({})
                 });
+                // Clear mode AFTER the current call stack completes (so onUsePower sees the mode)
+                setTimeout(function() { WW_State.clearSpecialPowerMode(); }, 0);
             });
         },
         
@@ -4168,11 +4186,12 @@ function (dojo, declare) {
             
             var self = this;
             this.resolvePendingActionsBeforePower(cardId, function() {
-                WW_State.clearSpecialPowerMode();
                 self.performAction('actUsePower', {
                     card_id: parseInt(cardId),
                     params: JSON.stringify({})
                 });
+                // Clear mode AFTER the current call stack completes (so onUsePower sees the mode)
+                setTimeout(function() { WW_State.clearSpecialPowerMode(); }, 0);
             });
         },
         
@@ -4186,11 +4205,12 @@ function (dojo, declare) {
             
             var self = this;
             this.resolvePendingActionsBeforePower(cardId, function() {
-                WW_State.clearSpecialPowerMode();
                 self.performAction('actUsePower', {
                     card_id: parseInt(cardId),
                     params: JSON.stringify({})
                 });
+                // Clear mode AFTER the current call stack completes (so onUsePower sees the mode)
+                setTimeout(function() { WW_State.clearSpecialPowerMode(); }, 0);
             });
         },
         
@@ -4235,6 +4255,8 @@ function (dojo, declare) {
          * :tap:: Ignorez :d6-white: / :d6-black:
          */
         enterAmonPowerMode: function(cardId) {
+            var self = this;
+            
             // Count black dice
             var blackDiceCount = dojo.query('#ww_horde_dice .ww_dice_black, #ww_wind_dice .ww_dice_black').length;
             
@@ -4570,7 +4592,9 @@ function (dojo, declare) {
         /**
          * Jonas: Choose a wind force (1-6) to set on current tile
          */
-        enterJonasPowerMode: function(cardId) {            
+        enterJonasPowerMode: function(cardId) {
+            var self = this;
+            
             WW_PowerMode.enter(this, cardId, 'jonas_power', {
                 message: _("Jonas: Click a button to set wind force (1-6)")
             });
@@ -5949,6 +5973,10 @@ function (dojo, declare) {
         
         onAbandonHordier: function(cardId) {
             this.performAction('actAbandonHordier', { card_id: parseInt(cardId) });
+        },
+        
+        onAbandonForFontaine: function(cardId) {
+            this.performAction('actAbandonForFontaine', { card_id: parseInt(cardId) });
         },
         
         onSelectHordierToRest: function(cardId) {
