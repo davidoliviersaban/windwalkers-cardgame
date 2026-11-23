@@ -50,7 +50,7 @@ devDependencies:
     specifier: ^15.3.3
     version: 15.3.3(eslint@8.57.1)(typescript@5.7.3)
   postcss:
-    specifier: ^8.5.33
+    specifier: ^8.5.2
     version: 8.5.33
   prettier:
     specifier: ^3.5.1
