@@ -38,10 +38,10 @@ devDependencies:
     specifier: ^18.3.5
     version: 18.3.7(@types/react@18.3.31)
   '@typescript-eslint/eslint-plugin':
-    specifier: ^8.74.0
+    specifier: ^8.24.1
     version: 8.74.0(@typescript-eslint/parser@8.74.0)(eslint@8.57.1)(typescript@5.9.3)
   '@typescript-eslint/parser':
-    specifier: ^8.74.0
+    specifier: ^8.24.1
     version: 8.74.0(eslint@8.57.1)(typescript@5.9.3)
   eslint:
     specifier: ^8.57.1
